@@ -266,7 +266,6 @@ class ManualSegmentationWidget(QWidget):
             minimum_width=COLUMN_WIDTH,
             alignment=SEGM_METHODS_PANEL_ALIGN,
         )
-        # self.load_label_push_button.setStyleSheet("QPushButton::disabled{background-color: black; color: darkgray;}")
 
         # Annotations tools are created in another layout
         self.tool_annotation_layout = QHBoxLayout()
@@ -284,18 +283,18 @@ class ManualSegmentationWidget(QWidget):
         )
         # self.undo_push_button.setStyleSheet("QPushButton::disabled{background-color: black; color: darkgray;}")
 
-        self.lock_push_button = add_icon_push_button(
-            name="",
-            icon=QIcon(get_icon_path('unlock')),
-            layout=self.tool_annotation_layout,
-            callback_function=self.lock_slide,
-            row=0,
-            column=1,
-            minimum_width=COLUMN_WIDTH,
-            alignment=SEGM_METHODS_PANEL_ALIGN,
-            isBoxLayout=True,
-        )
-        self.lock_push_button.setCheckable(True)
+        # self.lock_push_button = add_icon_push_button(
+        #     name="",
+        #     icon=QIcon(get_icon_path('unlock')),
+        #     layout=self.tool_annotation_layout,
+        #     callback_function=self.lock_slide,
+        #     row=0,
+        #     column=1,
+        #     minimum_width=COLUMN_WIDTH,
+        #     alignment=SEGM_METHODS_PANEL_ALIGN,
+        #     isBoxLayout=True,
+        # )
+        # self.lock_push_button.setCheckable(True)
         # self.lock_push_button.setStyleSheet("QPushButton::disabled{background-color: black; color: darkgray;}")
 
         self.zoom_slider = add_slider(
@@ -488,7 +487,7 @@ class ManualSegmentationWidget(QWidget):
                 self.load_label_push_button.setVisible(isVisible)
                 self.zoom_slider.setVisible(isVisible)
                 self.undo_push_button.setVisible(isVisible)
-                self.lock_push_button.setVisible(isVisible)
+                # self.lock_push_button.setVisible(isVisible)
 
             elif panel_name == "reset_save_panel":
                 self.reset_save_panel.setVisible(isVisible)
@@ -774,15 +773,14 @@ class ManualSegmentationWidget(QWidget):
                 label_layer = self.viewer.layers['annotations']
                 label_layer.undo()
 
-    def lock_slide(self):
-        """
-            TODO
-        """
+    # def lock_slide(self):
+    #     """
+    #     """
 
-        if self.lock_push_button.isChecked() == True:
-            self.lock_push_button.setIcon(QIcon(get_icon_path('lock')))
-        else:
-            self.lock_push_button.setIcon(QIcon(get_icon_path('unlock')))
+    #     if self.lock_push_button.isChecked() == True:
+    #         self.lock_push_button.setIcon(QIcon(get_icon_path('lock')))
+    #     else:
+    #         self.lock_push_button.setIcon(QIcon(get_icon_path('unlock')))
 
     def save_label(self):
         """

@@ -1,5 +1,5 @@
 name: hesperos
-display_name: Hesperos
+display_name: Hesperos application
 contributions:
   commands:
     - id: hesperos.make_manual_segmentation_widget
@@ -11,8 +11,6 @@ contributions:
 
   widgets:
     - command: hesperos.make_manual_segmentation_widget
-      display_name: Manual Segmentation 
+      display_name: Manual Segmentation or Correction
     - command: hesperos.make_oneshot_segmentation_widget
       display_name: OneShot Segmentation 
-
-
