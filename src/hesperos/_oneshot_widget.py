@@ -815,3 +815,7 @@ class OneShotWidget(QWidget):
     def reset_zoom_slider(self):
         median = round( (self.zoom_slider.maximum() - self.zoom_slider.minimum()) / 2)
         self.zoom_slider.setValue(median)
+        
+# ============ For testing ============
+    def _on_click(self):
+        print("napari has", len(self.viewer.layers), "layers")

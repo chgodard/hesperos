@@ -998,3 +998,7 @@ class ManualSegmentationWidget(QWidget):
 
     #     pixmap = QPixmap(image_path)
     #     view_image_1.setPixmap(pixmap)
+
+# ============ For testing ============
+    def _on_click(self):
+        print("napari has", len(self.viewer.layers), "layers")
