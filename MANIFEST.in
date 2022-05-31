@@ -1,9 +1,8 @@
 include LICENSE
 include README.md
+include src/hesperos/resources/icons/*.svg
 
 recursive-include *.svg
 
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
-
-include src/hesperos/resources/icons/*.svg
