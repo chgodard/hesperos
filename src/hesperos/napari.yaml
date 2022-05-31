@@ -1,5 +1,5 @@
 name: hesperos
-display_name: JAPET application
+display_name: Hesperos
 contributions:
   commands:
     - id: hesperos.make_manual_segmentation_widget
