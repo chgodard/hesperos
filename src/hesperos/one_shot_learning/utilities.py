@@ -85,7 +85,7 @@ def rfc_inference(features_df, output_classifier_path, proba_list, size_y, size_
     proba_list.append(output_proba.reshape(size_y, size_x).astype(np.uint8))
 
 # ============ Run Process ============
-def run_one_shot_learning(source_img, label):
+def run_one_shot_learning(source_img, label, output_classifier_path):
     """
     Run one shot learning proccess (learning and inference)
 
@@ -93,16 +93,15 @@ def run_one_shot_learning(source_img, label):
     ----------
     source_img : ndarray
         3D original image
-
     label : ndarray
         labelled data (same size than soure_img) with 2 classes : the region of interest (1) and the "other structures" (2)
+    output_classifier_path : str
+        path to save the model
 
     Returns
     ----------
     output_proba : ndarray
         output probabilities normed between 0 to 1 (same size than source_img) where 1 is the highest probabilities for a pixel to be in the region of interest
-
-
 
     """
 
@@ -146,7 +145,6 @@ def run_one_shot_learning(source_img, label):
     train_features._create_features_df()
 
     # === Train the classifier ===
-    output_classifier_path = os.path.join(os.environ["HOMEPATH"], "Desktop", "rfc.pckl")
     rfc_training(train_features.features_df, output_classifier_path)
     del train_features
 

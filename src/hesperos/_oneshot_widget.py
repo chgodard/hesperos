@@ -608,7 +608,12 @@ class OneShotWidget(QWidget):
             else:
                 return
 
-        output_proba = run_one_shot_learning(source_img, label)
+        files_types = "PICKLE (*.pckl)"
+
+        default_filepath = Path(self.img_dir).joinpath("model_rfc.pckl")
+        output_classifier_path, _ = QFileDialog.getSaveFileName(self, "Save Model File", str(default_filepath), files_types)
+
+        output_proba = run_one_shot_learning(source_img, label, str(output_classifier_path))
 
         self.remove_segmentation()
         self.remove_proba()
@@ -659,29 +664,59 @@ class OneShotWidget(QWidget):
 
         files_types = "TIFF (*.tiff);;TIF (*.tif);;NIFTI compressed (*.nii.gz)"
 
-        default_filename = os.path.join(self.img_dir, "segmentation.tif")
-        file_path, _ = QFileDialog.getSaveFileName(self, "Save Segmentation", default_filename , files_types)
+        default_filepath = Path(self.img_dir).joinpath("segmentation.tif")
+        file_path, _ = QFileDialog.getSaveFileName(self, "Save Segmentation", str(default_filepath) , files_types)
 
         # If choose "Cancel"
         if file_path == "":
             return
 
-        #TODO ADD CHOIVE TO SAVE SEPERATELYR
-
         if hasattr(self.viewer, 'layers'):
             if "segmentation" in self.viewer.layers:
+
+                saving_mode = display_save_message_box(
+                    "Saving Mode",
+                    "Do you want to save all segmentation in once file, or independently ?",
+                )
+
                 seg_img = self.viewer.layers['segmentation'].data
 
                 extensions = Path(file_path).suffixes
 
-                if len(extensions) == 1:
-                    if (extensions[0] == ".tif") or (extensions[0] == ".tiff"): 
-                        tif.imsave(file_path, seg_img)
-                elif len(extensions) == 2:
+                if saving_mode: # if All
+                    if len(extensions) == 1:
+                        if (extensions[0] == ".tif") or (extensions[0] == ".tiff"): 
+                            tif.imsave(file_path, seg_img)
+                    elif len(extensions) == 2:
                         if (extensions[0] == ".nii") and (extensions[1] == ".gz"):
                             result_image_sitk = sitk.GetImageFromArray(seg_img.astype(np.uint16))
                             result_image_sitk.CopyInformation(self.image_sitk)
                             sitk.WriteImage(result_image_sitk, file_path)
+
+                else: # If independently
+                    structure_list = self.oneshot.list_structure_name
+
+                    for idx, struc in enumerate(structure_list):
+                        label_struc = np.zeros(seg_img.shape, dtype=np.uint16)
+                        label_struc[seg_img == (idx + 1)] = 255
+
+                        if len(extensions) == 1:
+                            if (extensions[0] == ".tif") or (extensions[0] == ".tiff"):
+                                file_name = Path(file_path).stem 
+                                new_file_name = file_name + '_' + struc + extensions[0]
+                                new_file_path = Path(Path(file_path).parent).joinpath(new_file_name)
+                                tif.imsave(str(new_file_path), label_struc)
+                        elif len(extensions) == 2:
+                            if (extensions[0] == ".nii") and (extensions[1] == ".gz"):
+                                file_name = Path(Path(file_path).stem).stem
+                                new_file_name = file_name + '_' + struc + extensions[0] + extensions[1]
+                                new_file_path = Path(Path(file_path).parent).joinpath(new_file_name)
+                                result_image_sitk = sitk.GetImageFromArray(label_struc)
+                                result_image_sitk.CopyInformation(self.image_sitk)
+                                sitk.WriteImage(result_image_sitk, str(new_file_path))
+
+                self.remove_backup_label_file()
+
             else:
                 display_warning_box(self, "Error", "No segmentation data find")
                 return
@@ -693,14 +728,12 @@ class OneShotWidget(QWidget):
 
         files_types = "TIFF (*.tiff);;TIF (*.tif);;NIFTI compressed (*.nii.gz)"
 
-        default_filename = os.path.join(self.img_dir, "probabilities.tif")
-        file_path, _ = QFileDialog.getSaveFileName(self, "Save Probabilities", default_filename , files_types)
+        default_filepath = Path(self.img_dir).joinpath("probabilities.tif")
+        file_path, _ = QFileDialog.getSaveFileName(self, "Save Probabilities", str(default_filepath) , files_types)
 
         # If choose "Cancel"
         if file_path == "":
             return
-
-        #TODO ADD CHOIVE TO SAVE SEPERATELYR
 
         if hasattr(self.viewer, 'layers'):
             if "probabilities" in self.viewer.layers:
@@ -815,7 +848,7 @@ class OneShotWidget(QWidget):
     def reset_zoom_slider(self):
         median = round( (self.zoom_slider.maximum() - self.zoom_slider.minimum()) / 2)
         self.zoom_slider.setValue(median)
-        
+
 # ============ For testing ============
     def _on_click(self):
         print("napari has", len(self.viewer.layers), "layers")

@@ -951,8 +951,8 @@ class ManualSegmentationWidget(QWidget):
         """
 
         temp_label_data_file_path = Path(self.img_dir).joinpath("TEMP_segmentation.tif")
-        if os.path.exists(str(temp_label_data_file_path)):
-            os.remove(str(temp_label_data_file_path))
+        if temp_label_data_file_path.exists():
+            temp_label_data_file_path.unlink()
 
     def reset_label(self):
         """
