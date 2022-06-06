@@ -13,10 +13,11 @@ DICT_SUB_STRUCTURES = {
         'Cords 2',
         'Ventricles 1',
         'Ventricles 2'],
+        
     "MOTHER":[
+        'Blader',
         'Placenta',
         'Ribs',
         'Uterus',
-        'Vessie'
     ]
 }

@@ -269,29 +269,20 @@ class OneShotWidget(QWidget):
             layout=self.annotation_layout,
             callback_function=self.update_segmentation_with_path,
             row=0,
-            column=0,
+            column=1,
             column_span=2,
             minimum_width=COLUMN_WIDTH,
-        )
-
-        self.annotation_text = add_label(
-            text="Type of structure:",
-            layout=self.annotation_layout,
-            row=1,
-            column=0,
         )
 
         # Annotations tools are created in another layout 
         # self.tool_annotation_layout = QHBoxLayout()
 
-        self.undo_push_button = add_icon_text_push_button(
+        self.undo_push_button = add_icon_push_button(
             icon=QIcon(get_icon_path('undo')),
-            text="Undo last painting action",
             layout=self.annotation_layout,
             callback_function=self.undo_segmentation,
-            row=2,
+            row=0,
             column=0,
-            column_span=2,
             minimum_width=COLUMN_WIDTH,
         )
 
@@ -427,7 +418,6 @@ class OneShotWidget(QWidget):
         for panel_name in list_panel_names:
             if panel_name == "annotation_panel":
                 self.annotation_panel.setVisible(isVisible)
-                self.annotation_text.setVisible(isVisible)
                 self.load_segmentation_push_button.setVisible(isVisible)
                 self.undo_push_button.setVisible(isVisible)
             

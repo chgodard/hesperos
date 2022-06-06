@@ -1,11 +1,11 @@
 # ============ List of structure to annotate ============
 
 LIST_STRUCTURES = [
-    "",
+    "LABEL",
 ]
 
 DICT_SUB_STRUCTURES = {
-    "":[
-        'structure to annotate',
-        'other']
+    "LABEL":[
+        'Structure of interest',
+        'Other']
 }

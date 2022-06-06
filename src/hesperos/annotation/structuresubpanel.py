@@ -59,7 +59,18 @@ class StructureSubPanel(QGroupBox):
         # === Set sub panel parameters ===
         self.subpanel = QGroupBox("")
         self.subpanel.setObjectName("SubPanel")
-        self.subpanel.setStyleSheet("QGroupBox#SubPanel{border: 0px;}")
+        self.subpanel.setStyleSheet("""
+                QGroupBox#SubPanel{
+                    border: 0px;
+                    border-radius: 0px;
+                    padding: 0px 0px 0px 0px;
+                },
+                QGroupBox::title#SubPanel{
+                    border: 0px;
+                    border-radius: 0px;
+                    padding: 0px 0px 0px 0px;
+                    margin = 0px 0px 0px 0px
+                }""")
 
         # === Set sub panel layout parameters ===
         sublayout = QGridLayout()

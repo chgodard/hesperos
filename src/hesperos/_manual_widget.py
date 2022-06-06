@@ -299,35 +299,29 @@ class ManualSegmentationWidget(QWidget):
             minimum_width=COLUMN_WIDTH,
         )
 
-        self.annotation_text = add_label(
-            text="Type of structure:",
+        self.undo_push_button = add_icon_push_button(
+            icon=QIcon(get_icon_path('undo')),
             layout=self.annotation_layout,
+            callback_function=self.undo_segmentation,
             row=1,
             column=0,
+            minimum_width=COLUMN_WIDTH,
         )
 
         self.annotation_combo_box = add_combo_box(
-            list_items=["", "Fetus", "Shoulder", "Feta Challenge"],
+            list_items=["Choose a structure", "Fetus", "Shoulder", "Feta Challenge"],
             layout=self.annotation_layout,
             callback_function=self.toggle_annotation_sub_panel,
             row=1,
             column=1,
+            minimum_width=COLUMN_WIDTH,
         )
         # self.annotation_combo_box.setStyleSheet("QComboBox::disabled{background-color: black; color: darkgray;}")
 
         # Annotations tools are created in another layout
         # self.tool_annotation_layout = QHBoxLayout()
 
-        self.undo_push_button = add_icon_text_push_button(
-            icon=QIcon(get_icon_path('undo')),
-            text="Undo last painting action",
-            layout=self.annotation_layout,
-            callback_function=self.undo_segmentation,
-            row=2,
-            column=0,
-            column_span=2,
-            minimum_width=COLUMN_WIDTH,
-        )
+        
         # self.undo_push_button.setStyleSheet("QPushButton::disabled{background-color: black; color: darkgray;}")
 
         # self.lock_push_button = add_icon_push_button(
@@ -517,7 +511,6 @@ class ManualSegmentationWidget(QWidget):
         for panel_name in list_panel_names:            
             if panel_name == "annotation_panel":
                 self.annotation_panel.setVisible(isVisible)
-                self.annotation_text.setVisible(isVisible)
                 self.annotation_combo_box.setVisible(isVisible)
                 self.load_segmentation_push_button.setVisible(isVisible)
                 self.undo_push_button.setVisible(isVisible)
@@ -593,7 +586,7 @@ class ManualSegmentationWidget(QWidget):
         #     elif isFeta:
         #         self.annotation_combo_box.setCurrentText("Feta Challenge")
         #     else:
-        #         self.annotation_combo_box.setCurrentText("")
+        #         self.annotation_combo_box.setCurrentText("Choose a structure")
 
     def toggle_loading_panel_widget(self, isVisible, file_type=None):
         """
@@ -674,7 +667,7 @@ class ManualSegmentationWidget(QWidget):
                 segmentation_arr = np.zeros(image_arr.shape, dtype=np.int8)
                 self.set_segmentation_layer(segmentation_arr)
 
-            self.annotation_combo_box.setCurrentText("")
+            self.annotation_combo_box.setCurrentText("Choose a structure")
 
             self.status_label.setText("Ready")
 

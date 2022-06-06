@@ -8,50 +8,63 @@ LIST_STRUCTURES = [
 DICT_SUB_STRUCTURES = {
     "BONES":[
         'Clavicle',
-        'Acromion',
+        'Elbow',
+        'Glenoid',
         'Humerus',
         'Humeral Head',
         'Scapula',
-        'Glenoid',
-        'Coracoid process',
-        'Elbow'],
-    "MUSCLES": [
-        'Supraspinatus ',
-        'Infra spinatus',
-        'Teres minor',
-        'Deltoid anterior',
-        'Deltoid lateral part',
-        'Deltoid posterior part',
-        'Sub scapularis ',
-        'Triceps brachii',
-        'Coraco-Brachialis',
-        'Pec major',
-        'Pec minor',
+        'Sternum',
+        'Vertebrae'],
+
+    "MUSCLES":[     
+        'Biceps',
+        'Coracobrachialis',
+        'Deltoid',
+        'Infraspinatus',
         'Latissimus dorsi',
+        'Pectoralis',
         'Rhomboid',
+        'Subscapularis ',
+        'Teres major',
         'Trapezius',
-        'Long Biceps']
+        'Triceps brachii',
+        'Upper Cuff Muscle']
 }
 
 DICT_SUB_SUB_STRUCTURES = {
     "Scapula":[
-        'Body',
-        'Epine',
         'Acromion',
-        'Coracoid'],
-    "Humeral Head" : [
-        'Trochiter',
-        'Trochin',
-        'Tete',
-        'Diaphise'],
-    "Muscle de la coiffe": [
-        'Supra',
-        'Infra',
-        'Supscapu'],
-    "Elbow": [
-        'ole crade',
-        'Radius',
-        'Palet humérale'],
-}
+        'Body',
+        'Coracoid process',
+        'Spine'],
 
-# COLUMN_WIDTH = 30
+    "Humeral Head":[
+        'Diaphyse',
+        'Head',
+        'Trochiter',
+        'Trochin'],
+
+    "Upper Cuff Muscle":[
+        'Infra-spinatus',
+        'Sub-scapularis',
+        'Supra-spinatus',
+        'Terres minor'],
+
+    "Elbow":[
+        'Humeral pallet',
+        'Olecranon',
+        'Radius'],
+
+    "Deltoid":[
+        'Anterior',
+        'Lateral',
+        'Posterior'],
+
+    "Biceps":[
+        'Long',
+        'Short'],
+
+    "Pectoralis":[
+        'Major',
+        'Minor'],    
+}
