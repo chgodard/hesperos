@@ -67,7 +67,7 @@ class OneShotWidget(QWidget):
 
         """
 
-        reset_dock_widget(napari_viewer)
+        # reset_dock_widget(napari_viewer)
 
         super().__init__()
 

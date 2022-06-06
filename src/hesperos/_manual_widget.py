@@ -64,7 +64,7 @@ class ManualSegmentationWidget(QWidget):
             active (unique) instance of the napari viewer
 
         """
-        reset_dock_widget(napari_viewer)
+        # reset_dock_widget(napari_viewer)
 
         super().__init__()
 
