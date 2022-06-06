@@ -1,7 +1,8 @@
-# ============ 2D Kernel definition used to compute features of the raw image ============
-
+# ============ Import python packages ============
 import numpy as np
 
+
+# ============ 2D Kernel definition used to compute features of the raw image ============
 gaussian_kernel_3x3 = np.array((
         [ [1,2,1], [2,4,2], [1,2,1]]), dtype="int")
 gaussian_kernel_5x5 = np.array((

@@ -41,6 +41,7 @@ def rfc_training(features_df, output_classifier_path):
     # === Save the classifier
     pickle.dump(rfc.model, open(output_classifier_path, 'wb'))
 
+
 # ============ Infer a probability for all the pixels of a 3D image ============
 def rfc_inference(features_df, output_classifier_path, proba_list, size_y, size_x):
     """
@@ -84,6 +85,7 @@ def rfc_inference(features_df, output_classifier_path, proba_list, size_y, size_
 
     proba_list.append(output_proba.reshape(size_y, size_x).astype(np.uint8))
 
+
 # ============ Run Process ============
 def run_one_shot_learning(source_img, label, output_classifier_path):
     """
@@ -106,41 +108,28 @@ def run_one_shot_learning(source_img, label, output_classifier_path):
     """
 
     # === Load data ===
-    # tiff
     size_z , size_y, size_x = source_img.shape
-    # DICOM
-    # size_x, size_y, size_z  = source_img.shape
 
     # === Extract tagged pixels ===
     # suppose only 2 labels
-    _, label_roi, label_background = np.unique(label)
+    _, label_roi, label_other = np.unique(label)
 
     mask_roi = (label == label_roi)
-    mask_background = (label == label_background)
+    mask_other = (label == label_other)
 
     # incr = round(source_img.shape[size_z]/50)
 
     # === Compute all features ===
-    # Pool
     if not napari.features_3d.is_feature_computed:
         napari.features_3d._set_source_img(source_img)
         napari.features_3d._compute_features_3d()
 
     # === Create features data needed for training a RFC ===
-
-    # tiff
     train_features = TrainingFeatures()
     for z in range(size_z):
         # Extract only features of tagged pixels
         train_features.features_2d_array = napari.features_3d.features_3d_list[z]
-        train_features._extract_tagged_features(mask_roi[z, :, :], mask_background[z, :, :])
-
-    # DICOM
-    # train_features = TrainingFeatures()
-    # for z in range(size_z):
-    #     # Extract only features of tagged pixels
-    #     train_features.features_2d_array = napari.features_3d.features_3d_list[z]
-    #     train_features._extract_tagged_features(mask_roi[:, :, z], mask_background[:, :, z])
+        train_features._extract_tagged_features(mask_roi[z, :, :], mask_other[z, :, :])
 
     train_features._create_features_df()
 
@@ -168,10 +157,6 @@ def run_one_shot_learning(source_img, label, output_classifier_path):
         rfc_inference(infer_features.features_df, output_classifier_path, proba_list, size_y, size_x)
 
     # === Display the output results ===
-
-    # tiff
     output_proba = np.stack(proba_list, axis=0)
-    #DICOM
-    # output_proba = np.stack(proba_list, axis=2)
 
     return output_proba

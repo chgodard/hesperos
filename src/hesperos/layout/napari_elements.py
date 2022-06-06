@@ -1,5 +1,5 @@
 # ============ Import python packages ============
-from napari.viewer import Viewer
+import napari
 from qtpy import QtCore
 
 
@@ -34,7 +34,7 @@ image_layer_widget_list = [
 # ============ Function to custom napari viewer buttons ============
 def disable_napari_buttons(viewer):
     """
-    Disable some Napari functions to hide them from user interation
+    Disable some napari functions to hide them from user interation
 
     Parameters
     ----------
@@ -52,9 +52,18 @@ def disable_napari_buttons(viewer):
     viewer.window._qt_viewer.layerButtons.newLabelsButton.setVisible(False)
     viewer.window._qt_viewer.layerButtons.deleteButton.setVisible(False)
 
+def disable_dock_widget_buttons(viewer):
+    """_summary_
+
+    Args:
+        viewer (_type_): _description_
+    """
+    # for dw in list(viewer.window._dock_widgets.values()):
+    #     dw.title.close_button.hide()
+
 def increase_napari_buttons_size(viewer):
     """
-    Increase Napari button size
+    Increase napari button size
 
     Parameters
     ----------
@@ -65,8 +74,17 @@ def increase_napari_buttons_size(viewer):
     viewer.window._qt_viewer.viewerButtons.rollDimsButton.setGeometry(100, 100, 2000, 2000)
     viewer.window._qt_viewer.viewerButtons.transposeDimsButton.setGeometry(100, 100, 2000, 2000)
 
+def reset_dock_widget(viewer):
+    if hasattr(napari, 'DOCK_WIDGETS'):
+        while len(napari.DOCK_WIDGETS) !=0:
+            for layers in ("image", "annotations", "segmentation", "probabilities"):
+                if layers in viewer.layers:
+                    viewer.layers.remove(layers)
 
-def disable_layer_widgets(viewer, layer_name):
+            viewer.window.remove_dock_widget(napari.DOCK_WIDGETS[-1])
+            napari.DOCK_WIDGETS.pop(-1)
+
+def disable_layer_widgets(viewer, layer_name, layer_type):
     """
     Disable some options in the selected layer to hide them from user interation
 
@@ -74,23 +92,22 @@ def disable_layer_widgets(viewer, layer_name):
     ----------
     viewer : napari.Viewer
         active (unique) instance of the napari viewer
-
     layer_name: int
         name of the layer to clean
 
     """
 
-    if layer_name == 'annotations':
-        layer = viewer.layers['annotations']
-        list_widget_to_remove = label_layer_widget_list
-        indx_while = 9
-        indx_item = 7
-
-    elif layer_name == 'image':
-        layer = viewer.layers['image']
+    if layer_type == 'image':
+        layer = viewer.layers[layer_name]
         list_widget_to_remove = image_layer_widget_list
         indx_while = 4
         indx_item = 4
+
+    elif layer_type == 'label':
+        layer = viewer.layers[layer_name]
+        list_widget_to_remove = label_layer_widget_list
+        indx_while = 9
+        indx_item = 7       
 
     else:
         return

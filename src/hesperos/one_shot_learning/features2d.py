@@ -8,7 +8,14 @@ from scipy.ndimage.morphology import distance_transform_cdt
 
 
 # ============ Import python files ============
-from hesperos.one_shot_learning.kernel import gaussian_kernel_3x3, gaussian_kernel_5x5, prewitt_kernel_3x3, prewitt_kernel_5x5, laplacian_kernel_3x3, laplacian_kernel_5x5
+from hesperos.one_shot_learning.kernel import (
+    gaussian_kernel_3x3, 
+    gaussian_kernel_5x5, 
+    prewitt_kernel_3x3, 
+    prewitt_kernel_5x5, 
+    laplacian_kernel_3x3, 
+    laplacian_kernel_5x5
+)
 
 
 # ============ Utilities function ============
@@ -29,18 +36,28 @@ def norm(source_img):
     return ((source_img - source_img.min())/(source_img.max() - source_img.min()))
 
 
-# ============ Define fetaures Class ============
+# ============ Define 2D features class ============
 class Features2D:
     """
-        Description
+        A class used to compute 2D features on 2D image and store in a list
 
     """
     def __init__(self):
         """
-        Description
+        Initilialisation and definition of 2D features to compute
 
         """
-        self.feature_to_compute = {'entropy', 'gaussian_blur', 'gradient', 'maximum', 'mean', 'sdf', 'minimum', 'laplacian', 'stddev'}
+        self.feature_to_compute = {
+            'entropy', 
+            'gaussian_blur', 
+            'gradient', 
+            'maximum', 
+            'mean', 
+            'sdf', 
+            'minimum', 
+            'laplacian', 
+            'stddev'
+            }
         self.feature_list = []
         self.features_2d_array = None
 
@@ -49,12 +66,13 @@ class Features2D:
 
     def _set_source_img(self, source_img):
         """
-        Description
+        Define the original 2D image on which the 2D features will be calculated 
+        and norm the image to 0-255
 
         Parameters
         ----------
-        param_1 : type
-            description
+        source_img : 2darray
+            2D original image
 
         """
         self.source_img = source_img
@@ -64,17 +82,12 @@ class Features2D:
 
     def _compute_features_2d(self):
         """
-        Description
+        Compute 2D features
 
-        Parameters
+        Returns
         ----------
-        param_1 : type
-            description
-
-        Returns:
-        --------
-        output : type
-            description
+        features_2d_array : ndarray
+            array of 2D features (each slice correspond to one type of features)
 
         """
         for f in self.feature_to_compute:
@@ -116,17 +129,15 @@ class Features2D:
                 self._calculate_sdf()
 
         return np.stack(self.feature_list)
-        # self.features_2d_array = np.stack(self.feature_list)
-        # self.feature_list = []
 
     def _calculate_entropy(self, radius):
         """
-        Description
+        Calculate entropy and add it to the feature_list
 
         Parameters
         ----------
-        param_1 : type
-            description
+        radius : int
+            radius of the disk of the neighborhood used
 
         """
         img_div = self.norm_img / 32
@@ -136,12 +147,12 @@ class Features2D:
 
     def _calculate_stddev(self, radius):
         """
-        Description
+        Calculate standard deviation and add it to the feature_list
 
         Parameters
         ----------
-        param_1 : type
-            description
+        radius : int
+            radius of the kernel used during convolution
 
         """
         mean = ndim.convolve(self.norm_img, disk(radius)) / disk(radius).sum()
@@ -153,12 +164,12 @@ class Features2D:
 
     def _calculate_gaussian_blur(self, kernel):
         """
-        Description
+        Calculate gaussian blur and add it to the feature_list
 
         Parameters
         ----------
-        param_1 : type
-            description
+        kernel : ndarray
+            kernel used during convolution
 
         """
         feature = ndim.convolve(self.norm_img, kernel) / kernel.sum()
@@ -166,12 +177,14 @@ class Features2D:
 
     def _calculate_laplacian(self, kernel, scaling):
         """
-        Description
+        Calculate laplacian and add it to the feature_list
 
         Parameters
         ----------
-        param_1 : type
-            description
+        kernel : ndarray
+            kernel used during convolution
+        scaling : int
+            scale factor
 
         """
         feature = ndim.convolve(self.norm_img, kernel) / scaling + 127
@@ -179,12 +192,14 @@ class Features2D:
 
     def _calculate_gradient(self, kernel, kernel_size):
         """
-        Description
+        Calculate gradient and add it to the feature_list
 
         Parameters
         ----------
-        param_1 : type
-            description
+        kernel : ndarray
+            kernel used during convolution
+        kernel_size : int
+            size of the kernel
 
         """
         gx = ndim.convolve(self.norm_img, kernel) / (kernel_size * kernel_size)
@@ -194,12 +209,12 @@ class Features2D:
 
     def _calculate_maximum(self, radius):
         """
-        Description
+        Calculate maximum and add it to the feature_list
 
         Parameters
         ----------
-        param_1 : type
-            description
+        radius : int
+            radius of the disk of the neighborhood used
 
         """
         feature = ndim.maximum_filter(self.norm_img, footprint=disk(radius))
@@ -207,12 +222,12 @@ class Features2D:
 
     def _calculate_minimum(self, radius):
         """
-        Description
+        Calculate minimum and add it to the feature_list
 
         Parameters
         ----------
-        param_1 : type
-            description
+        radius : int
+            radius of the disk of the neighborhood used
 
         """
         feature = ndim.minimum_filter(self.norm_img, footprint=disk(radius))
@@ -220,12 +235,12 @@ class Features2D:
 
     def _calculate_mean(self, radius):
         """
-        Description
+        Calculate mean and add it to the feature_list
 
         Parameters
         ----------
-        param_1 : type
-            description
+        radius : int
+            radius of the disk of the neighborhood used
 
         """
         feature = ndim.convolve(self.norm_img, disk(radius)) / disk(radius).sum()
@@ -233,10 +248,9 @@ class Features2D:
 
     def _calculate_sdf(self):
         """
-        Description
+        Calculate signed distance fields and add it to the feature_list
 
         """
-
         # define intervals of pixel intensity to keep for successive sdf calculation
         bornes = [[0,120], [60,180], [120,255], [20,100], [50,130], [80,160], [110,190], [140,220], [170,255], [40,80], [100,140], [160,200]]
 
@@ -253,15 +267,15 @@ class Features2D:
             self.feature_list.append(distance_transform_cdt(input_img))
 
 
-# ============ Define fetaures Class ============
+# ============ Define features class for training ============
 class TrainingFeatures(Features2D):
     """
-        Description
+        A class used to store in a dataframe the 2D features used for training
 
     """
     def __init__(self):
         """
-        Description
+        Initilialisation
 
         """
         Features2D.__init__(self)
@@ -271,13 +285,14 @@ class TrainingFeatures(Features2D):
 
     def _extract_tagged_features(self, mask_roi, mask_other):
         """
-        Description
+        From the 2D feature array, extract only tagged features at the position given by a binary mask for each class (region of interest and other)
 
         Parameters
         ----------
-        param_1 : type
-            description
-
+        mask_roi : ndarray
+            2D binary mask of the region of interest (1 where the pixel is tagged as region of interest, 0 if not)
+        mask_other : ndarray
+            2D binary mask of the other regions (to avoid to segment) /!\ different from the global background of the image
 
         """
         nb_features = self.features_2d_array.shape[0]
@@ -291,7 +306,7 @@ class TrainingFeatures(Features2D):
 
     def _create_features_df(self):
         """
-        Description
+        Create the final dataframe with features data to use
 
         """
         roi_features_df = pd.DataFrame([1] * len(self.feature_list_roi[8]), columns=['LABEL'])
@@ -305,14 +320,15 @@ class TrainingFeatures(Features2D):
         self.features_df = pd.concat((roi_features_df, other_features_df), axis=0)
 
 
+# ============ Define features class for training ============
 class InferingFeatures(Features2D):
     """
-        Description
+        A class used to store in a dataframe the 2D features used for the inference
 
     """
     def __init__(self):
         """
-        Description
+        Initilialisation
 
         """
         Features2D.__init__(self)
@@ -320,7 +336,7 @@ class InferingFeatures(Features2D):
 
     def _create_features_df(self):
         """
-        Description
+        Create the final dataframe with features data
 
         """
         self.features_df = pd.concat((self.features_df, pd.DataFrame(np.transpose(self.features_2d_array.reshape(self.features_2d_array.shape[0], -1)))), axis=1)

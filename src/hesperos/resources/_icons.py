@@ -3,7 +3,7 @@ from pathlib import Path, PurePath
 ICON_PATH = (Path(__file__).parent / 'icons').resolve()
 ICONS = {x.stem: str(x) for x in ICON_PATH.iterdir() if x.suffix == '.svg'}
 
-## FROM NAPARI CODE
+## FROM napari CODE
 
 def get_icon_path(name):
     """Return path to an SVG in the theme icons."""

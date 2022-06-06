@@ -1,14 +1,20 @@
 # ============ Import python files ============
 # === GUI elements ===
 from hesperos.layout.gui_elements import (
-    add_push_button, 
+    add_check_box,
+    add_combo_box,
     add_icon_push_button,
-    add_label, 
-    add_slider, 
-    display_warning_box, 
-    display_ok_cancel_question_box
+    add_icon_text_push_button,
+    add_image_widget,
+    add_label,
+    add_push_button,
+    add_slider,
+    display_warning_box,
+    display_save_message_box,
+    display_ok_cancel_question_box,
+    display_yes_no_question_box
 )
-from hesperos.layout.napari_elements import disable_napari_buttons, disable_layer_widgets
+from hesperos.layout.napari_elements import disable_napari_buttons, disable_layer_widgets, reset_dock_widget, disable_dock_widget_buttons
 from hesperos.resources._icons import get_icon_path, get_relative_icon_path
 
 import hesperos.annotation.oneshot as oneshot_data
@@ -17,6 +23,7 @@ from hesperos.annotation.structuresubpanel import StructureSubPanel
 # === One Shot learning computation
 from hesperos.one_shot_learning.features3d import Features3D
 from hesperos.one_shot_learning.utilities import run_one_shot_learning
+
 
 # ============ Import python packages ============
 import os
@@ -39,19 +46,19 @@ from qtpy.QtWidgets import (
 
 # ============ Define variables ============
 COLUMN_WIDTH = 100
-SEGM_METHODS_PANEL_ALIGN = (
-    "center"  # Alignment of text in pushbuttons in methods chooser panel
-)
+if not hasattr(napari, 'DOCK_WIDGETS'):
+    napari.DOCK_WIDGETS = []
 
 
 # ============ Define QWidget Class ============
 class OneShotWidget(QWidget):
     """
-    QWidget class for One Shot Learning Segmentation in NAPARI
+    QWidget class for One Shot Learning Segmentation in napari
 
     """
     def __init__(self, napari_viewer):
-        """ Initilialisation of the widget in the current napari viewer
+        """ 
+        Initilialisation of the widget in the current napari viewer
 
         Parameters
         ----------
@@ -59,10 +66,12 @@ class OneShotWidget(QWidget):
             active (unique) instance of the napari viewer
 
         """
+
+        reset_dock_widget(napari_viewer)
+
         super().__init__()
 
         napari.utils.notifications.WarningNotification.blocked = True
-
         self.viewer = napari_viewer
 
         disable_napari_buttons(self.viewer)
@@ -71,10 +80,15 @@ class OneShotWidget(QWidget):
 
         self.generate_main_layout()
 
+        napari.DOCK_WIDGETS.append(self)
+        disable_dock_widget_buttons(self.viewer)
+
+
 # ============ Define Layout ============
     def generate_main_layout(self):
         """
         Generate the main layout of widget
+
         """
 
         # === Set layout parameters ===
@@ -93,7 +107,16 @@ class OneShotWidget(QWidget):
 
         self.add_reset_save_panel(5)
 
-        self.enable_panels(["annotation_panel", "segmentation_panel", "reset_save_panel"], False)
+        # Display status (cannot display progressing bar because napari is freezing)
+        self.status_label = add_label(
+            text='Ready',
+            layout=self.layout,
+            row=6,
+            column=0,
+            visibility=True
+            )
+
+        self.toggle_panels(["annotation_panel", "segmentation_panel", "reset_save_panel"], False)
 
         self.setLayout(self.layout)
 
@@ -115,7 +138,6 @@ class OneShotWidget(QWidget):
             dict_substructures=oneshot_data.DICT_SUB_STRUCTURES,
             dict_sub_substructures=[])
 
-
     def add_loading_panel(self, row, column=0):
         """
         Create loading panel
@@ -130,7 +152,7 @@ class OneShotWidget(QWidget):
         """
 
         # === Set panel parameters ===
-        self.loading_panel = QGroupBox("1. LOAD IMAGE")
+        self.loading_panel = QGroupBox("1. LOAD 3D IMAGE")
         self.loading_panel.setStyleSheet("margin-top : 5px;")
 
         # === Set panel layout parameters ===
@@ -141,23 +163,21 @@ class OneShotWidget(QWidget):
 
         # === Add Qwidgets to the panel layout ===
         self.load_dicom_image_push_button = add_push_button(
-            name="Open DICOM folder",
+            name="Open DICOM serie",
             layout=self.loading_layout,
-            callback_function=self.load_dicom_image,
+            callback_function=lambda: self.update_image_with_path("folder"),
             row=0,
             column=0,
             minimum_width=COLUMN_WIDTH,
-            alignment=SEGM_METHODS_PANEL_ALIGN,
         )
 
         self.load_file_image_push_button = add_push_button(
             name="Open image file",
             layout=self.loading_layout,
-            callback_function=self.load_image,
+            callback_function=lambda: self.update_image_with_path("file"),
             row=0,
             column=1,
             minimum_width=COLUMN_WIDTH,
-            alignment=SEGM_METHODS_PANEL_ALIGN,
         )
 
         self.file_name_text = add_label(
@@ -165,16 +185,48 @@ class OneShotWidget(QWidget):
             layout=self.loading_layout,
             row=1,
             column=0,
-            column_span=1,
+            minimum_width=COLUMN_WIDTH,
             )
 
-        self.file_name = add_label(
+        self.file_name_label = add_label(
             text='',
             layout=self.loading_layout,
             row=1,
+            column=1,
+            minimum_width=COLUMN_WIDTH,
+            )
+
+        self.zoom_slider = add_slider(
+            layout=self.loading_layout,
+            bounds=[50, 500],
+            callback_function=self.zoom,
+            row=2,
             column=0,
             column_span=2,
-            )
+        )
+        self.zoom_slider.setStyleSheet("""
+            QSlider::handle:horizontal {{
+                image: url({});
+                margin: -30px 0px;
+                width: 25px;
+                background: transparent;
+                }}""".format(get_relative_icon_path('zoom')))
+
+        self.default_contrast_text = add_label(
+            text="Default contrast:",
+            layout=self.loading_layout,
+            row=3,
+            column=0,
+        )
+
+        self.default_contrast_combo_box = add_combo_box(
+            list_items=["", "CT Bone", "CT Soft"],
+            layout=self.loading_layout,
+            callback_function=self.set_default_contrast,
+            row=3,
+            column=1,
+            column_span=2
+        )
 
         self.loading_panel.setLayout(self.loading_layout)
 
@@ -185,8 +237,8 @@ class OneShotWidget(QWidget):
         self.loading_panel.setVisible(True)
         self.load_dicom_image_push_button.setVisible(True)
         self.load_file_image_push_button.setVisible(True)
-        self.file_name_text.setVisible(True)
-        self.file_name.setVisible(True)
+        
+        self.toggle_loading_panel_widget(False)
 
     def add_annotation_panel(self, row, column=0):
         """
@@ -212,57 +264,38 @@ class OneShotWidget(QWidget):
         self.annotation_layout.setAlignment(QtCore.Qt.AlignTop)
 
         # === Add Qwidgets to the panel layout ===
-        self.annotation_text = add_label(
-            text="Choose a type of structure:",
-            layout=self.annotation_layout,
-            row=0,
-            column=0,
-        )
-
-        self.load_label_push_button = add_push_button(
+        self.load_segmentation_push_button = add_push_button(
             name="Open segmentation file",
             layout=self.annotation_layout,
-            callback_function=self.load_label,
-            row=1,
+            callback_function=self.update_segmentation_with_path,
+            row=0,
             column=0,
             column_span=2,
             minimum_width=COLUMN_WIDTH,
-            alignment=SEGM_METHODS_PANEL_ALIGN,
+        )
+
+        self.annotation_text = add_label(
+            text="Type of structure:",
+            layout=self.annotation_layout,
+            row=1,
+            column=0,
         )
 
         # Annotations tools are created in another layout 
-        self.tool_annotation_layout = QHBoxLayout()
+        # self.tool_annotation_layout = QHBoxLayout()
 
-        self.undo_push_button = add_icon_push_button(
-            name="",
+        self.undo_push_button = add_icon_text_push_button(
             icon=QIcon(get_icon_path('undo')),
-            layout=self.tool_annotation_layout,
-            callback_function=self.undo_label,
-            row=0,
+            text="Undo last painting action",
+            layout=self.annotation_layout,
+            callback_function=self.undo_segmentation,
+            row=2,
             column=0,
+            column_span=2,
             minimum_width=COLUMN_WIDTH,
-            alignment=SEGM_METHODS_PANEL_ALIGN,
-            isBoxLayout=True,
         )
 
-        self.zoom_slider = add_slider(
-            layout=self.tool_annotation_layout,
-            bounds=[50, 500],
-            callback_function=self.zoom,
-            row=0,
-            column=2,
-            isBoxLayout=True
-        )
-
-        self.zoom_slider.setStyleSheet("""
-            QSlider::handle:horizontal {{
-                image: url({});
-                margin: -30px 0px;
-                width: 25px;
-                background: transparent;
-                }}""".format(get_relative_icon_path('zoom')))
-
-        self.annotation_layout.addLayout(self.tool_annotation_layout, 2, 0, 1, 2)
+        # self.annotation_layout.addLayout(self.tool_annotation_layout, 2, 0, 1, 2)
         self.annotation_panel.setLayout(self.annotation_layout)
 
         # === Add panel to the main layout ===
@@ -300,7 +333,6 @@ class OneShotWidget(QWidget):
             column=0,
             column_span=2,
             minimum_width=COLUMN_WIDTH,
-            alignment=SEGM_METHODS_PANEL_ALIGN,
         )
 
         self.threshold_label = add_label(
@@ -314,7 +346,7 @@ class OneShotWidget(QWidget):
         self.threshold_slider = add_slider(
             layout=self.segmentation_layout,
             bounds=[0, 255],
-            callback_function=self.change_threshold,
+            callback_function=self.set_probabilities_threshold,
             row=1,
             column=1,
             minimum_width=COLUMN_WIDTH,
@@ -354,7 +386,6 @@ class OneShotWidget(QWidget):
             row=0,
             column=0,
             minimum_width=COLUMN_WIDTH,
-            alignment=SEGM_METHODS_PANEL_ALIGN,
         )
 
         self.save_proba_push_button = add_push_button(
@@ -364,18 +395,16 @@ class OneShotWidget(QWidget):
             row=0,
             column=1,
             minimum_width=COLUMN_WIDTH,
-            alignment=SEGM_METHODS_PANEL_ALIGN,
         )
 
         self.reset_push_button = add_push_button(
             name="Delete all",
             layout=self.reset_save_layout,
-            callback_function=self.reset_label,
+            callback_function=self.reset_segmentation,
             row=1,
             column=0,
             column_span=2,
             minimum_width=COLUMN_WIDTH,
-            alignment=SEGM_METHODS_PANEL_ALIGN,
         )
 
         self.reset_save_panel.setLayout(self.reset_save_layout)
@@ -383,7 +412,7 @@ class OneShotWidget(QWidget):
         # === Add panel to the main layout ===
         self.layout.addWidget(self.reset_save_panel, row, column)
 
-    def enable_panels(self, list_panel_names, isVisible):
+    def toggle_panels(self, list_panel_names, isVisible):
         """
         Make visible panels
 
@@ -393,14 +422,13 @@ class OneShotWidget(QWidget):
             list of the name of the panels to enable
         isVisible : bool
             visible status of the panels
-        """
 
+        """
         for panel_name in list_panel_names:
             if panel_name == "annotation_panel":
                 self.annotation_panel.setVisible(isVisible)
                 self.annotation_text.setVisible(isVisible)
-                self.load_label_push_button.setVisible(isVisible)
-                self.zoom_slider.setVisible(isVisible)
+                self.load_segmentation_push_button.setVisible(isVisible)
                 self.undo_push_button.setVisible(isVisible)
             
             elif panel_name == "segmentation_panel":
@@ -415,307 +443,177 @@ class OneShotWidget(QWidget):
                 self.reset_push_button.setVisible(isVisible)
                 self.save_proba_push_button.setVisible(isVisible)
 
-# ============ Define callbacks ============
-    def load_dicom_image(self):
+    def toggle_annotation_sub_panel(self, isVisible):
         """
-        Load a complete DICOM serie and convert it in a .nii file to be directly open in Napari.
-        The created .nii file will be deleted when saving the segmentation (see save_segmentation function).
+            Toggle sub panel of the structure to annotate
 
         """
-        dicom_path = QFileDialog.getExistingDirectory(self, 'Choose a DICOM serie directory')
-        self.img_dir = dicom_path
+        self.oneshot.toggle_sub_panel(isVisible)
 
-        if dicom_path == "":
-            return
-        # if not glob.glob('*.dcm'):
-        #     display_warning_box(self, "Error", "No DICOM files in the directory")
-        #     return
+        self.reset_annotation_radio_button_checked_id()
+        self.reset_annotation_layer_selected_label()
 
-        reader = sitk.ImageSeriesReader()
-        img_names = reader.GetGDCMSeriesFileNames(dicom_path)
-        reader.SetFileNames(img_names)
-        self.image_sitk = reader.Execute()
-
-        image = sitk.GetArrayFromImage(self.image_sitk) # z, y, x
-        #ITK's Image class does not have a bracket operator. It has a GetPixel which takes an ITK Index object as an argument, which is an array ordered as (x,y,z). This is the convention that SimpleITK's Image class uses for the GetPixel method as well.
-        # While in numpy, an array is indexed in the opposite order (z,y,x).
-
-        canRemove = self.can_remove_all()
-
-        if canRemove:
-            self.remove_image()
-            self.viewer.add_image(rearranged_image, name='image')
-
-            disable_layer_widgets(self.viewer, 'image')
-
-            self.enable_panels(["annotation_panel", "segmentation_panel", "reset_save_panel"], True)
-            self.reset_zoom_slider()
-
-            self.remove_label()
-            self.add_label_layers(label_data=[])
-            self.reset_annotation_radio_buttons()
-
-            self.remove_segmentation()
-            self.remove_proba()
-
-            self.oneshot.toggle_sub_panel(True)
-            napari.features_3d = Features3D()
-        else:
-            return
-
-    def load_image(self):
+    def toggle_loading_panel_widget(self, isVisible, file_type=None):
         """
-            Load an image file of type .tiff, .tif, .nii.gz
-        """
-
-        files_types = "TIFF (*.tiff);;TIF (*.tif);;NIFTI compressed (*.nii.gz)"
-        file_path, _ = QFileDialog.getOpenFileName(self, "Choose a image file", "" , files_types )
+        Toggle widget or the loading panel (default contrast option only for DICOM image (use housfield value))
         
-        if file_path == "":
-            return
-
-        extensions = Path(file_path).suffixes
-        self.img_dir = Path(file_path).parents[0]
-
-        if len(extensions) == 1:
-            if (extensions[0] == ".tif") or (extensions[0] == ".tiff"):           
-                image = tif.imread(file_path)
-                self.image_sitk = sitk.Image(image.shape[2], image.shape[1], image.shape[0], sitk.sitkInt16)
-       
-        elif len(extensions) == 2:
-            if (extensions[0] == ".nii") and (extensions[1] == ".gz"):               
-                self.image_sitk = sitk.ReadImage(file_path)
-                image = sitk.GetArrayFromImage(self.image_sitk)
-        else:
-            return
-
-        canRemove = self.can_remove_all()
-
-        if canRemove:
-            self.remove_image()
-            self.viewer.add_image(image, name='image')
-
-            disable_layer_widgets(self.viewer, 'image')
-
-            self.enable_panels(["annotation_panel", "segmentation_panel", "reset_save_panel"], True)
-            self.reset_zoom_slider()
-
-            self.remove_label()
-            self.add_label_layers(label_data=[])
-            self.reset_annotation_radio_buttons()
-
-            self.remove_segmentation()
-            self.remove_proba()
-
-            self.oneshot.toggle_sub_panel(True)
-            napari.features_3d = Features3D()
-
-        else:
-            return
-
-    def load_label(self):
-        """
-            Load label image file of type .tiff, .tif or .nii.gz
-        """
-
-        files_types = "TIF (*.tif);;TIFF (*.tiff);;NIFTI compressed (*.nii.gz)"
-        file_path, _ = QFileDialog.getOpenFileName(self, "Choose a segmentation file", "" , files_types )
-
-        if file_path == "":
-            return
-
-        canRemoveLabel = self.can_remove_label_data()
-
-        if canRemoveLabel:
-            self.remove_label()
-
-            extensions = Path(file_path).suffixes
-
-            if len(extensions) == 1:
-                if (extensions[0] == ".tif") or (extensions[0] == ".tiff"): 
-                    label = tif.imread(file_path)
-                    self.add_label_layers(label_data=label)
-
-            elif len(extensions) == 2:
-                if (extensions[0] == ".nii") and (extensions[1] == ".gz"):
-                    label_sitk = sitk.ReadImage(file_path)
-                    label = sitk.GetArrayFromImage(label_sitk)
-                    label = label.astype(np.uint8)
-                    # self.originalType = label.dtype
-
-                    if any(n < 0 for n in np.unique(label)):
-                        display_warning_box(self, "Error", "Incorrect NIFTI format : negative value")
-                        return
-                    self.add_label_layers(label_data=label)
-            else:
-                return
-
-            self.reset_annotation_radio_buttons()
-        else:
-            return
-
-    def add_label_layers(self, label_data=[]):
-        """
-        Add a new layer to the NAPARI viewer for annotation.
-        New layer can be empty for initialisation.
-
         Parameters
         ----------
-        label_data : 3Darray
-            labelled data with the same size than the raw image (display in the 'image' layer)
-
+        isVisible : bool
+            visible status of the widgets
+        file_type : str
+            type of image loaded : "file" for .tiff, .tif and .nii.gz and "folder" for DICOM folder
+            
         """
-        if hasattr(self.viewer, 'layers'):
-            if 'image' in self.viewer.layers:
-                source_img = self.viewer.layers['image'].data
+        self.zoom_slider.setVisible(isVisible)
+        self.file_name_text.setVisible(isVisible)
+        self.file_name_label.setVisible(isVisible)
 
-                if label_data == []:
-                    label_img = np.zeros(source_img.shape, dtype=np.int8)
-                else:
-                    label_img = label_data
-                    if label_img.shape != source_img.shape:
-                        display_warning_box(self, "Error", "Size of the segmentation file doesn't correspond to the size of the source image")
-                        return
+        if file_type == "file":
+            self.default_contrast_text.setVisible(False)
+            self.default_contrast_combo_box.setVisible(False)
+        elif file_type == 'folder':
+            self.default_contrast_text.setVisible(True)
+            self.default_contrast_combo_box.setVisible(True)
+        else:
+            self.default_contrast_text.setVisible(isVisible)
+            self.default_contrast_combo_box.setVisible(isVisible)
 
+# ============ Define callbacks ============
+    def update_image_with_path(self, file_type):
+        """
+        Update image data by asking file path to the user.
+        Load image data, add it to napari, toggle panels, check if a corresponding segmentation data file exist (if so, load it and add it to napari).
+        
+        Parameters
+        ----------
+        file_type : str
+            type of image loaded : "file" for .tiff, .tif and .nii.gz and "folder" for DICOM folder
+            
+        """
+        canRemove = self.can_remove_all()
 
-                labels_layer = self.viewer.add_labels(label_img, name='annotations')
-                self.viewer.layers['annotations'].selected_label = self.oneshot.nbr_buttons
-                self.viewer.layers['annotations'].mode = "PAINT"
+        if canRemove:
+            self.status_label.setText("Loading...")
 
-                disable_layer_widgets(self.viewer, 'annotations')
+            if file_type == "file":
+                image_arr = self.load_image_file()
+            elif file_type == 'folder':
+                image_arr = self.load_dicom_folder()
 
-                # qctrl = self.viewer.window._qt_viewer.controls.widgets[self.viewer.layers['annotations']]
-                # qctrl.opacitySlider.setMaximum(0.8)
-            else:
-                display_warning_box(self, "Error", "Load first a DICOM serie")
+            if image_arr is None:
+                self.status_label.setText("Ready")
+                return
+
+            self.set_image_layer(image_arr)
+
+            self.reset_zoom_slider()
+            self.reset_threshold_slider()
+            self.default_contrast_combo_box.setCurrentText("")
+
+            self.toggle_loading_panel_widget(True, file_type)
+            self.toggle_panels(["annotation_panel", "segmentation_panel", "reset_save_panel"], True)
+
+            segmentation_arr = np.zeros(image_arr.shape, dtype=np.int8)
+            self.set_segmentation_layer(segmentation_arr)
+
+            self.remove_probabilities_layer()
+            self.remove_segmented_probabilities_layer()
+
+            self.toggle_annotation_sub_panel(True)
+
+            napari.features_3d = Features3D()
+
+            self.status_label.setText("Ready")
 
         else:
-            display_warning_box(self, "Error", "Load first a DICOM serie")
+            return
 
-    def run_segmentation(self):
+    def update_segmentation_with_path(self, segmentation_path=None):
         """
-            Run One shot learning : training and inference steps
+        Update segmentation data from a file path : load data and add it to napari.
+        
+        Parameters
+        ----------
+        segmentation_path : str
+            path of the segmentation file
+            
         """
 
-        # === Load data ===
-        if hasattr(self.viewer, 'layers'):
-            if 'image' in self.viewer.layers:
-                source_img = self.viewer.layers['image'].data
-            else:
+        # not from a corresponding segmentation file found for the image
+        if segmentation_path is None:
+            canRemove = self.can_remove_segmentation_data()
+        # from a corresponding segmentation file found for the image (not ask for remove because all ready done)
+        else:
+            canRemove = True
+
+        if canRemove:
+            self.status_label.setText("Loading...")
+
+            segmentation_arr = self.load_segmentation_file(segmentation_path)
+
+            if segmentation_arr is None:
+                self.status_label.setText("Ready")
                 return
-            if 'annotations' in self.viewer.layers:
-                label = self.viewer.layers['annotations'].data
-            else:
-                return
+            
+            if "image" in self.viewer.layers:
+                source_img = self.viewer.layers['image'].data 
+                if segmentation_arr.shape != source_img.shape:
+                    display_warning_box(self, "Error", "Size of the segmentation file doesn't correspond to the size of the source image")
+                    self.status_label.setText("Ready")
+                    return
 
-        files_types = "PICKLE (*.pckl)"
+                self.set_segmentation_layer(segmentation_arr)
+                self.status_label.setText("Ready")
 
-        default_filepath = Path(self.img_dir).joinpath("model_rfc.pckl")
-        output_classifier_path, _ = QFileDialog.getSaveFileName(self, "Save Model File", str(default_filepath), files_types)
-
-        output_proba = run_one_shot_learning(source_img, label, str(output_classifier_path))
-
-        self.remove_segmentation()
-        self.remove_proba()
-
-        self.viewer.add_image(output_proba, name="probabilities")
-        disable_layer_widgets(self.viewer, 'probabilities')
-        self.viewer.layers['probabilities'].visible = False
-
-        output_threshold = np.where(output_proba > self.threshold_slider.value(), 255, 0)
-        self.viewer.add_image(output_threshold, name="segmentation", colormap="red", opacity=0.5)
-        disable_layer_widgets(self.viewer, 'segmentation')
-
-    def change_threshold(self):
-        """
-        TODO
-        """
-        value = self.threshold_slider.value()
-
-        if hasattr(self.viewer, 'layers'):
-            if 'probabilities' in self.viewer.layers:
-                output_proba = self.viewer.layers["probabilities"].data
-                threshold_img = np.where(output_proba > value, 255, 0)
-                if 'segmentation' in self.viewer.layers:
-                    self.viewer.layers["segmentation"].data = threshold_img
-    
     def zoom(self):
         """
-            Zoom the camera view of the main canvas of NAPARI
+            Zoom the camera view of the main canvas of napari
+
         """
-        # TODO check value slider
         self.viewer.camera.zoom = self.zoom_slider.value() / 100
 
-    def undo_label(self):
+    def undo_segmentation(self):
         """
             Undo last operation of annotation
+
         """
         if hasattr(self.viewer, 'layers'):
             if 'annotations' in self.viewer.layers:
-                label_layer = self.viewer.layers['annotations']
-                label_layer.undo()
-
-
+                segmentation_layer = self.viewer.layers['annotations']
+                segmentation_layer.undo()
 
     def save_segmentation(self):
         """
-            Save the segmented data as a unique 3D image, or multiple 3D images (one by label)
+            Save the labelled data as a unique 3D image, or multiple 3D images (one by label)
+
         """
+        files_types = "Image File (*.tif *.tiff *.nii.gz)"
 
-        files_types = "TIFF (*.tiff);;TIF (*.tif);;NIFTI compressed (*.nii.gz)"
-
-        default_filepath = Path(self.img_dir).joinpath("segmentation.tif")
-        file_path, _ = QFileDialog.getSaveFileName(self, "Save Segmentation", str(default_filepath) , files_types)
+        default_filepath = Path(self.image_dir).joinpath(self.file_name_label.text() + "_segmented_probabilities.tif")
+        file_path, _ = QFileDialog.getSaveFileName(self, "Save Segmentation", str(default_filepath), files_types)
 
         # If choose "Cancel"
         if file_path == "":
             return
 
         if hasattr(self.viewer, 'layers'):
-            if "segmentation" in self.viewer.layers:
+            if "segmented probabilities" in self.viewer.layers:
+                self.status_label.setText("Saving...")
 
-                saving_mode = display_save_message_box(
-                    "Saving Mode",
-                    "Do you want to save all segmentation in once file, or independently ?",
-                )
-
-                seg_img = self.viewer.layers['segmentation'].data
+                segmentation_arr = self.viewer.layers['segmented probabilities'].data
 
                 extensions = Path(file_path).suffixes
+                if len(extensions) == 1:
+                    if (extensions[0] == ".tif") or (extensions[0] == ".tiff"): 
+                        tif.imsave(file_path, segmentation_arr)
+                elif len(extensions) == 2:
+                    if (extensions[0] == ".nii") and (extensions[1] == ".gz"):
+                        result_image_sitk = sitk.GetImageFromArray(segmentation_arr.astype(np.uint16))
+                        result_image_sitk.CopyInformation(self.image_sitk)
+                        sitk.WriteImage(result_image_sitk, file_path)
 
-                if saving_mode: # if All
-                    if len(extensions) == 1:
-                        if (extensions[0] == ".tif") or (extensions[0] == ".tiff"): 
-                            tif.imsave(file_path, seg_img)
-                    elif len(extensions) == 2:
-                        if (extensions[0] == ".nii") and (extensions[1] == ".gz"):
-                            result_image_sitk = sitk.GetImageFromArray(seg_img.astype(np.uint16))
-                            result_image_sitk.CopyInformation(self.image_sitk)
-                            sitk.WriteImage(result_image_sitk, file_path)
-
-                else: # If independently
-                    structure_list = self.oneshot.list_structure_name
-
-                    for idx, struc in enumerate(structure_list):
-                        label_struc = np.zeros(seg_img.shape, dtype=np.uint16)
-                        label_struc[seg_img == (idx + 1)] = 255
-
-                        if len(extensions) == 1:
-                            if (extensions[0] == ".tif") or (extensions[0] == ".tiff"):
-                                file_name = Path(file_path).stem 
-                                new_file_name = file_name + '_' + struc + extensions[0]
-                                new_file_path = Path(Path(file_path).parent).joinpath(new_file_name)
-                                tif.imsave(str(new_file_path), label_struc)
-                        elif len(extensions) == 2:
-                            if (extensions[0] == ".nii") and (extensions[1] == ".gz"):
-                                file_name = Path(Path(file_path).stem).stem
-                                new_file_name = file_name + '_' + struc + extensions[0] + extensions[1]
-                                new_file_path = Path(Path(file_path).parent).joinpath(new_file_name)
-                                result_image_sitk = sitk.GetImageFromArray(label_struc)
-                                result_image_sitk.CopyInformation(self.image_sitk)
-                                sitk.WriteImage(result_image_sitk, str(new_file_path))
-
-                self.remove_backup_label_file()
+                self.status_label.setText("Ready")
 
             else:
                 display_warning_box(self, "Error", "No segmentation data find")
@@ -723,13 +621,13 @@ class OneShotWidget(QWidget):
 
     def save_probabilities(self):
         """
-            Save the probabilities data as a unique 3D image, or multiple 3D images (one by label)
+            Save the labelled data as a unique 3D image, or multiple 3D images (one by label)
+
         """
+        files_types = "Image File (*.tif *.tiff *.nii.gz)"
 
-        files_types = "TIFF (*.tiff);;TIF (*.tif);;NIFTI compressed (*.nii.gz)"
-
-        default_filepath = Path(self.img_dir).joinpath("probabilities.tif")
-        file_path, _ = QFileDialog.getSaveFileName(self, "Save Probabilities", str(default_filepath) , files_types)
+        default_filepath = Path(self.image_dir).joinpath(self.file_name_label.text() + "_probabilities.tif")
+        file_path, _ = QFileDialog.getSaveFileName(self, "Save Probabilities", str(default_filepath), files_types)
 
         # If choose "Cancel"
         if file_path == "":
@@ -737,47 +635,407 @@ class OneShotWidget(QWidget):
 
         if hasattr(self.viewer, 'layers'):
             if "probabilities" in self.viewer.layers:
-                proba_img = self.viewer.layers['probabilities'].data
-                proba_img = proba_img * 255
-                proba_img = proba_img.astype(np.uint16)
+
+                self.status_label.setText("Saving...")
+
+                proba_arr = self.viewer.layers['probabilities'].data
 
                 extensions = Path(file_path).suffixes
 
-                if len(extensions) == 1:
-                    if (extensions[0] == ".tif") or (extensions[0] == ".tiff"): 
-                        tif.imsave(file_path, proba_img)
-                elif len(extensions) == 2:
-                    if (extensions[0] == ".nii") and (extensions[1] == ".gz"):
-                        result_image_sitk = sitk.GetImageFromArray(proba_img)
-                        result_image_sitk.CopyInformation(self.image_sitk)
-                        sitk.WriteImage(result_image_sitk, file_path)
+                if (extensions[-1] == ".tif") or (extensions[-1] == ".tiff"): 
+                    tif.imsave(file_path, proba_arr)
+                elif extensions[-1] == ".gz":
+                    if len(extensions) >= 2:
+                        if extensions[-2] == ".nii": 
+                            result_image_sitk = sitk.GetImageFromArray(proba_arr.astype(np.uint8))
+                            result_image_sitk.CopyInformation(self.image_sitk)
+                            sitk.WriteImage(result_image_sitk, file_path)
+                
+                self.status_label.setText("Ready")
+
             else:
-                display_warning_box(self, "Error", "No probabilities data find")
+                display_warning_box(self, "Error", "No segmentation data find")
                 return
+
+    def reset_segmentation(self):
+        """
+            Reset segmentation data
+
+        """
+        canRemoveSegmentation = self.can_remove_segmentation_data()
+
+        if canRemoveSegmentation:
+            if "image" in self.viewer.layers:
+                source_img = self.viewer.layers['image'].data 
+                segmentation_arr = np.zeros(image_arr.shape, dtype=np.int8)
+                self.set_segmentation_layer(segmentation_arr)
+        else:
+            return
+
+    def run_segmentation(self):
+        """
+            Run One shot learning : training and inference steps
+
+        """
+        self.status_label.setText("Computing...")
+
+        if hasattr(self.viewer, 'layers'):
+            if 'image' in self.viewer.layers:
+                source_img = self.viewer.layers['image'].data
+            else:
+                display_warning_box(self, "Error", "No image data.")
+                self.status_label.setText("Ready")
+                return
+
+            if 'annotations' in self.viewer.layers:
+                segmentation_arr = self.viewer.layers['annotations'].data
+            else:
+                display_warning_box(self, "Error", "No annotation data.")
+                self.status_label.setText("Ready")
+                return
+
+        #check if 2 classes have been annotated 
+        label_items = np.unique(segmentation_arr)
+        label_items = np.delete(label_items, 0)
+        if len(label_items) != 2:
+            display_warning_box(self, "Error", "Incorrect number of classes. You have to annotate 2 differents classes (background not included).")
+            self.status_label.setText("Ready")
+            return
+
+        files_types = "PICKLE (*.pckl)"
+
+        default_filepath = Path(self.image_dir).joinpath(self.file_name_label.text() + "_model_rfc.pckl")
+        output_classifier_path, _ = QFileDialog.getSaveFileName(self, "Save Model File", str(default_filepath), files_types)
+
+        output_proba = run_one_shot_learning(source_img, segmentation_arr, str(output_classifier_path))
+
+        self.set_probabilities_layer(output_proba)
+
+        self.reset_threshold_slider()
+        output_threshold = np.where(output_proba > self.threshold_slider.value(), 255, 0)
+        self.set_segmented_probabilities_layer(output_threshold)
+
+        self.status_label.setText("Ready")
+
+    def set_probabilities_threshold(self):
+        """
+        Update threshold value use to create the segmented probabilities.
+        
+        """
+        value = self.threshold_slider.value()
+
+        if hasattr(self.viewer, 'layers'):
+            if 'probabilities' in self.viewer.layers:
+                output_proba = self.viewer.layers["probabilities"].data
+                threshold_arr = np.where(output_proba > value, 255, 0)
+                self.set_segmented_probabilities_layer(threshold_arr)
+    
+
+# ============ Loading data functions ============
+    def load_dicom_folder(self):
+        """
+        Load a complete DICOM serie from a folder
+
+        Returns
+        ----------
+        image_arr : ndarray
+            3D image as a 3D array. None if loading failed.
+
+        """
+        dicom_path = QFileDialog.getExistingDirectory(self, 'Choose a DICOM serie directory')
+
+        if dicom_path == "":
+            return None
+
+        self.image_dir = Path(dicom_path).parents[0]
+
+        reader = sitk.ImageSeriesReader()
+
+        series_found = reader.GetGDCMSeriesIDs(dicom_path)
+        if len(series_found) > 1:
+            display_warning_box(self, "Error", "More than 1 DICOM serie in the folder. Select a folder containing a single DICOM series.")
+            return None
+
+        img_names = reader.GetGDCMSeriesFileNames(dicom_path)
+        reader.SetFileNames(img_names)
+        try:
+            self.image_sitk = reader.Execute()
+        except:
+            display_warning_box(self, "Error", "NO DICOM data in the folder.")
+            return None
+
+        image_arr = sitk.GetArrayFromImage(self.image_sitk) # z, y, x
+        #ITK's Image class does not have a bracket operator. It has a GetPixel which takes an ITK Index object as an argument, which is an array ordered as (x,y,z). This is the convention that SimpleITK's Image class uses for the GetPixel method as well.
+        # While in numpy, an array is indexed in the opposite order (z,y,x).
+
+        if len(image_arr.shape) != 3:
+            display_warning_box(self, "Error", "Incorrect file size. Need to be a 3D image")
+            return None
+
+        self.file_name_label.setText(Path(dicom_path).name)
+
+        return image_arr
+
+    def load_image_file(self):
+        """
+        Load a 3D image file of type .tiff, .tif or .nii.gz
+
+        Returns
+        ----------
+        image_arr : ndarray
+            3D image as a 3D array. None if loading failed.
+
+        """
+        files_types = "Image File (*.tif *.tiff *.nii.gz)"
+        file_path, _ = QFileDialog.getOpenFileName(self, "Choose a 3D image file", "" , files_types )
+
+        if file_path == "":
+            return None
+
+        extensions = Path(file_path).suffixes
+        self.image_dir = Path(file_path).parents[0]
+
+        if (extensions[-1] == ".tif") or (extensions[-1] == ".tiff"):
+            image_arr = tif.imread(file_path)
+            self.image_sitk = sitk.Image(image_arr.shape[2], image_arr.shape[1], image_arr.shape[0], sitk.sitkInt16)
+       
+        elif extensions[-1] == ".gz":
+            if len(extensions) >= 2:
+                if extensions[-2] == ".nii":               
+                    self.image_sitk = sitk.ReadImage(file_path)
+                    image_arr = sitk.GetArrayFromImage(self.image_sitk)
+                else:
+                    return None
+
+        else:
+            return None
+
+        if len(image_arr.shape) != 3:
+            display_warning_box(self, "Error", "Incorrect file size. Need to be a 3D image")
+            return None
+
+        self.file_name_label.setText(Path(file_path).stem)
+        
+        return image_arr
+
+    def load_segmentation_file(self, default_file_path=None):
+        """
+        Load segmentation image file of type .tiff, .tif or .nii.gz
+
+        Parameters
+        ----------
+        default_file_path : Pathlib.Path
+            path of the segmentation image to load. If None, a QFileDialog is open to aks a path.
+
+        Returns
+        ----------
+        segmentation_arr : ndarray
+            segmentation image as a 3D array. None if loading failed.
+
+        """
+        if default_file_path is None:
+            files_types = "Image File (*.tif *.tiff *.nii.gz)"
+            file_path, _ = QFileDialog.getOpenFileName(self, "Choose a segmentation file", "" , files_types )
+
+            if file_path == "":
+                return None
+
+        else:
+            file_path = default_file_path 
+
+        extensions = Path(file_path).suffixes
+
+        if (extensions[-1] == ".tif") or (extensions[-1] == ".tiff"):
+            segmentation_arr = tif.imread(file_path)
+
+        elif extensions[-1] == ".gz":
+            if len(extensions) >= 2:
+                if extensions[-2] == ".nii":                
+                    segmentation_sitk = sitk.ReadImage(file_path)
+                    segmentation_arr = sitk.GetArrayFromImage(segmentation_sitk)
+                    segmentation_arr = segmentation_arr.astype(np.uint8)
+
+                    if any(n < 0 for n in np.unique(segmentation_arr)):
+                        display_warning_box(self, "Error", "Incorrect NIFTI format : negative value")
+                        return
+                else:
+                    return None
+
+        else:
+            return None
+
+        if len(segmentation_arr.shape) != 3:
+            display_warning_box(self, "Error", "Incorrect file size. Need to be a 3D image")
+            return None
+        
+        return segmentation_arr
+
+
+# ============ Update napari layers ============
+    def set_image_layer(self, array):
+        """
+        Remove the image layer from Napari and add a new image layer (faster than changing the data of an existing layer)
+
+        Parameters
+        ----------
+        array : ndarray
+            3D image data to add
+
+        """
+        self.remove_image_layer()
+        self.viewer.add_image(array, name='image')
+        disable_layer_widgets(self.viewer, layer_name='image', layer_type='image')
+        self.viewer.layers['image'].events.contrast_limits.connect(self.reset_default_contrast_combo_box)
+
+    def set_segmentation_layer(self, array):
+        """
+        Remove the segmentation layer from Napari and add a new segmentation layer (faster than changing the data of an existing layer)
+        New layer can be empty for initialisation.
+
+        Parameters
+        ----------
+        array : ndarray
+            3D segmentation data with the same size than the raw image (display in the 'image' layer)
+
+        """
+        self.remove_segmentation_layer()
+        self.viewer.add_labels(array, name='annotations')
+        self.reset_annotation_layer_selected_label()
+        disable_layer_widgets(self.viewer, layer_name='annotations', layer_type='label')
+    
+    def set_probabilities_layer(self, array):
+        """
+        Remove the probabilities layer from Napari and add a new probabilities layer (faster than changing the data of an existing layer)
+        New layer can be empty for initialisation.
+
+        Parameters
+        ----------
+        array : ndarray
+            3D probabilities data
+
+        """
+        self.remove_probabilities_layer()
+        self.viewer.add_image(array, name='probabilities')
+        disable_layer_widgets(self.viewer, layer_name='probabilities', layer_type='image')
+        self.viewer.layers['probabilities'].visible = False
+ 
+    def set_segmented_probabilities_layer(self, array):
+        """
+        Remove the segmented probabilities layer from Napari and add a new segmented probabilities layer (faster than changing the data of an existing layer)
+
+        Parameters
+        ----------
+        array : ndarray
+            probabilities data (0-1)
+
+        """
+        if "segmented probabilities" in self.viewer.layers:
+            self.viewer.layers["segmented probabilities"].data = array
+        else:
+            self.viewer.add_image(array, name='segmented probabilities', colormap="red", opacity=0.5)
+            disable_layer_widgets(self.viewer, layer_name='segmented probabilities', layer_type='image')
+
+    def reset_annotation_layer_selected_label(self):
+        """
+        Reset the selected structure to annotate.
+
+        """
+        if "annotations" in self.viewer.layers:
+            self.viewer.layers['annotations'].selected_label = len(self.oneshot.list_structure_name)
+            self.viewer.layers['annotations'].mode = "PAINT"
+
+
+# ============ Change widget options ============
+    def reset_zoom_slider(self):
+        """
+        Reset the zoom slider to 100 (i.e. no zoom)
+
+        """
+        self.zoom_slider.setValue(self.viewer.camera.zoom * 100)
+
+    def reset_threshold_slider(self):
+        """
+        Reset the threshold slider to 125
+
+        """
+        self.threshold_slider.setValue(125)
+
+    def reset_annotation_radio_button_checked_id(self):
+        """
+        Reset selected radio button (i.e. the element to annotate) to the last item of the list.
+
+        """
+        radio_button_to_check = self.oneshot.group_radio_button.button(len(self.oneshot.list_structure_name))
+        radio_button_to_check.setChecked(True)
+
+    def set_default_contrast(self):
+        """
+        Change the image contrast limits according to a predefined contrast window ("CT Bone" or "CT Soft").
+        Can only be apply to a DICOM image, because windows are defined using the Hounsfiled units.
+
+        """
+        if "image" in self.viewer.layers:
+            rescale_intercept = - self.viewer.layers['image'].contrast_limits_range[0]
+            if self.default_contrast_combo_box.currentText() == "CT Bone":
+                self.hu_limits = (-450, 1050)
+                # hu = pixel_value * slope + intercept
+                self.viewer.layers['image'].contrast_limits = self.hu_limits
+                # self.viewer.layers['image'].contrast_limits_range = (self.viewer.layers['image'].data.min(), self.viewer.layers['image'].data.max())
+            elif self.default_contrast_combo_box.currentText() == "CT Soft":
+                self.hu_limits = (-160, 240)
+                self.viewer.layers['image'].contrast_limits = self.hu_limits
+            else:
+                self.hu_limits = (0,0)
+                return
+        else:
+            self.default_contrast_combo_box.setCurrentText("")
+    
+    def reset_default_contrast_combo_box(self):
+        """
+        Reset the selected structure to annotate.
+
+        """
+        if "image" in self.viewer.layers:
+            if (self.default_contrast_combo_box.currentText() == "CT Bone") or (self.default_contrast_combo_box.currentText() == "CT Soft"):
+                if self.viewer.layers['image'].contrast_limits != list(self.hu_limits):
+                    self.default_contrast_combo_box.setCurrentText("")
+
 
 # ============ Display warning/question message box ============
     def can_remove_image_data(self):
         """
-            Display a question box to remove image data
+        Display a question box to remove image data
+
+        Returns
+        ----------
+        choice : bool
+            answer to the question : True if Ok, False if Cancel (default=True)
+
         """
         if "image" in self.viewer.layers:
             choice = display_ok_cancel_question_box(
                 "Warning",
-                "This will reset image data. Do you want to continue ?",
+                "This will delete image data. Do you want to continue ?",
             )
         else:
             choice = True
 
         return choice
 
-    def can_remove_label_data(self):
+    def can_remove_segmentation_data(self):
         """
-            Display a question box to remove segmentation data
+        Display a question box to remove segmentation data
+
+        Returns
+        ----------
+        choice : bool
+            answer to the question : True if Ok, False if Cancel (default=True)
+
         """
         if "annotations" in self.viewer.layers:
             choice = display_ok_cancel_question_box(
                 "Warning",
-                "This will reset segmentation data. Do you want to continue ?",
+                "This will delete segmentation data. Do you want to continue ?",
             )
         else:
             choice = True
@@ -786,12 +1044,18 @@ class OneShotWidget(QWidget):
 
     def can_remove_all(self):
         """
-            Display a question box to remove all data
+        Display a question box to remove all data
+
+        Returns
+        ----------
+        choice : bool
+            answer to the question : True if Ok, False if Cancel (default=True)
+
         """
-        if "image" in self.viewer.layers or "annotations" in self.viewer.layers:
+        if ("image" in self.viewer.layers) or ("annotations" in self.viewer.layers) or ("probabilities" in self.viewer.layers) or ("segmented probabilities" in self.viewer.layers):
             choice = display_ok_cancel_question_box(
                 "Warning",
-                "This will reset all data. Do you want to continue ?",
+                "This will delete all data. Do you want to continue ?",
             )
         else:
             choice = True
@@ -799,55 +1063,39 @@ class OneShotWidget(QWidget):
         return choice
 
 
-# ============ Remove or reset data ============
-    def remove_image(self):
+# ============ Remove data ============
+    def remove_image_layer(self):
         """
-            Remove image data
+            Remove image layer from napari viewer
+
         """
         if "image" in self.viewer.layers:
             self.viewer.layers.remove('image')
 
-    def remove_label(self):
+    def remove_segmentation_layer(self):
         """
-            Remove label data
+            Remove segmentation layer from napari viewer
+
         """
         if "annotations" in self.viewer.layers:
             self.viewer.layers.remove('annotations')
 
-    def remove_segmentation(self):
+    def remove_probabilities_layer(self):
         """
-            Remove segmentation data
-        """
-        if "segmentation" in self.viewer.layers:
-            self.viewer.layers.remove('segmentation')
+            Remove probabilities layer from napari viewer
 
-    def remove_proba(self):
-        """
-            Remove probabilities data
         """
         if "probabilities" in self.viewer.layers:
             self.viewer.layers.remove('probabilities')
 
-    def reset_label(self):
+    def remove_segmented_probabilities_layer(self):
         """
-            Reset label data
+            Remove segmented probabilities' layer from napari viewer
+
         """
-        canRemoveLabel = self.can_remove_label_data()
+        if "segmented probabilities" in self.viewer.layers:
+            self.viewer.layers.remove('segmented probabilities')
 
-        if canRemoveLabel:
-            self.remove_label()
-            self.add_label_layers(label_data=[])
-            self.reset_annotation_radio_buttons()
-        else:
-            return
-
-    def reset_annotation_radio_buttons(self):
-        radio_button_to_check = self.oneshot.group_radio_button.button(self.oneshot.nbr_buttons)
-        radio_button_to_check.setChecked(True)
-
-    def reset_zoom_slider(self):
-        median = round( (self.zoom_slider.maximum() - self.zoom_slider.minimum()) / 2)
-        self.zoom_slider.setValue(median)
 
 # ============ For testing ============
     def _on_click(self):

@@ -1,22 +1,34 @@
+# ============ Import python packages ============
 import time
 import pickle
 import numpy as np
 import pandas as pd
 import sklearn.ensemble
 
+
+# ============ Define main class fr classifier ============
 class Classifier():
     """
-    A class used to represent
-
-    Attributes
-    ----------
-    classifier_path : str
-        file path of the classifier (to save or to be loaded)
-
+    A class used to prepare data for training and inference of a classifier
 
     """
 
     def __init__(self, classifier_path, features_df):
+        """
+        Initilialisation
+
+        Parameters
+        ----------
+        classifier_path : str
+            path file where the classifier is loaded
+        features_df : dataframe
+            2D features (normed 0-255) of all pixels of a 2D image (so the size of the dataframe is size_x*size_y)
+            as {  0 : [Feature1, Feature2, ...],
+                1 : [Feature1, Feature2, ...]
+                    ...
+                }
+
+        """
         self.classifier_path = classifier_path
         self.features_df = features_df
 
@@ -25,10 +37,16 @@ class Classifier():
 
     def _prepare_data_for_training(self):
         """
-        Description
+        Modify the features dataframe to correspond to the requirement of the "rfc_training" function:
+
+            features (normed 0-255) of all labeled pixels (0-1) of the 3D image
+            as { 'LABEL'    : [0, ...., 0, 1, ....., 1],
+                'Feature1' : [5, ...., 80, 255, ...., 5],
+                'Feature2' : [ ... ],
+                    ...
+                }
 
         """
-
         # Separate states (i.e. label tags -- 0 or 1) from features
         df_0 = self.features_df[ self.features_df.iloc[:,0] == 0 ]
         df_1 = self.features_df[ self.features_df.iloc[:,0] == 1 ]
@@ -60,38 +78,34 @@ class Classifier():
 
     def _prepare_data_for_inference(self):
         """
-        Description
-
-        Parameters
-        ----------
-        param_1 : type
-            description
-
-        Returns:
-        --------
-        output : type
-            description
+        Extract the dataframe, all ready in the good format for the "rfc_inference" function
 
         """
         self.features = self.features_df
 
+
+# ============ Define inherent class for Random Forest ============
 class RandomForestClassifier(Classifier):
     """
-        Description
+    A class used to create a Random Forest Classfier and prepare data for training and inference
+
+    """
+    def __init__(self, classifier_path, features_df):
+        """
+        Initilialisation
 
         Parameters
         ----------
-        param_1 : type
-            description
-
-        Returns:
-        --------
-        output : type
-            description
+        classifier_path : str
+            path file where the classifier is loaded
+        features_df : dataframe
+            2D features (normed 0-255) of all pixels of a 2D image (so the size of the dataframe is size_x*size_y)
+            as {  0 : [Feature1, Feature2, ...],
+                1 : [Feature1, Feature2, ...]
+                    ...
+                }
 
         """
-
-    def __init__(self, classifier_path, features_df):
         Classifier.__init__(self, classifier_path, features_df)
 
         self.nb_tree      = 50
@@ -109,4 +123,3 @@ class RandomForestClassifier(Classifier):
             self.model = pickle.load(open(self.classifier_path, 'rb'))
         except:
             self.model = sklearn.ensemble.RandomForestClassifier(n_estimators=self.nb_tree, max_depth=self.max_depth, criterion=self.criterion, max_features=self.max_features, oob_score=self.oob_score, warm_start=self.warm_start, bootstrap=self.bootstrap, class_weight=self.class_weight)
-

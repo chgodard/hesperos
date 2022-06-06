@@ -7,12 +7,6 @@ from qtpy.QtWidgets import QGridLayout, QGroupBox
 from qtpy import QtCore
 
 
-# ============ Define variables ============
-SEGM_METHODS_PANEL_ALIGN = (
-    "left"  # Alignment of text in pushbuttons in methods chooser panel
-)
-
-
 # ============ Define class ============
 class StructureSubPanel(QGroupBox):
     """
@@ -26,6 +20,16 @@ class StructureSubPanel(QGroupBox):
         ----------
         parent : QWidget
             parent widget
+        row : int
+            row position of the sub panel in the layout of the parent (QGridLayout)
+        column : int
+            column position of the sub panel in the layout of the parent (QGridLayout)
+        list_structures : list[str]
+            list of the main groups of radio buttons
+        dict_subgroups : dict[str, str]
+            dictionnary of subgroups of main groups (name of radio buttons)
+        dict_sub_subgroups : dict[str, str]
+            dictionnary of sub-subgroups of subgroups (name of radio buttons)
 
         """
         super().__init__()
@@ -43,6 +47,12 @@ class StructureSubPanel(QGroupBox):
             row position of the sub panel in the layout of the parent (QGridLayout)
         column : int
             column position of the panel in the layout of the parent (QGridLayout)
+        list_structures : list[str]
+            list of the main groups of radio buttons
+        dict_subgroups : dict[str, str]
+            dictionnary of subgroups of main groups (name of radio buttons)
+        dict_sub_subgroups : dict[str, str]
+            dictionnary of sub-subgroups of subgroups (name of radio buttons)
 
         """
 
@@ -56,8 +66,7 @@ class StructureSubPanel(QGroupBox):
         sublayout.setAlignment(QtCore.Qt.AlignTop)
 
         # === Add Qwidgets to the sub panel layout ===
-        self.group_radio_button, self.nbr_buttons, self.list_structure_name = add_sub_subgroup_radio_button(
-            name="",
+        self.group_radio_button, self.list_structure_name = add_sub_subgroup_radio_button(
             list_items=list_structures,
             layout=sublayout,
             callback_function=self.change_structure_type,
@@ -96,8 +105,8 @@ class StructureSubPanel(QGroupBox):
 
         Parameters
         ----------
-        object : ??
-            ??
+        object : QAbstractButton
+            selected button of a QButtonGroup
 
         """
         structure_id = self.group_radio_button.id(object)
@@ -105,5 +114,3 @@ class StructureSubPanel(QGroupBox):
             if 'annotations' in self.parent.viewer.layers:
                 self.parent.viewer.layers['annotations'].selected_label = structure_id
                 self.parent.viewer.layers['annotations'].mode = "PAINT"
-
-
