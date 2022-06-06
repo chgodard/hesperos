@@ -1094,7 +1094,7 @@ class ManualSegmentationWidget(QWidget):
         Reset the zoom slider to 100 (no zoom)
 
         """
-        self.zoom_slider.setValue(self.viewer.camera.zoom * 100)
+        self.zoom_slider.setValue(int(self.viewer.camera.zoom * 100))
 
     def set_default_contrast(self):
         """

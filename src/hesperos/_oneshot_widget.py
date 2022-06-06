@@ -951,7 +951,7 @@ class OneShotWidget(QWidget):
         Reset the zoom slider to 100 (i.e. no zoom)
 
         """
-        self.zoom_slider.setValue(self.viewer.camera.zoom * 100)
+        self.zoom_slider.setValue(int(self.viewer.camera.zoom * 100))
 
     def reset_threshold_slider(self):
         """
