@@ -267,7 +267,7 @@ class OneShotWidget(QWidget):
         self.load_segmentation_push_button = add_push_button(
             name="Open segmentation file",
             layout=self.annotation_layout,
-            callback_function=self.update_segmentation_with_path,
+            callback_function=lambda: self.update_segmentation_with_path(None),
             row=0,
             column=1,
             column_span=2,
@@ -452,7 +452,7 @@ class OneShotWidget(QWidget):
         isVisible : bool
             visible status of the widgets
         file_type : str
-            type of image loaded : "file" for .tiff, .tif and .nii.gz and "folder" for DICOM folder
+            type of image loaded : "file" for .tiff, .tif, .nii and .nii.gz and "folder" for DICOM folder
             
         """
         self.zoom_slider.setVisible(isVisible)
@@ -478,7 +478,7 @@ class OneShotWidget(QWidget):
         Parameters
         ----------
         file_type : str
-            type of image loaded : "file" for .tiff, .tif and .nii.gz and "folder" for DICOM folder
+            type of image loaded : "file" for .tiff, .tif, .nii and .nii.gz and "folder" for DICOM folder
             
         """
         canRemove = self.can_remove_all()
@@ -578,7 +578,7 @@ class OneShotWidget(QWidget):
             Save the labelled data as a unique 3D image, or multiple 3D images (one by label)
 
         """
-        files_types = "Image File (*.tif *.tiff *.nii.gz)"
+        files_types = "Image File (*.tif *.tiff *.nii.gz *.nii)"
 
         default_filepath = Path(self.image_dir).joinpath(self.file_name_label.text() + "_segmented_probabilities.tif")
         file_path, _ = QFileDialog.getSaveFileName(self, "Save Segmentation", str(default_filepath), files_types)
@@ -597,6 +597,10 @@ class OneShotWidget(QWidget):
                 if len(extensions) == 1:
                     if (extensions[0] == ".tif") or (extensions[0] == ".tiff"): 
                         tif.imsave(file_path, segmentation_arr)
+                    elif extensions[0] == ".nii":
+                        result_image_sitk = sitk.GetImageFromArray(segmentation_arr.astype(np.uint16))
+                        result_image_sitk.CopyInformation(self.image_sitk)
+                        sitk.WriteImage(result_image_sitk, file_path)
                 elif len(extensions) == 2:
                     if (extensions[0] == ".nii") and (extensions[1] == ".gz"):
                         result_image_sitk = sitk.GetImageFromArray(segmentation_arr.astype(np.uint16))
@@ -614,7 +618,7 @@ class OneShotWidget(QWidget):
             Save the labelled data as a unique 3D image, or multiple 3D images (one by label)
 
         """
-        files_types = "Image File (*.tif *.tiff *.nii.gz)"
+        files_types = "Image File (*.tif *.tiff *.nii.gz *.nii)"
 
         default_filepath = Path(self.image_dir).joinpath(self.file_name_label.text() + "_probabilities.tif")
         file_path, _ = QFileDialog.getSaveFileName(self, "Save Probabilities", str(default_filepath), files_types)
@@ -634,6 +638,12 @@ class OneShotWidget(QWidget):
 
                 if (extensions[-1] == ".tif") or (extensions[-1] == ".tiff"): 
                     tif.imsave(file_path, proba_arr)
+
+                elif extensions[-1] == ".nii": 
+                    result_image_sitk = sitk.GetImageFromArray(proba_arr.astype(np.uint8))
+                    result_image_sitk.CopyInformation(self.image_sitk)
+                    sitk.WriteImage(result_image_sitk, file_path)
+
                 elif extensions[-1] == ".gz":
                     if len(extensions) >= 2:
                         if extensions[-2] == ".nii": 
@@ -737,7 +747,12 @@ class OneShotWidget(QWidget):
         if dicom_path == "":
             return None
 
-        self.image_dir = Path(dicom_path).parents[0]
+        if (Path(dicom_path).name == 'Raw') or (Path(dicom_path).name == 'ST0'):
+            self.image_dir = Path(dicom_path).parents[1]
+            file_name = Path(dicom_path).parents[0].name
+        else:
+            self.image_dir = Path(dicom_path).parents[0]
+            file_name = Path(dicom_path).name
 
         reader = sitk.ImageSeriesReader()
 
@@ -762,13 +777,13 @@ class OneShotWidget(QWidget):
             display_warning_box(self, "Error", "Incorrect file size. Need to be a 3D image")
             return None
 
-        self.file_name_label.setText(Path(dicom_path).name)
+        self.file_name_label.setText(file_name)
 
         return image_arr
 
     def load_image_file(self):
         """
-        Load a 3D image file of type .tiff, .tif or .nii.gz
+        Load a 3D image file of type .tiff, .tif, .nii or .nii.gz
 
         Returns
         ----------
@@ -776,7 +791,7 @@ class OneShotWidget(QWidget):
             3D image as a 3D array. None if loading failed.
 
         """
-        files_types = "Image File (*.tif *.tiff *.nii.gz)"
+        files_types = "Image File (*.tif *.tiff *.nii.gz *.nii)"
         file_path, _ = QFileDialog.getOpenFileName(self, "Choose a 3D image file", "" , files_types )
 
         if file_path == "":
@@ -788,6 +803,10 @@ class OneShotWidget(QWidget):
         if (extensions[-1] == ".tif") or (extensions[-1] == ".tiff"):
             image_arr = tif.imread(file_path)
             self.image_sitk = sitk.Image(image_arr.shape[2], image_arr.shape[1], image_arr.shape[0], sitk.sitkInt16)
+        
+        elif extensions[-1] == ".nii":
+            self.image_sitk = sitk.ReadImage(file_path)
+            image_arr = sitk.GetArrayFromImage(self.image_sitk)
        
         elif extensions[-1] == ".gz":
             if len(extensions) >= 2:
@@ -810,7 +829,7 @@ class OneShotWidget(QWidget):
 
     def load_segmentation_file(self, default_file_path=None):
         """
-        Load segmentation image file of type .tiff, .tif or .nii.gz
+        Load segmentation image file of type .tiff, .tif, .nii or .nii.gz
 
         Parameters
         ----------
@@ -824,7 +843,7 @@ class OneShotWidget(QWidget):
 
         """
         if default_file_path is None:
-            files_types = "Image File (*.tif *.tiff *.nii.gz)"
+            files_types = "Image File (*.tif *.tiff *.nii.gz *.nii)"
             file_path, _ = QFileDialog.getOpenFileName(self, "Choose a segmentation file", "" , files_types )
 
             if file_path == "":
@@ -837,6 +856,15 @@ class OneShotWidget(QWidget):
 
         if (extensions[-1] == ".tif") or (extensions[-1] == ".tiff"):
             segmentation_arr = tif.imread(file_path)
+
+        elif extensions[-1] == ".nii" :
+            segmentation_sitk = sitk.ReadImage(file_path)
+            segmentation_arr = sitk.GetArrayFromImage(segmentation_sitk)
+            segmentation_arr = segmentation_arr.astype(np.uint8)
+
+            if any(n < 0 for n in np.unique(segmentation_arr)):
+                display_warning_box(self, "Error", "Incorrect NIFTI format : negative value")
+                return
 
         elif extensions[-1] == ".gz":
             if len(extensions) >= 2:
