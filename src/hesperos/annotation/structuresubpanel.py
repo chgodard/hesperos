@@ -6,6 +6,9 @@ from hesperos.layout.gui_elements import add_sub_subgroup_radio_button
 from qtpy.QtWidgets import QGridLayout, QGroupBox
 from qtpy import QtCore
 
+COLUMN_WIDTH_SUB = 40
+
+
 
 # ============ Define class ============
 class StructureSubPanel(QGroupBox):
@@ -77,17 +80,17 @@ class StructureSubPanel(QGroupBox):
         sublayout.setAlignment(QtCore.Qt.AlignTop)
 
         # === Add Qwidgets to the sub panel layout ===
-        self.group_radio_button, self.list_structure_name = add_sub_subgroup_radio_button(
+        self.group_radio_button, self.list_structure_name, self.list_button_in_subgroups = add_sub_subgroup_radio_button(
             list_items=list_structures,
             layout=sublayout,
             callback_function=self.change_structure_type,
             column=0,
-            minimum_width=30,
+            minimum_width=COLUMN_WIDTH_SUB,
             dict_subgroups=dict_substructures,
             dict_sub_subgroups=dict_sub_substructures
         )
 
-        sublayout.setColumnMinimumWidth(0, 30)
+        # sublayout.setColumnMinimumWidth(0, COLUMN_WIDTH_SUB)
         self.subpanel.setLayout(sublayout)
 
         # === Add sub panel to the main layout (QGridLayout) of the parent widget ===
@@ -98,7 +101,7 @@ class StructureSubPanel(QGroupBox):
 
     def toggle_sub_panel(self, toggle_bool):
         """
-        Toggle the annotation sub panel and corresponding group radio button
+        Toggle the annotation sub panel and corresponding group radio button (except button in a subgroup)
 
         Parameters
         ----------
@@ -108,7 +111,8 @@ class StructureSubPanel(QGroupBox):
         """
         self.subpanel.setVisible(toggle_bool)
         for btn in self.group_radio_button.buttons():
-            btn.setVisible(toggle_bool)
+            if btn not in self.list_button_in_subgroups:
+                btn.setVisible(toggle_bool)   
 
     def change_structure_type(self, object):
         """

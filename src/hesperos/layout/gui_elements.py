@@ -1,5 +1,7 @@
 # ============ Import python packages ============
+import functools
 from qtpy import QtCore
+from qtpy.QtTest import QTest
 from qtpy.QtWidgets import (
     QPushButton,
     QCheckBox,
@@ -14,6 +16,10 @@ from qtpy.QtWidgets import (
     QTextEdit
 )
 from qtpy.QtGui import QPixmap, QFont
+from pathlib import Path, PurePath
+
+
+from hesperos.layout.napari_elements import label_colors
 
 
 # ============ Functions to add custom QWidgets ============
@@ -458,12 +464,15 @@ def add_sub_subgroup_radio_button(list_items, layout, callback_function, row=0, 
         widget created
     list_button_name : List[str]
         list of name of all QRadioButtons in the QButtonGroup
+    list_button_in_subgroups : list[QRadioButtons]
+        list of QRadioButtons in subgroup
 
-    """
-    
+    """    
     group_button = QButtonGroup()
 
     list_button_name = []
+    list_button_in_subgroups = []
+    list_sub_panel = []
     label = 0
     for column_grp, item in enumerate(list_items):
         if item in dict_subgroups:
@@ -483,13 +492,15 @@ def add_sub_subgroup_radio_button(list_items, layout, callback_function, row=0, 
                     background-color: transparent;
                 }""")
 
-
             layout_main_panel = QGridLayout()
-
+            layout_main_panel.setAlignment(QtCore.Qt.AlignTop)
+           
             for subindex, subitem in enumerate(dict_subgroups[item]):
                 if subitem in dict_sub_subgroups:
                     sub_panel = QGroupBox(subitem)
+                    sub_panel.setCheckable(True)
                     layout_sub_panel = QGridLayout()
+                    layout_sub_panel.setAlignment(QtCore.Qt.AlignTop)
 
                     sub_panel.setObjectName("SubPanel")
 
@@ -497,39 +508,29 @@ def add_sub_subgroup_radio_button(list_items, layout, callback_function, row=0, 
                     font.setItalic(True)
                     sub_panel.setFont(font)
 
-                    sub_panel.setStyleSheet("""
-                    QGroupBox#SubPanel {
-                        border: 1px solid rgb(90, 98, 108);
-                        margin-top: 0.5em;
-                        color: rgb(90, 98, 108);
-                        font-weight: normal;
-                    },
-                    QGroupBox::title#SubPanel {
-                        top: -6px;
-                        left: 10px;
-                    }""")
-
+                    style_sheet_path = Path(__file__).parent.parent.joinpath('resources', 'group_box_stylesheet.qss')
+                    sub_panel.setStyleSheet(open(str(style_sheet_path)).read())
 
                     for sub_subindex, sub_subitem in enumerate(dict_sub_subgroups[subitem]):
                         button = QRadioButton(sub_subitem)
-                        button.setVisible(visibility)
                         button.setMinimumWidth(minimum_width)
 
                         font = QFont()
                         font.setItalic(False)
                         button.setFont(font)
 
-                        button.setStyleSheet("color: rgb(240, 241, 242);")
+                        # button.setStyleSheet("color: rgb(240, 241, 242);")
 
                         # button.setStyleSheet(
-                        #     """QRadioButton::indicator{
-                        #         background-color: yellow;
-                        #     }""")
+                            # """QRadioButton::indicator{{
+                            #     background-color: {};
+                            # }}""".format(label_colors))
 
                         group_button.addButton(button, label + 1)
                         layout_sub_panel.addWidget(button, sub_subindex, 0)
 
                         list_button_name.append(sub_subitem)
+                        list_button_in_subgroups.append(button)
 
                         label = label + 1
 
@@ -537,6 +538,8 @@ def add_sub_subgroup_radio_button(list_items, layout, callback_function, row=0, 
 
                     layout_main_panel.addWidget(sub_panel, subindex, 0)
 
+                    list_sub_panel.append(sub_panel)
+                   
                 else:
                     button = QRadioButton(subitem)
                     button.setVisible(visibility)
@@ -559,7 +562,30 @@ def add_sub_subgroup_radio_button(list_items, layout, callback_function, row=0, 
 
     group_button.buttonClicked.connect(callback_function)
 
-    return group_button, list_button_name
+    for index, group_box in enumerate(list_sub_panel):
+        group_box.toggled.connect(functools.partial(toggle_group_box, list_sub_panel, index))  
+        group_box.setChecked(False) 
+
+    return group_button, list_button_name, list_button_in_subgroups
+
+def toggle_group_box(list_sub_panel, index):
+    """
+    Toggle widgets in a QGroupBox if the GroupBox is clicked 
+
+    Parameters
+    ----------
+    list_sub_panel : list[QGroupBox]
+        list of QGroupBox in the sub panel
+    index : int
+        index of the clicked QGroupBox
+
+    """
+    group_box = list_sub_panel[index]
+
+    state = group_box.isChecked()
+    for widget in group_box.children():
+        if widget.isWidgetType():
+            widget.setVisible(state) 
 
 
 # ============ Display warning box ============

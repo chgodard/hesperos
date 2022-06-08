@@ -220,11 +220,11 @@ class OneShotWidget(QWidget):
         )
 
         self.default_contrast_combo_box = add_combo_box(
-            list_items=["", "CT Bone", "CT Soft"],
+            list_items=["Set a default contrast", "CT Bone", "CT Soft"],
             layout=self.loading_layout,
             callback_function=self.set_default_contrast,
             row=3,
-            column=1,
+            column=0,
             column_span=2
         )
 
@@ -499,7 +499,7 @@ class OneShotWidget(QWidget):
 
             self.reset_zoom_slider()
             self.reset_threshold_slider()
-            self.default_contrast_combo_box.setCurrentText("")
+            self.default_contrast_combo_box.setCurrentText("Set a default contrast")
 
             self.toggle_loading_panel_widget(True, file_type)
             self.toggle_panels(["annotation_panel", "segmentation_panel", "reset_save_panel"], True)
@@ -547,8 +547,8 @@ class OneShotWidget(QWidget):
                 return
             
             if "image" in self.viewer.layers:
-                source_img = self.viewer.layers['image'].data 
-                if segmentation_arr.shape != source_img.shape:
+                image_arr = self.viewer.layers['image'].data 
+                if segmentation_arr.shape != image_arr.shape:
                     display_warning_box(self, "Error", "Size of the segmentation file doesn't correspond to the size of the source image")
                     self.status_label.setText("Ready")
                     return
@@ -666,7 +666,7 @@ class OneShotWidget(QWidget):
 
         if canRemoveSegmentation:
             if "image" in self.viewer.layers:
-                source_img = self.viewer.layers['image'].data 
+                image_arr = self.viewer.layers['image'].data 
                 segmentation_arr = np.zeros(image_arr.shape, dtype=np.int8)
                 self.set_segmentation_layer(segmentation_arr)
         else:
@@ -681,7 +681,7 @@ class OneShotWidget(QWidget):
 
         if hasattr(self.viewer, 'layers'):
             if 'image' in self.viewer.layers:
-                source_img = self.viewer.layers['image'].data
+                image_arr = self.viewer.layers['image'].data
             else:
                 display_warning_box(self, "Error", "No image data.")
                 self.status_label.setText("Ready")
@@ -707,7 +707,7 @@ class OneShotWidget(QWidget):
         default_filepath = Path(self.image_dir).joinpath(self.file_name_label.text() + "_model_rfc.pckl")
         output_classifier_path, _ = QFileDialog.getSaveFileName(self, "Save Model File", str(default_filepath), files_types)
 
-        output_proba = run_one_shot_learning(source_img, segmentation_arr, str(output_classifier_path))
+        output_proba = run_one_shot_learning(image_arr, segmentation_arr, str(output_classifier_path))
 
         self.set_probabilities_layer(output_proba)
 
@@ -803,16 +803,19 @@ class OneShotWidget(QWidget):
         if (extensions[-1] == ".tif") or (extensions[-1] == ".tiff"):
             image_arr = tif.imread(file_path)
             self.image_sitk = sitk.Image(image_arr.shape[2], image_arr.shape[1], image_arr.shape[0], sitk.sitkInt16)
-        
+            self.file_name_label.setText(Path(file_path).stem)
+
         elif extensions[-1] == ".nii":
             self.image_sitk = sitk.ReadImage(file_path)
             image_arr = sitk.GetArrayFromImage(self.image_sitk)
-       
+            self.file_name_label.setText(Path(file_path).stem)
+
         elif extensions[-1] == ".gz":
             if len(extensions) >= 2:
                 if extensions[-2] == ".nii":               
                     self.image_sitk = sitk.ReadImage(file_path)
                     image_arr = sitk.GetArrayFromImage(self.image_sitk)
+                    self.file_name_label.setText(Path(Path(file_path).stem).stem)
                 else:
                     return None
 
@@ -822,8 +825,6 @@ class OneShotWidget(QWidget):
         if len(image_arr.shape) != 3:
             display_warning_box(self, "Error", "Incorrect file size. Need to be a 3D image")
             return None
-
-        self.file_name_label.setText(Path(file_path).stem)
         
         return image_arr
 
@@ -959,8 +960,12 @@ class OneShotWidget(QWidget):
 
         """
         if "annotations" in self.viewer.layers:
-            self.viewer.layers['annotations'].selected_label = len(self.oneshot.list_structure_name)
+            if self.annotation_combo_box.currentText() == "Choose a structure":
+                self.viewer.layers['annotations'].selected_label = 0
+            else:
+                self.viewer.layers['annotations'].selected_label = 1
             self.viewer.layers['annotations'].mode = "PAINT"
+            self.viewer.layers['annotations'].opacity = 0.6
 
 
 # ============ Change widget options ============
@@ -980,10 +985,10 @@ class OneShotWidget(QWidget):
 
     def reset_annotation_radio_button_checked_id(self):
         """
-        Reset selected radio button (i.e. the element to annotate) to the last item of the list.
+        Reset selected radio button (i.e. the element to annotate) to the first item of the list.
 
         """
-        radio_button_to_check = self.oneshot.group_radio_button.button(len(self.oneshot.list_structure_name))
+        radio_button_to_check = self.oneshot.group_radio_button.button(1)
         radio_button_to_check.setChecked(True)
 
     def set_default_contrast(self):
@@ -1006,7 +1011,7 @@ class OneShotWidget(QWidget):
                 self.hu_limits = (0,0)
                 return
         else:
-            self.default_contrast_combo_box.setCurrentText("")
+            self.default_contrast_combo_box.setCurrentText("Set a default contrast")
     
     def reset_default_contrast_combo_box(self):
         """
@@ -1016,7 +1021,7 @@ class OneShotWidget(QWidget):
         if "image" in self.viewer.layers:
             if (self.default_contrast_combo_box.currentText() == "CT Bone") or (self.default_contrast_combo_box.currentText() == "CT Soft"):
                 if self.viewer.layers['image'].contrast_limits != list(self.hu_limits):
-                    self.default_contrast_combo_box.setCurrentText("")
+                    self.default_contrast_combo_box.setCurrentText("Set a default contrast")
 
 
 # ============ Display warning/question message box ============

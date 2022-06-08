@@ -13,7 +13,7 @@ from hesperos.layout.gui_elements import (
     display_ok_cancel_question_box,
     display_yes_no_question_box
 )
-from hesperos.layout.napari_elements import disable_napari_buttons, disable_layer_widgets, reset_dock_widget, disable_dock_widget_buttons
+from hesperos.layout.napari_elements import disable_napari_buttons, disable_layer_widgets, reset_dock_widget, disable_dock_widget_buttons, label_colors
 from hesperos.resources._icons import get_icon_path, get_relative_icon_path
 
 import hesperos.annotation.fetus as fetus_data
@@ -183,7 +183,6 @@ class ManualSegmentationWidget(QWidget):
 
         # === Set panel layout parameters ===
         self.loading_layout = QGridLayout()
-        self.loading_layout.setContentsMargins(10, 10, 10, 10)
         self.loading_layout.setSpacing(5)
         
         # === Add Qwidgets to the panel layout ===
@@ -228,6 +227,7 @@ class ManualSegmentationWidget(QWidget):
             row=2,
             column=0,
             column_span=2,
+            minimum_width=COLUMN_WIDTH,
         )
         self.zoom_slider.setStyleSheet("""
             QSlider::handle:horizontal {{
@@ -242,15 +242,17 @@ class ManualSegmentationWidget(QWidget):
             layout=self.loading_layout,
             row=3,
             column=0,
+            minimum_width=COLUMN_WIDTH,
         )
 
         self.default_contrast_combo_box = add_combo_box(
-            list_items=["", "CT Bone", "CT Soft"],
+            list_items=["Set a default contrast", "CT Bone", "CT Soft"],
             layout=self.loading_layout,
             callback_function=self.set_default_contrast,
             row=3,
-            column=1,
-            column_span=2
+            column=0,
+            column_span=2,
+            minimum_width=COLUMN_WIDTH,
         )
 
         self.loading_panel.setLayout(self.loading_layout)
@@ -400,6 +402,7 @@ class ManualSegmentationWidget(QWidget):
             row=1,
             column=0,
             column_span=2,
+            minimum_width=COLUMN_WIDTH,
         )
         self.backup_check_box.setChecked(False)
 
@@ -702,8 +705,8 @@ class ManualSegmentationWidget(QWidget):
                 return
             
             if "image" in self.viewer.layers:
-                source_img = self.viewer.layers['image'].data 
-                if segmentation_arr.shape != source_img.shape:
+                image_arr = self.viewer.layers['image'].data 
+                if segmentation_arr.shape != image_arr.shape:
                     display_warning_box(self, "Error", "Size of the segmentation file doesn't correspond to the size of the source image")
                     self.status_label.setText("Ready")
                     return
@@ -858,9 +861,9 @@ class ManualSegmentationWidget(QWidget):
         """
         canRemoveSegmentation = self.can_remove_segmentation_data()
 
-        if canRemoveLSegmentation:
+        if canRemoveSegmentation:
             if "image" in self.viewer.layers:
-                source_img = self.viewer.layers['image'].data 
+                image_arr = self.viewer.layers['image'].data 
                 segmentation_arr = np.zeros(image_arr.shape, dtype=np.int8)
                 self.set_segmentation_layer(segmentation_arr)
         else:
@@ -938,16 +941,19 @@ class ManualSegmentationWidget(QWidget):
         if (extensions[-1] == ".tif") or (extensions[-1] == ".tiff"):
             image_arr = tif.imread(file_path)
             self.image_sitk = sitk.Image(image_arr.shape[2], image_arr.shape[1], image_arr.shape[0], sitk.sitkInt16)
+            self.file_name_label.setText(Path(file_path).stem)
         
         elif extensions[-1] == ".nii":
             self.image_sitk = sitk.ReadImage(file_path)
             image_arr = sitk.GetArrayFromImage(self.image_sitk)
+            self.file_name_label.setText(Path(file_path).stem)
        
         elif extensions[-1] == ".gz":
             if len(extensions) >= 2:
                 if extensions[-2] == ".nii":               
                     self.image_sitk = sitk.ReadImage(file_path)
                     image_arr = sitk.GetArrayFromImage(self.image_sitk)
+                    self.file_name_label.setText(Path(Path(file_path).stem).stem)
                 else:
                     return None
 
@@ -957,8 +963,6 @@ class ManualSegmentationWidget(QWidget):
         if len(image_arr.shape) != 3:
             display_warning_box(self, "Error", "Incorrect file size. Need to be a 3D image")
             return None
-
-        self.file_name_label.setText(Path(file_path).stem)
         
         return image_arr
 
@@ -1064,7 +1068,7 @@ class ManualSegmentationWidget(QWidget):
 
         """
         self.remove_segmentation_layer()
-        self.viewer.add_labels(array, name='annotations')
+        self.viewer.add_labels(array, name='annotations', color=label_colors)
         self.reset_annotation_layer_selected_label()
         disable_layer_widgets(self.viewer, layer_name='annotations', layer_type='label')
         self.remove_backup_segmentation_file()
@@ -1074,36 +1078,33 @@ class ManualSegmentationWidget(QWidget):
         Reset the selected structure to annotate.
 
         """
-        if "annotations" in self.viewer.layers:
-            if self.annotation_combo_box.currentText() == "Fetus":
-                self.viewer.layers['annotations'].selected_label = len(self.fetus.list_structure_name)
-            elif self.annotation_combo_box.currentText() == "Shoulder":
-                self.viewer.layers['annotations'].selected_label = len(self.shoulder.list_structure_name)
-            elif self.annotation_combo_box.currentText() == "Feta Challenge":
-                self.viewer.layers['annotations'].selected_label = len(self.feta.list_structure_name)
-            else:
+        if "annotations" in self.viewer.layers:           
+            if self.annotation_combo_box.currentText() == "Choose a structure":
                 self.viewer.layers['annotations'].selected_label = 0
+            else:
+                self.viewer.layers['annotations'].selected_label = 1
 
             self.viewer.layers['annotations'].mode = "PAINT"
+            self.viewer.layers['annotations'].opacity = 0.6
           
 
 # ============ Change widget options ============
     def reset_annotation_radio_button_checked_id(self):
         """
-        Reset selected radio button (i.e. the element to annotate) to the last item of the list.
+        Reset selected radio button (i.e. the element to annotate) to the first item of the list.
 
         """
         structure_name = self.annotation_combo_box.currentText()
         if structure_name == "Fetus":
-            radio_button_to_check = self.fetus.group_radio_button.button(len(self.fetus.list_structure_name))
+            radio_button_to_check = self.fetus.group_radio_button.button(1)
             radio_button_to_check.setChecked(True)
 
         elif structure_name == "Shoulder":
-            radio_button_to_check = self.shoulder.group_radio_button.button(len(self.shoulder.list_structure_name))
+            radio_button_to_check = self.shoulder.group_radio_button.button(1)
             radio_button_to_check.setChecked(True)
 
         elif structure_name == "Feta Challenge":
-            radio_button_to_check = self.feta.group_radio_button.button(len(self.feta.list_structure_name))
+            radio_button_to_check = self.feta.group_radio_button.button(1)
             radio_button_to_check.setChecked(True)
 
     def reset_zoom_slider(self):
@@ -1133,7 +1134,7 @@ class ManualSegmentationWidget(QWidget):
                 self.hu_limits = (0,0)
                 return
         else:
-            self.default_contrast_combo_box.setCurrentText("")
+            self.default_contrast_combo_box.setCurrentText("Set a default contrast")
     
     def reset_default_contrast_combo_box(self):
         """
@@ -1143,7 +1144,7 @@ class ManualSegmentationWidget(QWidget):
         if "image" in self.viewer.layers:
             if (self.default_contrast_combo_box.currentText() == "CT Bone") or (self.default_contrast_combo_box.currentText() == "CT Soft"):
                 if self.viewer.layers['image'].contrast_limits != list(self.hu_limits):
-                    self.default_contrast_combo_box.setCurrentText("")
+                    self.default_contrast_combo_box.setCurrentText("Set a default contrast")
 
 
 # ============ Display warning/question message box ============
@@ -1262,7 +1263,7 @@ class ManualSegmentationWidget(QWidget):
     #     # image_to_display = self.image[index, :, :]
 
     #     if 'image' in self.viewer.layers:
-    #             source_img = self.viewer.layers['image'].data
+    #             image_arr = self.viewer.layers['image'].data
 
 
     #     pixmap = QPixmap(image_path)

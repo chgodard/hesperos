@@ -1,9 +1,13 @@
+# ============ Import python packages ============
 from pathlib import Path, PurePath
+from qtpy import QtCore
 
+
+# ============ Same as napari CODE ============
 ICON_PATH = (Path(__file__).parent / 'icons').resolve()
 ICONS = {x.stem: str(x) for x in ICON_PATH.iterdir() if x.suffix == '.svg'}
 
-## FROM napari CODE
+QtCore.QDir.addSearchPath('icons', str(ICON_PATH))
 
 def get_icon_path(name):
     """Return path to an SVG in the theme icons."""

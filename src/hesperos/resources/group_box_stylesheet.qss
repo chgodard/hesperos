@@ -1,0 +1,19 @@
+QGroupBox#SubPanel  {
+    border: 1px solid rgb(90, 98, 108);
+    margin-top: 0.5em;
+    color: rgb(90, 98, 108);
+    font-weight: normal;
+}
+
+QGroupBox::title#SubPanel  {
+    top: 0px;
+    left: -5px;
+}
+
+QGroupBox::indicator:checked#SubPanel {
+    image: url(icons:chevron_down.svg)
+}
+
+QGroupBox::indicator:unchecked#SubPanel {
+    image: url(icons:chevron_right.svg)
+}
