@@ -86,6 +86,7 @@ class StructureSubPanel(QGroupBox):
             callback_function=self.change_structure_type,
             column=0,
             minimum_width=COLUMN_WIDTH_SUB,
+            tooltip_text="Select to change label color",
             dict_subgroups=dict_substructures,
             dict_sub_subgroups=dict_sub_substructures
         )

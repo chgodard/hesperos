@@ -169,6 +169,7 @@ class OneShotWidget(QWidget):
             row=0,
             column=0,
             minimum_width=COLUMN_WIDTH,
+            tooltip_text="Load DICOM data from a folder containing one serie",
         )
 
         self.load_file_image_push_button = add_push_button(
@@ -178,6 +179,7 @@ class OneShotWidget(QWidget):
             row=0,
             column=1,
             minimum_width=COLUMN_WIDTH,
+            tooltip_text="Load image data from one file",
         )
 
         self.file_name_text = add_label(
@@ -203,6 +205,7 @@ class OneShotWidget(QWidget):
             row=2,
             column=0,
             column_span=2,
+            tooltip_text="Zoom the main camera",
         )
         self.zoom_slider.setStyleSheet("""
             QSlider::handle:horizontal {{
@@ -212,20 +215,15 @@ class OneShotWidget(QWidget):
                 background: transparent;
                 }}""".format(get_relative_icon_path('zoom')))
 
-        self.default_contrast_text = add_label(
-            text="Default contrast:",
-            layout=self.loading_layout,
-            row=3,
-            column=0,
-        )
-
         self.default_contrast_combo_box = add_combo_box(
             list_items=["Set a default contrast", "CT Bone", "CT Soft"],
             layout=self.loading_layout,
             callback_function=self.set_default_contrast,
             row=3,
             column=0,
-            column_span=2
+            column_span=2,
+            minimum_width=COLUMN_WIDTH,
+            tooltip_text="Use a predefined HU contrast",
         )
 
         self.loading_panel.setLayout(self.loading_layout)
@@ -272,6 +270,7 @@ class OneShotWidget(QWidget):
             column=1,
             column_span=2,
             minimum_width=COLUMN_WIDTH,
+            tooltip_text="Open a segmentation file with the same size of the original image",
         )
 
         # Annotations tools are created in another layout 
@@ -284,6 +283,7 @@ class OneShotWidget(QWidget):
             row=0,
             column=0,
             minimum_width=COLUMN_WIDTH,
+            tooltip_text="Undo the last painting action",
         )
 
         # self.annotation_layout.addLayout(self.tool_annotation_layout, 2, 0, 1, 2)
@@ -324,6 +324,7 @@ class OneShotWidget(QWidget):
             column=0,
             column_span=2,
             minimum_width=COLUMN_WIDTH,
+            tooltip_text="Launch the training and inference of a classifier",
         )
 
         self.threshold_label = add_label(
@@ -341,6 +342,7 @@ class OneShotWidget(QWidget):
             row=1,
             column=1,
             minimum_width=COLUMN_WIDTH,
+            tooltip_text="Apply threshold on the output probability",
         )
 
         self.segmentation_panel.setLayout(self.segmentation_layout)
@@ -377,6 +379,7 @@ class OneShotWidget(QWidget):
             row=0,
             column=0,
             minimum_width=COLUMN_WIDTH,
+            tooltip_text="Save only the segmented probability data",
         )
 
         self.save_proba_push_button = add_push_button(
@@ -386,6 +389,7 @@ class OneShotWidget(QWidget):
             row=0,
             column=1,
             minimum_width=COLUMN_WIDTH,
+            tooltip_text="Save only the probability data",
         )
 
         self.reset_push_button = add_push_button(
@@ -396,6 +400,7 @@ class OneShotWidget(QWidget):
             column=0,
             column_span=2,
             minimum_width=COLUMN_WIDTH,
+            tooltip_text="Delete all segmentation data",
         )
 
         self.reset_save_panel.setLayout(self.reset_save_layout)
@@ -460,13 +465,10 @@ class OneShotWidget(QWidget):
         self.file_name_label.setVisible(isVisible)
 
         if file_type == "file":
-            self.default_contrast_text.setVisible(False)
             self.default_contrast_combo_box.setVisible(False)
         elif file_type == 'folder':
-            self.default_contrast_text.setVisible(True)
             self.default_contrast_combo_box.setVisible(True)
         else:
-            self.default_contrast_text.setVisible(isVisible)
             self.default_contrast_combo_box.setVisible(isVisible)
 
 # ============ Define callbacks ============

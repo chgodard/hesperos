@@ -23,7 +23,7 @@ from hesperos.layout.napari_elements import label_colors
 
 
 # ============ Functions to add custom QWidgets ============
-def add_combo_box(list_items, layout, callback_function, row, column, column_span=1, visibility=False, minimum_width=0):
+def add_combo_box(list_items, layout, callback_function, row, column, column_span=1, visibility=False, minimum_width=0, tooltip_text=""):
     """
     Create a QComboBox and add it to the corresponding layout
 
@@ -50,9 +50,10 @@ def add_combo_box(list_items, layout, callback_function, row, column, column_spa
     ----------
     out : QComboBox
 
-    """
-    
+    """ 
     combo_box = QComboBox()
+    combo_box.setToolTip(tooltip_text)
+
     # combo_box.setVisible(visibility)
     combo_box.addItems(list_items)
     combo_box.setCurrentIndex(0)
@@ -64,7 +65,7 @@ def add_combo_box(list_items, layout, callback_function, row, column, column_spa
 
     return combo_box
 
-def add_check_box(text, layout, callback_function, row, column, column_span=1, visibility=False, minimum_width=0):
+def add_check_box(text, layout, callback_function, row, column, column_span=1, visibility=False, minimum_width=0, tooltip_text=""):
     """
     Create a QCheckBox and add it to the corresponding layout
 
@@ -92,9 +93,9 @@ def add_check_box(text, layout, callback_function, row, column, column_span=1, v
     out : QCheckBox
 
     """
-
     check_box = QCheckBox(text)
     check_box.setVisible(visibility)
+    check_box.setToolTip(tooltip_text)
 
     check_box.setMinimumWidth(minimum_width)
     layout.addWidget(check_box, row, column, 1, column_span)
@@ -102,7 +103,7 @@ def add_check_box(text, layout, callback_function, row, column, column_span=1, v
 
     return check_box
 
-def add_icon_push_button(icon, layout, callback_function, row, column, column_span=1, visibility=False, minimum_width=0, isHBoxLayout=False):
+def add_icon_push_button(icon, layout, callback_function, row, column, column_span=1, visibility=False, minimum_width=0, tooltip_text="", isHBoxLayout=False):
     """
     Create a QPushButton with only a icon image (no text) and add it to the corresponding layout
 
@@ -132,9 +133,9 @@ def add_icon_push_button(icon, layout, callback_function, row, column, column_sp
     out : QPushButton
 
     """
-
     button = QPushButton(icon, "")
     button.setVisible(visibility)
+    button.setToolTip(tooltip_text)
 
     button.setFixedSize(25, 25)
     button.setIconSize(QtCore.QSize(20,20))
@@ -148,7 +149,7 @@ def add_icon_push_button(icon, layout, callback_function, row, column, column_sp
 
     return button
 
-def add_icon_text_push_button(icon, text, layout, callback_function, row, column, column_span=1, visibility=False, minimum_width=0, isHBoxLayout=False):
+def add_icon_text_push_button(icon, text, layout, callback_function, row, column, column_span=1, visibility=False, minimum_width=0, tooltip_text="", isHBoxLayout=False):
     """
     Create a QPushButton with only a icon image (no text) and add it to the corresponding layout
 
@@ -183,6 +184,7 @@ def add_icon_text_push_button(icon, text, layout, callback_function, row, column
 
     button = QPushButton(icon, text)
     button.setVisible(visibility)
+    button.setToolTip(tooltip_text)
 
     button.setIconSize(QtCore.QSize(20,20))
     button.setStyleSheet("QPushButton {text-align: center;}")
@@ -266,7 +268,7 @@ def add_label(text, layout, row, column, column_span=1, visibility=False, minimu
 
     return label
 
-def add_push_button(name, layout, callback_function, row, column, column_span=1, visibility=False, minimum_width=0):
+def add_push_button(name, layout, callback_function, row, column, column_span=1, visibility=False, minimum_width=0, tooltip_text=""):
     """
     Create a QPushButton and add it to the corresponding layout
 
@@ -297,6 +299,7 @@ def add_push_button(name, layout, callback_function, row, column, column_span=1,
 
     button = QPushButton(name)
     button.setVisible(visibility)
+    button.setToolTip(tooltip_text)
 
     button.setMinimumWidth(minimum_width)
     layout.addWidget(button, row, column, 1, column_span)
@@ -337,7 +340,7 @@ def add_text_edit(text, layout, row, column, column_span=1, visibility=False, mi
 
     return text_edit
 
-def add_slider(layout, bounds , callback_function, row, column, column_span=1, visibility=False, minimum_width=0, isHBoxLayout=False):
+def add_slider(layout, bounds , callback_function, row, column, column_span=1, visibility=False, minimum_width=0, tooltip_text="", isHBoxLayout=False):
     """
     Create a QSlider and add it to the corresponding layout
 
@@ -369,6 +372,8 @@ def add_slider(layout, bounds , callback_function, row, column, column_span=1, v
     """
     slider = QSlider(orientation=QtCore.Qt.Horizontal)
     slider.setVisible(visibility)
+    slider.setToolTip(tooltip_text)
+
     slider.setMinimum(bounds[0])
     slider.setMaximum(bounds[1])
     slider.setSingleStep(1)
@@ -386,7 +391,7 @@ def add_slider(layout, bounds , callback_function, row, column, column_span=1, v
 
 
 # ============ Functions to add custom radio buttons subgroups ============
-def add_group_radio_button(list_items, layout, callback_function, row=0, column=0, visibility=False, minimum_width=0):
+def add_group_radio_button(list_items, layout, callback_function, row=0, column=0, visibility=False, minimum_width=0, tooltip_text=""):
     """
     Create a QButtonGroup of QRadioButton and add it to the corresponding layout
 
@@ -412,12 +417,12 @@ def add_group_radio_button(list_items, layout, callback_function, row=0, column=
     button : QButtonGroup
 
     """
-    
     group_button = QButtonGroup()
 
     for label, item in enumerate(list_items):
         button = QRadioButton(item)
         button.setVisible(visibility)
+        button.setToolTip(tooltip_text)
 
         button.setMinimumWidth(minimum_width)
 
@@ -433,7 +438,7 @@ def add_group_radio_button(list_items, layout, callback_function, row=0, column=
 
     return group_button
 
-def add_sub_subgroup_radio_button(list_items, layout, callback_function, row=0, column=0, visibility=False, minimum_width=0, dict_subgroups={}, dict_sub_subgroups={}):
+def add_sub_subgroup_radio_button(list_items, layout, callback_function, row=0, column=0, visibility=False, minimum_width=0, tooltip_text="", dict_subgroups={}, dict_sub_subgroups={}):
     """
     Create a QButtonGroup with sub groups of QRadioButton and add it to the corresponding layout
 
@@ -514,6 +519,7 @@ def add_sub_subgroup_radio_button(list_items, layout, callback_function, row=0, 
                     for sub_subindex, sub_subitem in enumerate(dict_sub_subgroups[subitem]):
                         button = QRadioButton(sub_subitem)
                         button.setMinimumWidth(minimum_width)
+                        button.setToolTip(tooltip_text)
 
                         font = QFont()
                         font.setItalic(False)
@@ -543,6 +549,7 @@ def add_sub_subgroup_radio_button(list_items, layout, callback_function, row=0, 
                 else:
                     button = QRadioButton(subitem)
                     button.setVisible(visibility)
+                    button.setToolTip(tooltip_text)
                     button.setMinimumWidth(minimum_width)
                     button.setStyleSheet("font-weight: normal;")
 
@@ -601,6 +608,7 @@ def display_warning_box(widget, title, message):
         title of the pop up window
     message : str
         text to display
+
     """
     QMessageBox.warning(
         widget,
@@ -623,8 +631,8 @@ def display_save_message_box(title, message):
     ----------
     choice : bool
         answer to the question. True if "Unique", False if "Several"
-    """
 
+    """
     msg_box = QMessageBox()
     msg_box.setWindowTitle(title)
     msg_box.setText(message)
@@ -656,8 +664,8 @@ def display_ok_cancel_question_box(title, message):
     ----------
     choice : bool
         answer to the question
-    """
 
+    """
     msg_box = QMessageBox()
     msg_box.setWindowTitle(title)
     msg_box.setText(message)
@@ -687,8 +695,8 @@ def display_yes_no_question_box(title, message):
     ----------
     choice : bool
         answer to the question
-    """
 
+    """
     msg_box = QMessageBox()
     msg_box.setWindowTitle(title)
     msg_box.setText(message)

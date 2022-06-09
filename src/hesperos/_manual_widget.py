@@ -193,6 +193,7 @@ class ManualSegmentationWidget(QWidget):
             row=0,
             column=0,
             minimum_width=COLUMN_WIDTH,
+            tooltip_text="Load DICOM data from a folder containing one serie",
         )
 
         self.load_file_image_push_button = add_push_button(
@@ -202,6 +203,7 @@ class ManualSegmentationWidget(QWidget):
             row=0,
             column=1,
             minimum_width=COLUMN_WIDTH,
+            tooltip_text="Load image data from one file",
         )
 
         self.file_name_text = add_label(
@@ -228,6 +230,7 @@ class ManualSegmentationWidget(QWidget):
             column=0,
             column_span=2,
             minimum_width=COLUMN_WIDTH,
+            tooltip_text="Zoom the main camera",
         )
         self.zoom_slider.setStyleSheet("""
             QSlider::handle:horizontal {{
@@ -237,14 +240,6 @@ class ManualSegmentationWidget(QWidget):
                 background: transparent;
                 }}""".format(get_relative_icon_path('zoom')))
 
-        self.default_contrast_text = add_label(
-            text="Default contrast:",
-            layout=self.loading_layout,
-            row=3,
-            column=0,
-            minimum_width=COLUMN_WIDTH,
-        )
-
         self.default_contrast_combo_box = add_combo_box(
             list_items=["Set a default contrast", "CT Bone", "CT Soft"],
             layout=self.loading_layout,
@@ -253,6 +248,7 @@ class ManualSegmentationWidget(QWidget):
             column=0,
             column_span=2,
             minimum_width=COLUMN_WIDTH,
+            tooltip_text="Use a predefined HU contrast",
         )
 
         self.loading_panel.setLayout(self.loading_layout)
@@ -299,6 +295,7 @@ class ManualSegmentationWidget(QWidget):
             column=0,
             column_span=2,
             minimum_width=COLUMN_WIDTH,
+            tooltip_text="Open a segmentation file with the same size of the original image",
         )
 
         self.undo_push_button = add_icon_push_button(
@@ -308,6 +305,7 @@ class ManualSegmentationWidget(QWidget):
             row=1,
             column=0,
             minimum_width=COLUMN_WIDTH,
+            tooltip_text="Undo the last painting action",
         )
 
         self.annotation_combo_box = add_combo_box(
@@ -317,6 +315,7 @@ class ManualSegmentationWidget(QWidget):
             row=1,
             column=1,
             minimum_width=COLUMN_WIDTH,
+            tooltip_text="Select the pre-defined structure to annotate",
         )
         # self.annotation_combo_box.setStyleSheet("QComboBox::disabled{background-color: black; color: darkgray;}")
 
@@ -384,6 +383,7 @@ class ManualSegmentationWidget(QWidget):
             row=0,
             column=0,
             minimum_width=COLUMN_WIDTH,
+            tooltip_text="Save only the segmented data",
         )
 
         self.reset_push_button = add_push_button(
@@ -393,6 +393,7 @@ class ManualSegmentationWidget(QWidget):
             row=0,
             column=1,
             minimum_width=COLUMN_WIDTH,
+            tooltip_text="Delete all segmentation data",
         )
 
         self.backup_check_box = add_check_box(
@@ -403,6 +404,7 @@ class ManualSegmentationWidget(QWidget):
             column=0,
             column_span=2,
             minimum_width=COLUMN_WIDTH,
+            tooltip_text="Activate the automatic backup of the segmentation data when the slice inex is changed",
         )
         self.backup_check_box.setChecked(False)
 
@@ -608,13 +610,10 @@ class ManualSegmentationWidget(QWidget):
         self.file_name_label.setVisible(isVisible)
 
         if file_type == "file":
-            self.default_contrast_text.setVisible(False)
             self.default_contrast_combo_box.setVisible(False)
         elif file_type == 'folder':
-            self.default_contrast_text.setVisible(True)
             self.default_contrast_combo_box.setVisible(True)
         else:
-            self.default_contrast_text.setVisible(isVisible)
             self.default_contrast_combo_box.setVisible(isVisible)
 
 # ============ Define callbacks ============
