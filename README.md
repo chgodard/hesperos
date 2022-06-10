@@ -44,6 +44,7 @@ Hesperos plugin is designed to run on Windows or Macos with python 3.8, 3.9 or 3
 3. Install python 3.8, 3.9 or 3.10
 4. Install Python packages ( on conda virtual environment)
     > $ ` conda install -c conda-forge napari=0.4.14`
+    
     > $ ` pip install hesperos`                            
 5. Launch Napari > $ ` napari`
 
@@ -51,12 +52,12 @@ Hesperos plugin is designed to run on Windows or Macos with python 3.8, 3.9 or 3
 # Use Hesperos plugin
     
     
-# Contributing
+## Contributing
 
 Contributions are very welcome. Tests can be run with [tox], please ensure
 the coverage at least stays the same before you submit a pull request.
 
-# License
+## License
 
 Distributed under the terms of the [BSD-3] license,
 "hesperos" is free and open source software
