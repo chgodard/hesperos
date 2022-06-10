@@ -46,11 +46,12 @@ Hesperos plugin is designed to run on Windows or Macos with python 3.8, 3.9 or 3
     > $ ` conda install -c conda-forge napari=0.4.14`
     
     > $ ` pip install hesperos`                            
-5. Launch Napari > $ ` napari`
+5. Launch Napari 
+    > $ ` napari`
 
     
 # Use Hesperos plugin
-    
+    TODO
     
 ## Contributing
 
