@@ -25,17 +25,17 @@ Hesperos plugin is designed to run on Windows or Macos with python 3.8, 3.9 or 3
      
 ## Automatic installation
 1. Install [Anaconda] and deselect *Add to PATH*. Note the path where you install anaconda.
-2. Download only the [*INSTALLATION* folder](/INSTALLATION)
-3. Right click on the .bat files (for [installation](/INSTALLATION/run_hesperos.bat) and [running](/INSTALLATION/run_hesperos.bat)) and open in a text editor. Change the anaconda_dir to your anaconda path. Then save changes.
-    > for exemple: $ `anaconda_dir="C:\Users\chgodard\anaconda3" ` 
-4. Double click on the [installation file](/INSTALLATION/install_hesperos_env.bat) to create a anaconda virtual environement with python 3.9 and napari 0.4.14
-5. Double click on the [running file](/INSTALLATION/run_hesperos.bat) to run napari from your virtual environment.
+2. Download only the installation folder: [*script_files*]](/script_files)
+3. Right click on the .bat files (for [installation](/script_files/run_hesperos.bat) and [running](/script_files/run_hesperos.bat)) and open in a text editor. Change the anaconda_dir to your anaconda path. Then save changes.
+    > for exemple: $ `anaconda_dir=C:\Users\chgodard\anaconda3 ` 
+4. Double click on the [installation file](/script_files/install_hesperos_env.bat) to create a anaconda virtual environement with python 3.9 and napari 0.4.14
+5. Double click on the [running file](/script_files/run_hesperos.bat) to run napari from your virtual environment.
 6. On Napari: 
     1. Go to *Plugins/Install Plugins...*
     2. Search for "hesperos" (it can take a while to load).
     3. Install **hesperos** plugin.
     4. When installation is done, close Napari. A restart of Napari is needed to take in consideration the new installed plugin.
-7. Double click on the [running file](/INSTALLATION/run_hesperos.bat) to run napari.
+7. Double click on the [running file](/script_files/run_hesperos.bat) to run napari.
 8. Use the hesperos plugin in *Plugins/hesperos*
 
 ## Manual installation
