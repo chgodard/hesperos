@@ -582,7 +582,7 @@ class OneShotWidget(QWidget):
         """
         files_types = "Image File (*.tif *.tiff *.nii.gz *.nii)"
 
-        default_filepath = Path(self.image_dir).joinpath(self.file_name_label.text() + "_segmented_probabilities.tif")
+        default_filepath = Path(self.image_dir).joinpath(self.file_name_label.text() + "_segmented_probabilities.nii.gz")
         file_path, _ = QFileDialog.getSaveFileName(self, "Save Segmentation", str(default_filepath), files_types)
 
         # If choose "Cancel"
@@ -847,13 +847,13 @@ class OneShotWidget(QWidget):
         """
         if default_file_path is None:
             files_types = "Image File (*.tif *.tiff *.nii.gz *.nii)"
-            file_path, _ = QFileDialog.getOpenFileName(self, "Choose a segmentation file", "" , files_types )
+            file_path, _ = QFileDialog.getOpenFileName(self, "Choose a segmentation file", "" , files_types)
 
             if file_path == "":
                 return None
 
         else:
-            file_path = default_file_path 
+            file_path = str(default_file_path)
 
         extensions = Path(file_path).suffixes
 
