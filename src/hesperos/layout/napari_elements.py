@@ -12,7 +12,7 @@ label_layer_widget_list = [
     'contourSpinBox',
     'ndimSpinBox',
     'pick_button',
-    'preserveLabelsCheckBox',
+    # 'preserveLabelsCheckBox',
     'renderComboBox',
     'renderLabel',
     'selectionSpinBox',
@@ -35,11 +35,11 @@ label_colors = {
     0: 'transparent',
     1: 'red',
     2: 'cyan',
-    3: (87/255, 219/255, 0/255, 1),
-    4: 'yellow',
-    5: 'pink',
-    6: 'blue',
-    7: 'magenta',
+    3: (15/255, 10/255, 222/255, 1),
+    4: (255/255, 240/255, 0/255, 1),
+    5: 'magenta',
+    6: (87/255, 219/255, 0/255, 1),
+    7: (253/255, 182/255, 193/255, 1),
     8: (15/255, 73/255, 55/255, 1),
     9: (178/255, 119/255, 255/255, 1),
     10: 'orange',
@@ -61,15 +61,19 @@ label_colors = {
     26: (223/255, 131/255, 226/255, 1),
     27: (55/255, 5/255, 68/255, 1),
     28: (56/255, 40/255, 5/255, 1),
-    29: (226/255, 61/255, 97/255, 1),
+    29: (226/255, 61/255, 97/255, 1), 
     30: (43/255, 13/255, 119/255, 1),
     31: (119/255, 3/255, 50/255, 1),
     32: (13/255, 140/255, 163/255, 1),
     33: (198/255, 169/255, 95/255, 1),
     34: (117/255, 198/255, 113/255, 1),
     35: (221/255, 108/255, 59/255, 1),
+    None: 'transparent',
 }
+    # '_background_label': 'transparent',
+    #when checked "selected color" with color mode "direct", the label used to display the non selected label is referenced by the id None (see napari.layers.labels.labels.py) 
 
+# (255/255, 192/255, 203/255, 1)
 # ============ Function to custom napari viewer buttons ============
 def disable_napari_buttons(viewer):
     """
@@ -146,7 +150,7 @@ def disable_layer_widgets(viewer, layer_name, layer_type):
         layer = viewer.layers[layer_name]
         list_widget_to_remove = label_layer_widget_list
         indx_while = 9
-        indx_item = 7       
+        indx_item = 5       
 
     else:
         return
