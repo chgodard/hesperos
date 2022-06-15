@@ -8,6 +8,6 @@ call conda activate hesperos_env
 
 call conda install -c conda-forge napari=0.4.14
 
-call conda install -c anacoda pyqt
+call conda install -c anaconda pyqt
 
 exit
