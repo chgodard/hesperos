@@ -87,10 +87,13 @@ Hesperos plugin is designed to run on Windows operating system and macOS with Py
     
 # Hesperos: Manual Segmentation and Correction
 
-## Load your image
+## Loading panel
 Hesperos plugin can be used with Digital imaging and communications in medicine (DICOM), Neuroimaging Informatics Technology Initiative (NIfTI) or Tagged Image File Format (TIFF) images. To improve performances, use images that are located on your disk.
 
-To load a image file (.tiff, .tif, .nii or .nii.gz) use the IMAGE button     
+To load a image file (.tiff, .tif, .nii or .nii.gz) use the IMAGE button. To load a unique DICOM serie use the IMAGE button. Folder with multiple DICOM series is not supported.  
+    
+After Loading, a slider appears to zoom in/out on the image. Zoom is also possible with the mouse scroller. 
+If the image is a DICOM serie, a default contrast  have the possibility to select a default contrast for the image (to highlight bones or soft tissues according to their Hounsfield Units.) 
     
 ## Contributing
 
