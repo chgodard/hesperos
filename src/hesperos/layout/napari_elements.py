@@ -149,8 +149,8 @@ def disable_layer_widgets(viewer, layer_name, layer_type):
     elif layer_type == 'label':
         layer = viewer.layers[layer_name]
         list_widget_to_remove = label_layer_widget_list
-        indx_while = 9
-        indx_item = 5       
+        indx_while = 11
+        indx_item = 7      
 
     else:
         return
