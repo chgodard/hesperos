@@ -25,12 +25,12 @@ Hesperos plugin is designed to run on Windows or Macos with python 3.8, 3.9 or 3
      
 ## Automatic installation
 1. Install [Anaconda] and deselect *Add to PATH*. Note the path where you install anaconda.
-2. Download only the installation folder: [*script_files*]](/script_files)
-3. Add Anaconda path:
-    1. <ins>For Windows</ins>: Right click on the .bat files (for [installation](/script_files/for_Windows/install_hesperos_env.bat) and [running](/script_files/for_Windows/run_hesperos.bat)) and select *Modify*. Change the anaconda_dir to your anaconda path. Then save changes.
+2. Download only the script folder for [Windows](/script_files/for_Windows/) or [Macos](/script_files/for_Windows/).
+3. Add Anaconda path in script files:
+    1. <ins>For Windows</ins>: Right click on the .bat files (for [installation](/script_files/for_Windows/install_hesperos_env.bat) and [running](/script_files/for_Windows/run_hesperos.bat)) and select *Modify*. Change *PATH_TO_ADD* with your anaconda path. Then save changes.
         > for exemple: $ `anaconda_dir=C:\Users\chgodard\anaconda3 ` 
     2. <ins>For Macos</ins>:
-        1. Right click on the .command files (for [installation](/script_files/for_Macos/install_hesperos_env.command) and [running](/script_files/for_Macos/run_hesperos.command)) and select *Open with TextEdit*. Change the PATH_TO_ADD with your anaconda3 path. Then save changes.
+        1. Right click on the .command files (for [installation](/script_files/for_Macos/install_hesperos_env.command) and [running](/script_files/for_Macos/run_hesperos.command)) and select *Open with TextEdit*. Change *PATH_TO_ADD* with your anaconda path. Then save changes.
             > for exemple: $ `source ~/opt/anaconda3/etc/profile.d/conda.sh ` 
         2. On your terminal allow running of your .command files (change PATH with the path of your .command files) : 
             > $ `chmod u+x PATH/install_hesperos_env.command `
@@ -43,7 +43,7 @@ Hesperos plugin is designed to run on Windows or Macos with python 3.8, 3.9 or 3
     2. Search for "hesperos" (it can take a while to load).
     3. Install **hesperos** plugin.
     4. When installation is done, close Napari. A restart of Napari is needed to take in consideration the new installed plugin.
-7. Double click on the **run_hesperos file** to run napari.
+7. Double click on the **run_hesperos file** to run Napari.
 8. Use the hesperos plugin in *Plugins/hesperos*
 
 ## Manual installation
@@ -81,4 +81,4 @@ Distributed under the terms of the [BSD-3] license,
 [pip]: https://pypi.org/project/pip/
 [PyPI]: https://pypi.org/
     
-[Anaconda](https://www.anaconda.com/products/distribution#Downloads)
+[Anaconda]: https://www.anaconda.com/products/distribution#Downloads
