@@ -11,7 +11,6 @@ DICT_SUB_STRUCTURES = {
         'Elbow',
         'Glenoid',
         'Humerus',
-        'Humeral Head',
         'Scapula',
         'Sternum',
         'Vertebrae'],
@@ -20,15 +19,13 @@ DICT_SUB_STRUCTURES = {
         'Biceps',
         'Coracobrachialis',
         'Deltoid',
-        'Infraspinatus',
         'Latissimus dorsi',
         'Pectoralis',
         'Rhomboid',
-        'Subscapularis ',
         'Teres major',
         'Trapezius',
         'Triceps brachii',
-        'Upper Cuff Muscle']
+        'Cuff Muscles']
 }
 
 DICT_SUB_SUB_STRUCTURES = {
@@ -38,13 +35,13 @@ DICT_SUB_SUB_STRUCTURES = {
         'Coracoid process',
         'Spine'],
 
-    "Humeral Head":[
+    "Humerus":[
         'Diaphyse',
         'Head',
         'Trochiter',
         'Trochin'],
 
-    "Upper Cuff Muscle":[
+    "Cuff Muscles":[
         'Infra-spinatus',
         'Sub-scapularis',
         'Supra-spinatus',
