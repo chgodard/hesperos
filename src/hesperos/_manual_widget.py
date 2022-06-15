@@ -1051,7 +1051,9 @@ class ManualSegmentationWidget(QWidget):
 
         """
         self.remove_image_layer()
+        # self.viewer.add_image(array, name='image', contrast_limits=(np.min(array), np.max(array)))
         self.viewer.add_image(array, name='image')
+        self.viewer.layers['image'].contrast_limits = (np.min(array), np.max(array))
         disable_layer_widgets(self.viewer, layer_name='image', layer_type='image')
         self.viewer.layers['image'].events.contrast_limits.connect(self.reset_default_contrast_combo_box)
 
@@ -1130,7 +1132,6 @@ class ManualSegmentationWidget(QWidget):
                 self.hu_limits = (-160, 240)
                 self.viewer.layers['image'].contrast_limits = self.hu_limits
             else:
-                self.hu_limits = (0,0)
                 return
         else:
             self.default_contrast_combo_box.setCurrentText("Set a default contrast")
