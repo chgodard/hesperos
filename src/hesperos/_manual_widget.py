@@ -298,15 +298,31 @@ class ManualSegmentationWidget(QWidget):
             tooltip_text="Open a segmentation file with the same size of the original image",
         )
 
+        # Annotations tools are created in another layout
+        self.tool_annotation_layout = QHBoxLayout()
+
         self.undo_push_button = add_icon_push_button(
             icon=QIcon(get_icon_path('undo')),
-            layout=self.annotation_layout,
+            layout=self.tool_annotation_layout,
             callback_function=self.undo_segmentation,
-            row=1,
+            row=0,
             column=0,
-            minimum_width=COLUMN_WIDTH,
             tooltip_text="Undo the last painting action",
+            isHBoxLayout=True,
         )
+
+        self.lock_push_button = add_icon_push_button(
+            icon=QIcon(get_icon_path('unlock')),
+            layout=self.tool_annotation_layout,
+            callback_function=self.lock_slide,
+            row=0,
+            column=1,
+            tooltip_text="Lock a slice of work. Click on the checked button to go to the locked slice.",
+            isHBoxLayout=True,
+        )
+        self.lock_push_button.setCheckable(True)
+
+        self.annotation_layout.addLayout(self.tool_annotation_layout, 1, 0)
 
         self.annotation_combo_box = add_combo_box(
             list_items=["Choose a structure", "Fetus", "Shoulder", "Feta Challenge"],
@@ -317,27 +333,7 @@ class ManualSegmentationWidget(QWidget):
             minimum_width=COLUMN_WIDTH,
             tooltip_text="Select the pre-defined structure to annotate",
         )
-        # self.annotation_combo_box.setStyleSheet("QComboBox::disabled{background-color: black; color: darkgray;}")
-
-        # Annotations tools are created in another layout
-        # self.tool_annotation_layout = QHBoxLayout()
-
-        
-        # self.undo_push_button.setStyleSheet("QPushButton::disabled{background-color: black; color: darkgray;}")
-
-        # self.lock_push_button = add_icon_push_button(
-        #     icon=QIcon(get_icon_path('unlock')),
-        #     layout=self.tool_annotation_layout,
-        #     callback_function=self.lock_slide,
-        #     row=0,
-        #     column=1,
-        #     minimum_width=COLUMN_WIDTH,
-        #     isHBoxLayout=True,
-        # )
-        # self.lock_push_button.setCheckable(True)
-        # self.lock_push_button.setStyleSheet("QPushButton::disabled{background-color: black; color: darkgray;}")
-
-        # self.annotation_layout.addLayout(self.tool_annotation_layout, 2, 0, 1, 2)
+         
         self.annotation_panel.setLayout(self.annotation_layout)
 
         # === Add panel to the main layout ===
@@ -519,7 +515,7 @@ class ManualSegmentationWidget(QWidget):
                 self.annotation_combo_box.setVisible(isVisible)
                 self.load_segmentation_push_button.setVisible(isVisible)
                 self.undo_push_button.setVisible(isVisible)
-                # self.lock_push_button.setVisible(isVisible)
+                self.lock_push_button.setVisible(isVisible)
 
             elif panel_name == "reset_save_panel":
                 self.reset_save_panel.setVisible(isVisible)
@@ -645,6 +641,7 @@ class ManualSegmentationWidget(QWidget):
             self.set_image_layer(image_arr)
 
             self.reset_zoom_slider()
+            self.reset_lock_push_button()
             self.backup_check_box.setChecked(False)
             self.default_contrast_combo_box.setCurrentText("")
 
@@ -711,6 +708,7 @@ class ManualSegmentationWidget(QWidget):
                     return
 
                 self.set_segmentation_layer(segmentation_arr)
+                self.reset_lock_push_button()
 
                 self.status_label.setText("Ready")
 
@@ -867,6 +865,30 @@ class ManualSegmentationWidget(QWidget):
                 self.set_segmentation_layer(segmentation_arr)
         else:
             return
+
+    def lock_slide(self):
+    """
+        Lock a slice of work. Clicking on the checked QPushButton put the viewer to the locked slice location. 
+        Allow user to explore data and return to a specific slice quickly. 
+
+        """
+        if self.lock_push_button.isChecked() == True:
+            if self.locked_slice_index is None:
+                self.lock_push_button.setIcon(QIcon(get_icon_path('lock')))
+                self.locked_slice_index = self.viewer.dims.current_step
+
+        else:
+            if self.locked_slice_index == self.viewer.dims.current_step:
+                self.lock_push_button.setIcon(QIcon(get_icon_path('unlock')))
+                self.locked_slice_index = None
+
+            elif self.locked_slice_index is None:
+                self.lock_push_button.setIcon(QIcon(get_icon_path('unlock')))
+
+            else:
+                self.lock_push_button.setChecked(True)
+                self.viewer.dims.current_step = self.locked_slice_index
+
 
 # ============ Loading data functions ============
     def load_dicom_folder(self):
@@ -1146,6 +1168,14 @@ class ManualSegmentationWidget(QWidget):
                 if self.viewer.layers['image'].contrast_limits != list(self.hu_limits):
                     self.default_contrast_combo_box.setCurrentText("Set a default contrast")
 
+    def reset_lock_push_button(self):
+        """
+        Reset the selected slice of work to None and uncheck button.
+
+        """
+        self.locked_slice_index = None
+        self.lock_push_button.setChecked(False)
+        
 
 # ============ Display warning/question message box ============
     def can_remove_image_data(self):
@@ -1244,18 +1274,6 @@ class ManualSegmentationWidget(QWidget):
 
 
 # ============ Comments ============
-
-    # def lock_slide(self):
-    #     """
-    #     """
-
-    #     if self.lock_push_button.isChecked() == True:
-    #         self.lock_push_button.setIcon(QIcon(get_icon_path('lock')))
-    #     else:
-    #         self.lock_push_button.setIcon(QIcon(get_icon_path('unlock')))
-
-
-
     # def slicer_change(self):
     #     index = self.viewer.dims.current_step
     #     print(index)

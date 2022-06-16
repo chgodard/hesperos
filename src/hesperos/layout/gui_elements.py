@@ -142,7 +142,7 @@ def add_icon_push_button(icon, layout, callback_function, row, column, column_sp
     button.setStyleSheet("QPushButton {text-align: center;}")
 
     if isHBoxLayout:
-        layout.addWidget(button, column)
+        layout.addWidget(button)
     else:
         layout.addWidget(button, row, column, 1, column_span)
     button.clicked.connect(callback_function)
@@ -190,7 +190,7 @@ def add_icon_text_push_button(icon, text, layout, callback_function, row, column
     button.setStyleSheet("QPushButton {text-align: center;}")
 
     if isHBoxLayout:
-        layout.addWidget(button, column)
+        layout.addWidget(button)
     else:
         layout.addWidget(button, row, column, 1, column_span)
     button.clicked.connect(callback_function)
@@ -381,7 +381,7 @@ def add_slider(layout, bounds , callback_function, row, column, column_span=1, v
     # slider.setMinimumWidth(minimum_width)
 
     if isHBoxLayout:
-        layout.addWidget(slider, column)
+        layout.addWidget(slider)
     else:
         layout.addWidget(slider, row, column, 1, column_span)
 
