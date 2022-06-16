@@ -1085,6 +1085,8 @@ class ManualSegmentationWidget(QWidget):
         self.reset_annotation_layer_selected_label()
         disable_layer_widgets(self.viewer, layer_name='annotations', layer_type='label')
         self.remove_backup_segmentation_file()
+
+        self.viewer.layers['annotations'].mouse_double_click_callbacks.append(self.automatic_fill)
  
     def reset_annotation_layer_selected_label(self):
         """
@@ -1100,6 +1102,18 @@ class ManualSegmentationWidget(QWidget):
             self.viewer.layers['annotations'].mode = "PAINT"
             self.viewer.layers['annotations'].opacity = 0.6
           
+    def automatic_fill(self, layer, event):
+        """
+        TODO
+        """
+
+        if layer.mode in ["paint"]:
+            layer.mode = "fill"
+            
+        elif layer.mode in ["fill"]:
+            layer.mode = "paint"
+
+
 
 # ============ Change widget options ============
     def reset_annotation_radio_button_checked_id(self):
