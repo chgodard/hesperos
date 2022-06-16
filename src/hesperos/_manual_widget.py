@@ -361,17 +361,6 @@ class ManualSegmentationWidget(QWidget):
         self.reset_save_layout.setSpacing(5)
 
         # === Add Qwidgets to the panel layout ===
-        # self.backup_push_button = add_icon_push_button(
-        #     name="",
-        #     icon=QIcon(get_icon_path('backup')),
-        #     layout=self.reset_save_layout,
-        #     callback_function=self.activate_backup_segmentation,
-        #     row=0,
-        #     column=0,
-        #     minimum_width=COLUMN_WIDTH,
-        # )
-        # self.backup_push_button.setCheckable(True)
-
         self.save_push_button = add_push_button(
             name="Save",
             layout=self.reset_save_layout,
@@ -867,7 +856,7 @@ class ManualSegmentationWidget(QWidget):
             return
 
     def lock_slide(self):
-    """
+        """
         Lock a slice of work. Clicking on the checked QPushButton put the viewer to the locked slice location. 
         Allow user to explore data and return to a specific slice quickly. 
 
@@ -1060,6 +1049,7 @@ class ManualSegmentationWidget(QWidget):
                 return True, segmentation_file_path
         
         return False, ""   
+
 
 # ============ Update napari layers ============
     def set_image_layer(self, array):
