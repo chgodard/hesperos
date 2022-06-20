@@ -27,6 +27,7 @@ from hesperos.one_shot_learning.utilities import run_one_shot_learning
 
 # ============ Import python packages ============
 import os
+import json
 import napari
 import numpy as np
 import tifffile as tif
@@ -99,12 +100,9 @@ class OneShotWidget(QWidget):
 
         # === Create and add panels to the layout ===
         self.add_loading_panel(1)
-
         self.add_annotation_panel(2)
         self.add_sub_annotation_panel(3)
-
         self.add_segmentation_panel(4)
-
         self.add_reset_save_panel(5)
 
         # Display status (cannot display progressing bar because napari is freezing)
@@ -215,16 +213,53 @@ class OneShotWidget(QWidget):
                 background: transparent;
                 }}""".format(get_relative_icon_path('zoom')))
 
-        self.default_contrast_combo_box = add_combo_box(
-            list_items=["Set a default contrast", "CT Bone", "CT Soft"],
-            layout=self.loading_layout,
-            callback_function=self.set_default_contrast,
-            row=3,
+        # Loading tools are created in another layout
+        self.tool_loading_layout = QHBoxLayout()
+
+        self.set_custom_contrast_push_button = add_icon_push_button(
+            icon=QIcon(get_icon_path('plus')),
+            layout=self.tool_loading_layout,
+            callback_function=self.set_custom_contrast,
+            row=0,
             column=0,
-            column_span=2,
+            tooltip_text="Add custom contrast limit setting. Open it by selecting the Custom contrast choice.",
+            isHBoxLayout=True,
+        )        
+        self.custom_contrast_limits = None
+        self.hu_limits = []
+
+        self.import_custom_contrast_push_button = add_icon_push_button(
+            icon=QIcon(get_icon_path('import')),
+            layout=self.tool_loading_layout,
+            callback_function=self.import_custom_contrast,
+            row=0,
+            column=1,
+            tooltip_text="Import custom contrast limit setting from a .json file.",
+            isHBoxLayout=True,
+        )
+
+        self.export_custom_contrast_push_button = add_icon_push_button(
+            icon=QIcon(get_icon_path('export')),
+            layout=self.tool_loading_layout,
+            callback_function=self.export_custom_contrast,
+            row=0,
+            column=2,
+            tooltip_text="Export custom contrast limit setting as .json file.",
+            isHBoxLayout=True,
+        )
+
+        self.default_contrast_combo_box = add_combo_box(
+            list_items=["Set a default contrast", "CT Bone", "CT Soft", "Custom contrast"],
+            layout=self.tool_loading_layout,
+            callback_function=self.set_default_contrast,
+            row=0,
+            column=3,
             minimum_width=COLUMN_WIDTH,
             tooltip_text="Use a predefined HU contrast",
+            isHBoxLayout=True,
         )
+
+        self.loading_layout.addLayout(self.tool_loading_layout, 3, 0, 1, 2)
 
         self.loading_panel.setLayout(self.loading_layout)
 
@@ -408,6 +443,8 @@ class OneShotWidget(QWidget):
         # === Add panel to the main layout ===
         self.layout.addWidget(self.reset_save_panel, row, column)
 
+
+# ============ Toggle widgets and panel ============
     def toggle_panels(self, list_panel_names, isVisible):
         """
         Make visible panels
@@ -465,275 +502,25 @@ class OneShotWidget(QWidget):
         self.file_name_label.setVisible(isVisible)
 
         if file_type == "file":
+            self.set_custom_contrast_push_button.setVisible(False)
+            self.import_custom_contrast_push_button.setVisible(False)
+            self.export_custom_contrast_push_button.setVisible(False)
             self.default_contrast_combo_box.setVisible(False)
+
         elif file_type == 'folder':
+            self.set_custom_contrast_push_button.setVisible(False)
+            self.import_custom_contrast_push_button.setVisible(True)
+            self.export_custom_contrast_push_button.setVisible(True)
             self.default_contrast_combo_box.setVisible(True)
+            
         else:
+            self.set_custom_contrast_push_button.setVisible(False)
+            self.import_custom_contrast_push_button.setVisible(isVisible)
+            self.export_custom_contrast_push_button.setVisible(isVisible)
             self.default_contrast_combo_box.setVisible(isVisible)
 
-# ============ Define callbacks ============
-    def update_image_with_path(self, file_type):
-        """
-        Update image data by asking file path to the user.
-        Load image data, add it to napari, toggle panels, check if a corresponding segmentation data file exist (if so, load it and add it to napari).
-        
-        Parameters
-        ----------
-        file_type : str
-            type of image loaded : "file" for .tiff, .tif, .nii and .nii.gz and "folder" for DICOM folder
-            
-        """
-        canRemove = self.can_remove_all()
 
-        if canRemove:
-            self.status_label.setText("Loading...")
-
-            if file_type == "file":
-                image_arr = self.load_image_file()
-            elif file_type == 'folder':
-                image_arr = self.load_dicom_folder()
-
-            if image_arr is None:
-                self.status_label.setText("Ready")
-                return
-
-            self.set_image_layer(image_arr)
-
-            self.reset_zoom_slider()
-            self.reset_threshold_slider()
-            self.default_contrast_combo_box.setCurrentText("Set a default contrast")
-
-            self.toggle_loading_panel_widget(True, file_type)
-            self.toggle_panels(["annotation_panel", "segmentation_panel", "reset_save_panel"], True)
-
-            segmentation_arr = np.zeros(image_arr.shape, dtype=np.int8)
-            self.set_segmentation_layer(segmentation_arr)
-
-            self.remove_probabilities_layer()
-            self.remove_segmented_probabilities_layer()
-
-            self.toggle_annotation_sub_panel(True)
-
-            napari.features_3d = Features3D()
-
-            self.status_label.setText("Ready")
-
-        else:
-            return
-
-    def update_segmentation_with_path(self, segmentation_path=None):
-        """
-        Update segmentation data from a file path : load data and add it to napari.
-        
-        Parameters
-        ----------
-        segmentation_path : str
-            path of the segmentation file
-            
-        """
-
-        # not from a corresponding segmentation file found for the image
-        if segmentation_path is None:
-            canRemove = self.can_remove_segmentation_data()
-        # from a corresponding segmentation file found for the image (not ask for remove because all ready done)
-        else:
-            canRemove = True
-
-        if canRemove:
-            self.status_label.setText("Loading...")
-
-            segmentation_arr = self.load_segmentation_file(segmentation_path)
-
-            if segmentation_arr is None:
-                self.status_label.setText("Ready")
-                return
-            
-            if "image" in self.viewer.layers:
-                image_arr = self.viewer.layers['image'].data 
-                if segmentation_arr.shape != image_arr.shape:
-                    display_warning_box(self, "Error", "Size of the segmentation file doesn't correspond to the size of the source image")
-                    self.status_label.setText("Ready")
-                    return
-
-                self.set_segmentation_layer(segmentation_arr)
-                self.status_label.setText("Ready")
-
-    def zoom(self):
-        """
-            Zoom the camera view of the main canvas of napari
-
-        """
-        self.viewer.camera.zoom = self.zoom_slider.value() / 100
-
-    def undo_segmentation(self):
-        """
-            Undo last operation of annotation
-
-        """
-        if hasattr(self.viewer, 'layers'):
-            if 'annotations' in self.viewer.layers:
-                segmentation_layer = self.viewer.layers['annotations']
-                segmentation_layer.undo()
-
-    def save_segmentation(self):
-        """
-            Save the labelled data as a unique 3D image, or multiple 3D images (one by label)
-
-        """
-        files_types = "Image File (*.tif *.tiff *.nii.gz *.nii)"
-
-        default_filepath = Path(self.image_dir).joinpath(self.file_name_label.text() + "_segmented_probabilities.nii.gz")
-        file_path, _ = QFileDialog.getSaveFileName(self, "Save Segmentation", str(default_filepath), files_types)
-
-        # If choose "Cancel"
-        if file_path == "":
-            return
-
-        if hasattr(self.viewer, 'layers'):
-            if "segmented probabilities" in self.viewer.layers:
-                self.status_label.setText("Saving...")
-
-                segmentation_arr = self.viewer.layers['segmented probabilities'].data
-
-                extensions = Path(file_path).suffixes
-                if len(extensions) == 1:
-                    if (extensions[0] == ".tif") or (extensions[0] == ".tiff"): 
-                        tif.imsave(file_path, segmentation_arr)
-                    elif extensions[0] == ".nii":
-                        result_image_sitk = sitk.GetImageFromArray(segmentation_arr.astype(np.uint16))
-                        result_image_sitk.CopyInformation(self.image_sitk)
-                        sitk.WriteImage(result_image_sitk, file_path)
-                elif len(extensions) == 2:
-                    if (extensions[0] == ".nii") and (extensions[1] == ".gz"):
-                        result_image_sitk = sitk.GetImageFromArray(segmentation_arr.astype(np.uint16))
-                        result_image_sitk.CopyInformation(self.image_sitk)
-                        sitk.WriteImage(result_image_sitk, file_path)
-
-                self.status_label.setText("Ready")
-
-            else:
-                display_warning_box(self, "Error", "No segmentation data find")
-                return
-
-    def save_probabilities(self):
-        """
-            Save the labelled data as a unique 3D image, or multiple 3D images (one by label)
-
-        """
-        files_types = "Image File (*.tif *.tiff *.nii.gz *.nii)"
-
-        default_filepath = Path(self.image_dir).joinpath(self.file_name_label.text() + "_probabilities.tif")
-        file_path, _ = QFileDialog.getSaveFileName(self, "Save Probabilities", str(default_filepath), files_types)
-
-        # If choose "Cancel"
-        if file_path == "":
-            return
-
-        if hasattr(self.viewer, 'layers'):
-            if "probabilities" in self.viewer.layers:
-
-                self.status_label.setText("Saving...")
-
-                proba_arr = self.viewer.layers['probabilities'].data
-
-                extensions = Path(file_path).suffixes
-
-                if (extensions[-1] == ".tif") or (extensions[-1] == ".tiff"): 
-                    tif.imsave(file_path, proba_arr)
-
-                elif extensions[-1] == ".nii": 
-                    result_image_sitk = sitk.GetImageFromArray(proba_arr.astype(np.uint8))
-                    result_image_sitk.CopyInformation(self.image_sitk)
-                    sitk.WriteImage(result_image_sitk, file_path)
-
-                elif extensions[-1] == ".gz":
-                    if len(extensions) >= 2:
-                        if extensions[-2] == ".nii": 
-                            result_image_sitk = sitk.GetImageFromArray(proba_arr.astype(np.uint8))
-                            result_image_sitk.CopyInformation(self.image_sitk)
-                            sitk.WriteImage(result_image_sitk, file_path)
-                
-                self.status_label.setText("Ready")
-
-            else:
-                display_warning_box(self, "Error", "No segmentation data find")
-                return
-
-    def reset_segmentation(self):
-        """
-            Reset segmentation data
-
-        """
-        canRemoveSegmentation = self.can_remove_segmentation_data()
-
-        if canRemoveSegmentation:
-            if "image" in self.viewer.layers:
-                image_arr = self.viewer.layers['image'].data 
-                segmentation_arr = np.zeros(image_arr.shape, dtype=np.int8)
-                self.set_segmentation_layer(segmentation_arr)
-        else:
-            return
-
-    def run_segmentation(self):
-        """
-            Run One shot learning : training and inference steps
-
-        """
-        self.status_label.setText("Computing...")
-
-        if hasattr(self.viewer, 'layers'):
-            if 'image' in self.viewer.layers:
-                image_arr = self.viewer.layers['image'].data
-            else:
-                display_warning_box(self, "Error", "No image data.")
-                self.status_label.setText("Ready")
-                return
-
-            if 'annotations' in self.viewer.layers:
-                segmentation_arr = self.viewer.layers['annotations'].data
-            else:
-                display_warning_box(self, "Error", "No annotation data.")
-                self.status_label.setText("Ready")
-                return
-
-        #check if 2 classes have been annotated 
-        label_items = np.unique(segmentation_arr)
-        label_items = np.delete(label_items, 0)
-        if len(label_items) != 2:
-            display_warning_box(self, "Error", "Incorrect number of classes. You have to annotate 2 differents classes (background not included).")
-            self.status_label.setText("Ready")
-            return
-
-        files_types = "PICKLE (*.pckl)"
-
-        default_filepath = Path(self.image_dir).joinpath(self.file_name_label.text() + "_model_rfc.pckl")
-        output_classifier_path, _ = QFileDialog.getSaveFileName(self, "Save Model File", str(default_filepath), files_types)
-
-        output_proba = run_one_shot_learning(image_arr, segmentation_arr, str(output_classifier_path))
-
-        self.set_probabilities_layer(output_proba)
-
-        self.reset_threshold_slider()
-        output_threshold = np.where(output_proba > self.threshold_slider.value(), 255, 0)
-        self.set_segmented_probabilities_layer(output_threshold)
-
-        self.status_label.setText("Ready")
-
-    def set_probabilities_threshold(self):
-        """
-        Update threshold value use to create the segmented probabilities.
-        
-        """
-        value = self.threshold_slider.value()
-
-        if hasattr(self.viewer, 'layers'):
-            if 'probabilities' in self.viewer.layers:
-                output_proba = self.viewer.layers["probabilities"].data
-                threshold_arr = np.where(output_proba > value, 255, 0)
-                self.set_segmented_probabilities_layer(threshold_arr)
-    
-
-# ============ Loading data functions ============
+# ============ Load data ============
     def load_dicom_folder(self):
         """
         Load a complete DICOM serie from a folder
@@ -891,6 +678,273 @@ class OneShotWidget(QWidget):
         
         return segmentation_arr
 
+    def import_custom_contrast(self):
+        """
+        Import custom contrast limits from a .json file and apply it
+
+        """
+        files_types = "JSON File (*.json)"
+        file_path, _ = QFileDialog.getOpenFileName(self, "Choose a JSON image", "" , files_types)
+
+        if file_path == "":
+            return None
+
+        self.default_contrast_combo_box.setCurrentText("Set a default contrast")
+
+        with open(file_path) as f:
+            self.import_contrast = json.load(f)
+        
+        if (np.max(import_contrast) <= self.viewer.layers['image'].contrast_limits_range[1]) and (np.min(import_contrast) >= self.viewer.layers['image'].contrast_limits_range[0]):
+            self.custom_contrast_limits = import_contrast
+        else: 
+            display_warning_box(self, "Error", "The imported contrast limit is outside of the image contrast range.")
+            return
+
+        self.default_contrast_combo_box.setCurrentText("Custom contrast")
+
+
+# ============ Update data ============
+    def update_image_with_path(self, file_type):
+        """
+        Update image data by asking file path to the user.
+        Load image data, add it to napari, toggle panels, check if a corresponding segmentation data file exist (if so, load it and add it to napari).
+        
+        Parameters
+        ----------
+        file_type : str
+            type of image loaded : "file" for .tiff, .tif, .nii and .nii.gz and "folder" for DICOM folder
+            
+        """
+        canRemove = self.can_remove_all()
+
+        if canRemove:
+            self.status_label.setText("Loading...")
+
+            if file_type == "file":
+                image_arr = self.load_image_file()
+            elif file_type == 'folder':
+                image_arr = self.load_dicom_folder()
+
+            if image_arr is None:
+                self.status_label.setText("Ready")
+                return
+
+            self.set_image_layer(image_arr)
+
+            self.reset_zoom_slider()
+            self.reset_threshold_slider()
+            self.default_contrast_combo_box.setCurrentText("Set a default contrast")
+
+            self.toggle_loading_panel_widget(True, file_type)
+            self.toggle_panels(["annotation_panel", "segmentation_panel", "reset_save_panel"], True)
+
+            segmentation_arr = np.zeros(image_arr.shape, dtype=np.int8)
+            self.set_segmentation_layer(segmentation_arr)
+
+            self.remove_probabilities_layer()
+            self.remove_segmented_probabilities_layer()
+
+            self.toggle_annotation_sub_panel(True)
+
+            napari.features_3d = Features3D()
+
+            self.status_label.setText("Ready")
+
+        else:
+            return
+
+    def update_segmentation_with_path(self, segmentation_path=None):
+        """
+        Update segmentation data from a file path : load data and add it to napari.
+        
+        Parameters
+        ----------
+        segmentation_path : str
+            path of the segmentation file
+            
+        """
+
+        # not from a corresponding segmentation file found for the image
+        if segmentation_path is None:
+            canRemove = self.can_remove_segmentation_data()
+        # from a corresponding segmentation file found for the image (not ask for remove because all ready done)
+        else:
+            canRemove = True
+
+        if canRemove:
+            self.status_label.setText("Loading...")
+
+            segmentation_arr = self.load_segmentation_file(segmentation_path)
+
+            if segmentation_arr is None:
+                self.status_label.setText("Ready")
+                return
+            
+            if "image" in self.viewer.layers:
+                image_arr = self.viewer.layers['image'].data 
+                if segmentation_arr.shape != image_arr.shape:
+                    display_warning_box(self, "Error", "Size of the segmentation file doesn't correspond to the size of the source image")
+                    self.status_label.setText("Ready")
+                    return
+
+                self.set_segmentation_layer(segmentation_arr)
+                self.status_label.setText("Ready")
+
+
+# ============ Save data ============
+    def save_segmentation(self):
+        """
+            Save the labelled data as a unique 3D image, or multiple 3D images (one by label)
+
+        """
+        files_types = "Image File (*.tif *.tiff *.nii.gz *.nii)"
+
+        default_filepath = Path(self.image_dir).joinpath(self.file_name_label.text() + "_segmented_probabilities.nii.gz")
+        file_path, _ = QFileDialog.getSaveFileName(self, "Save Segmentation", str(default_filepath), files_types)
+
+        # If choose "Cancel"
+        if file_path == "":
+            return
+
+        if hasattr(self.viewer, 'layers'):
+            if "segmented probabilities" in self.viewer.layers:
+                self.status_label.setText("Saving...")
+
+                segmentation_arr = self.viewer.layers['segmented probabilities'].data
+
+                extensions = Path(file_path).suffixes
+                if len(extensions) == 1:
+                    if (extensions[0] == ".tif") or (extensions[0] == ".tiff"): 
+                        tif.imsave(file_path, segmentation_arr)
+                    elif extensions[0] == ".nii":
+                        result_image_sitk = sitk.GetImageFromArray(segmentation_arr.astype(np.uint16))
+                        result_image_sitk.CopyInformation(self.image_sitk)
+                        sitk.WriteImage(result_image_sitk, file_path)
+                elif len(extensions) == 2:
+                    if (extensions[0] == ".nii") and (extensions[1] == ".gz"):
+                        result_image_sitk = sitk.GetImageFromArray(segmentation_arr.astype(np.uint16))
+                        result_image_sitk.CopyInformation(self.image_sitk)
+                        sitk.WriteImage(result_image_sitk, file_path)
+
+                self.status_label.setText("Ready")
+
+            else:
+                display_warning_box(self, "Error", "No segmentation data find")
+                return
+
+    def save_probabilities(self):
+        """
+            Save the labelled data as a unique 3D image, or multiple 3D images (one by label)
+
+        """
+        files_types = "Image File (*.tif *.tiff *.nii.gz *.nii)"
+
+        default_filepath = Path(self.image_dir).joinpath(self.file_name_label.text() + "_probabilities.tif")
+        file_path, _ = QFileDialog.getSaveFileName(self, "Save Probabilities", str(default_filepath), files_types)
+
+        # If choose "Cancel"
+        if file_path == "":
+            return
+
+        if hasattr(self.viewer, 'layers'):
+            if "probabilities" in self.viewer.layers:
+
+                self.status_label.setText("Saving...")
+
+                proba_arr = self.viewer.layers['probabilities'].data
+
+                extensions = Path(file_path).suffixes
+
+                if (extensions[-1] == ".tif") or (extensions[-1] == ".tiff"): 
+                    tif.imsave(file_path, proba_arr)
+
+                elif extensions[-1] == ".nii": 
+                    result_image_sitk = sitk.GetImageFromArray(proba_arr.astype(np.uint8))
+                    result_image_sitk.CopyInformation(self.image_sitk)
+                    sitk.WriteImage(result_image_sitk, file_path)
+
+                elif extensions[-1] == ".gz":
+                    if len(extensions) >= 2:
+                        if extensions[-2] == ".nii": 
+                            result_image_sitk = sitk.GetImageFromArray(proba_arr.astype(np.uint8))
+                            result_image_sitk.CopyInformation(self.image_sitk)
+                            sitk.WriteImage(result_image_sitk, file_path)
+                
+                self.status_label.setText("Ready")
+
+            else:
+                display_warning_box(self, "Error", "No segmentation data find")
+                return
+
+    def export_custom_contrast(self):
+        """
+        Export custom contrast limits as a .json file that can be re-open in the plugin
+
+        """
+        if self.custom_contrast_limits is not None:
+
+            files_types = "JSON File (*.json)"
+
+            default_filepath = Path(self.image_dir).joinpath(self.file_name_label.text() + "_custom_contrast.json")
+            file_path, _ = QFileDialog.getSaveFileName(self, "Save contrast limit parameters", str(default_filepath), files_types)
+
+            # If choose "Cancel"
+            if file_path == "":
+                return
+
+            with open(file_path, 'w') as f:
+                json.dump(self.custom_contrast_limits, f)
+            
+        else:
+            display_warning_box(self, "Error", "No custom contrast limits saved. Click on + button to add one (it will take the value of the current contrast limits used).")
+
+
+# ============ Run One Shot Learning ============
+    def run_segmentation(self):
+        """
+            Run One shot learning : training and inference steps
+
+        """
+        self.status_label.setText("Computing...")
+
+        if hasattr(self.viewer, 'layers'):
+            if 'image' in self.viewer.layers:
+                image_arr = self.viewer.layers['image'].data
+            else:
+                display_warning_box(self, "Error", "No image data.")
+                self.status_label.setText("Ready")
+                return
+
+            if 'annotations' in self.viewer.layers:
+                segmentation_arr = self.viewer.layers['annotations'].data
+            else:
+                display_warning_box(self, "Error", "No annotation data.")
+                self.status_label.setText("Ready")
+                return
+
+        #check if 2 classes have been annotated 
+        label_items = np.unique(segmentation_arr)
+        label_items = np.delete(label_items, 0)
+        if len(label_items) != 2:
+            display_warning_box(self, "Error", "Incorrect number of classes. You have to annotate 2 differents classes (background not included).")
+            self.status_label.setText("Ready")
+            return
+
+        files_types = "PICKLE (*.pckl)"
+
+        default_filepath = Path(self.image_dir).joinpath(self.file_name_label.text() + "_model_rfc.pckl")
+        output_classifier_path, _ = QFileDialog.getSaveFileName(self, "Save Model File", str(default_filepath), files_types)
+
+        output_proba = run_one_shot_learning(image_arr, segmentation_arr, str(output_classifier_path))
+
+        self.set_probabilities_layer(output_proba)
+
+        self.reset_threshold_slider()
+        output_threshold = np.where(output_proba > self.threshold_slider.value(), 255, 0)
+        self.set_segmented_probabilities_layer(output_threshold)
+
+        self.status_label.setText("Ready")
+
 
 # ============ Update napari layers ============
     def set_image_layer(self, array):
@@ -957,42 +1011,16 @@ class OneShotWidget(QWidget):
             self.viewer.add_image(array, name='segmented probabilities', colormap="red", opacity=0.5)
             disable_layer_widgets(self.viewer, layer_name='segmented probabilities', layer_type='image')
 
-    def reset_annotation_layer_selected_label(self):
+
+# ============ Apply widget value ============
+    def set_custom_contrast(self):
         """
-        Reset the selected structure to annotate.
+        Save the current contrast limits as a "Custom contrast" to be re-used.
 
         """
-        if "annotations" in self.viewer.layers:
-            if self.annotation_combo_box.currentText() == "Choose a structure":
-                self.viewer.layers['annotations'].selected_label = 0
-            else:
-                self.viewer.layers['annotations'].selected_label = 1
-            self.viewer.layers['annotations'].mode = "PAINT"
-            self.viewer.layers['annotations'].opacity = 0.6
-
-
-# ============ Change widget options ============
-    def reset_zoom_slider(self):
-        """
-        Reset the zoom slider to 100 (i.e. no zoom)
-
-        """
-        self.zoom_slider.setValue(int(self.viewer.camera.zoom * 100))
-
-    def reset_threshold_slider(self):
-        """
-        Reset the threshold slider to 125
-
-        """
-        self.threshold_slider.setValue(125)
-
-    def reset_annotation_radio_button_checked_id(self):
-        """
-        Reset selected radio button (i.e. the element to annotate) to the first item of the list.
-
-        """
-        radio_button_to_check = self.oneshot.group_radio_button.button(1)
-        radio_button_to_check.setChecked(True)
+        if "image" in self.viewer.layers:
+            self.custom_contrast_limits = self.viewer.layers['image'].contrast_limits
+            self.default_contrast_combo_box.setCurrentText("Custom contrast")
 
     def set_default_contrast(self):
         """
@@ -1007,14 +1035,71 @@ class OneShotWidget(QWidget):
                 # hu = pixel_value * slope + intercept
                 self.viewer.layers['image'].contrast_limits = self.hu_limits
                 # self.viewer.layers['image'].contrast_limits_range = (self.viewer.layers['image'].data.min(), self.viewer.layers['image'].data.max())
+           
             elif self.default_contrast_combo_box.currentText() == "CT Soft":
                 self.hu_limits = (-160, 240)
                 self.viewer.layers['image'].contrast_limits = self.hu_limits
+
+            elif self.default_contrast_combo_box.currentText() == "Custom contrast":
+                if self.custom_contrast_limits is not None:
+                    self.viewer.layers['image'].contrast_limits = self.custom_contrast_limits
+                else:
+                    display_warning_box(self, "Error", "No custom contrast limits saved. Click on + button to add one (it will take the value of the current contrast limits used).")
+
             else:
-                self.hu_limits = (0,0)
                 return
         else:
             self.default_contrast_combo_box.setCurrentText("Set a default contrast")
+    
+    def set_probabilities_threshold(self):
+        """
+        Update threshold value use to create the segmented probabilities.
+        
+        """
+        value = self.threshold_slider.value()
+
+        if hasattr(self.viewer, 'layers'):
+            if 'probabilities' in self.viewer.layers:
+                output_proba = self.viewer.layers["probabilities"].data
+                threshold_arr = np.where(output_proba > value, 255, 0)
+                self.set_segmented_probabilities_layer(threshold_arr)
+    
+    def undo_segmentation(self):
+        """
+            Undo last operation of annotation
+
+        """
+        if hasattr(self.viewer, 'layers'):
+            if 'annotations' in self.viewer.layers:
+                segmentation_layer = self.viewer.layers['annotations']
+                segmentation_layer.undo()
+
+    def zoom(self):
+        """
+            Zoom the camera view of the main canvas of napari
+
+        """
+        self.viewer.camera.zoom = self.zoom_slider.value() / 100
+
+
+# ============ Reset widget options ============
+    def reset_annotation_layer_selected_label(self):
+        """
+        Reset the selected structure to annotate.
+
+        """
+        if "annotations" in self.viewer.layers:
+            self.viewer.layers['annotations'].selected_label = 1
+            self.viewer.layers['annotations'].mode = "PAINT"
+            self.viewer.layers['annotations'].opacity = 0.6
+
+    def reset_annotation_radio_button_checked_id(self):
+        """
+        Reset selected radio button (i.e. the element to annotate) to the first item of the list.
+
+        """
+        radio_button_to_check = self.oneshot.group_radio_button.button(1)
+        radio_button_to_check.setChecked(True)
     
     def reset_default_contrast_combo_box(self):
         """
@@ -1025,6 +1110,69 @@ class OneShotWidget(QWidget):
             if (self.default_contrast_combo_box.currentText() == "CT Bone") or (self.default_contrast_combo_box.currentText() == "CT Soft"):
                 if self.viewer.layers['image'].contrast_limits != list(self.hu_limits):
                     self.default_contrast_combo_box.setCurrentText("Set a default contrast")
+
+    def reset_threshold_slider(self):
+        """
+        Reset the threshold slider to 125
+
+        """
+        self.threshold_slider.setValue(125)
+
+    def reset_zoom_slider(self):
+        """
+        Reset the zoom slider to 100 (i.e. no zoom)
+
+        """
+        self.zoom_slider.setValue(int(self.viewer.camera.zoom * 100))
+
+
+# ============ Remove data ============
+    def remove_image_layer(self):
+        """
+            Remove image layer from napari viewer
+
+        """
+        if "image" in self.viewer.layers:
+            self.viewer.layers.remove('image')
+
+    def remove_probabilities_layer(self):
+        """
+            Remove probabilities layer from napari viewer
+
+        """
+        if "probabilities" in self.viewer.layers:
+            self.viewer.layers.remove('probabilities')
+
+    def remove_segmentation_layer(self):
+        """
+            Remove segmentation layer from napari viewer
+
+        """
+        if "annotations" in self.viewer.layers:
+            self.viewer.layers.remove('annotations')
+
+    def remove_segmented_probabilities_layer(self):
+        """
+            Remove segmented probabilities' layer from napari viewer
+
+        """
+        if "segmented probabilities" in self.viewer.layers:
+            self.viewer.layers.remove('segmented probabilities')
+
+    def reset_segmentation(self):
+        """
+            Reset segmentation data
+
+        """
+        canRemoveSegmentation = self.can_remove_segmentation_data()
+
+        if canRemoveSegmentation:
+            if "image" in self.viewer.layers:
+                image_arr = self.viewer.layers['image'].data 
+                segmentation_arr = np.zeros(image_arr.shape, dtype=np.int8)
+                self.set_segmentation_layer(segmentation_arr)
+        else:
+            return
 
 
 # ============ Display warning/question message box ============
@@ -1087,40 +1235,6 @@ class OneShotWidget(QWidget):
             choice = True
 
         return choice
-
-
-# ============ Remove data ============
-    def remove_image_layer(self):
-        """
-            Remove image layer from napari viewer
-
-        """
-        if "image" in self.viewer.layers:
-            self.viewer.layers.remove('image')
-
-    def remove_segmentation_layer(self):
-        """
-            Remove segmentation layer from napari viewer
-
-        """
-        if "annotations" in self.viewer.layers:
-            self.viewer.layers.remove('annotations')
-
-    def remove_probabilities_layer(self):
-        """
-            Remove probabilities layer from napari viewer
-
-        """
-        if "probabilities" in self.viewer.layers:
-            self.viewer.layers.remove('probabilities')
-
-    def remove_segmented_probabilities_layer(self):
-        """
-            Remove segmented probabilities' layer from napari viewer
-
-        """
-        if "segmented probabilities" in self.viewer.layers:
-            self.viewer.layers.remove('segmented probabilities')
 
 
 # ============ For testing ============

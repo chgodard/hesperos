@@ -23,7 +23,7 @@ from hesperos.layout.napari_elements import label_colors
 
 
 # ============ Functions to add custom QWidgets ============
-def add_combo_box(list_items, layout, callback_function, row, column, column_span=1, visibility=False, minimum_width=0, tooltip_text=""):
+def add_combo_box(list_items, layout, callback_function, row, column, column_span=1, visibility=False, minimum_width=0, tooltip_text="", isHBoxLayout=False):
     """
     Create a QComboBox and add it to the corresponding layout
 
@@ -31,20 +31,22 @@ def add_combo_box(list_items, layout, callback_function, row, column, column_spa
     ----------
     list_items : List[str]
         list of item to display
-    layout : QGridLayout
+    layout : QGridLayout or QHBoxLayout
         layout containing the widget
     callback_function : func
         function to call when changing selected item in the combobox
     row : int
-        row of the widget in the grid
+        row of the widget (used if the layout is a QGridLayout)
     column : int
-        column of the widget in the grid
+        column of the widget in the layout
     column_span : int
-        column span of the widget in the grid
+        column span of the widget (used if the layout is a QGridLayout)
     visibility : bool
         visibility status of the widget
     minimum_width : int
         minimum width of the widget
+    isHBoxLayout : bool
+        status of the layout : true if the layout is a QHBoxLayout, false if not
 
     Returns
     ----------
@@ -59,7 +61,11 @@ def add_combo_box(list_items, layout, callback_function, row, column, column_spa
     combo_box.setCurrentIndex(0)
 
     combo_box.setMinimumWidth(minimum_width)
-    layout.addWidget(combo_box, row, column, 1, column_span)
+
+    if isHBoxLayout:
+        layout.addWidget(combo_box)
+    else:
+        layout.addWidget(combo_box, row, column, 1, column_span)
     combo_box.currentIndexChanged.connect(callback_function)
     # combo_box.activated[str].connect(callback_function)
 

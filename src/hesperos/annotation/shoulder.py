@@ -25,7 +25,8 @@ DICT_SUB_STRUCTURES = {
         'Teres major',
         'Trapezius',
         'Triceps brachii',
-        'Cuff Muscles']
+        'Cuff Muscles',
+        'Tendons']
 }
 
 DICT_SUB_SUB_STRUCTURES = {
