@@ -940,10 +940,20 @@ class ManualSegmentationWidget(QWidget):
             
             if "image" in self.viewer.layers:
                 image_arr = self.viewer.layers['image'].data 
+    
                 if segmentation_arr.shape != image_arr.shape:
-                    display_warning_box(self, "Error", "Size of the segmentation file doesn't correspond to the size of the source image")
-                    self.status_label.setText("Ready")
-                    return
+                    image_arr_viewer = np.transpose(image_arr, self.viewer.dims.order)
+
+                    if segmentation_arr.shape == image_arr_viewer.shape:
+                        if self.viewer.dims.order == (2, 0, 1):
+                            segmentation_arr = np.transpose(segmentation_arr, (1, 2, 0))
+                        elif self.viewer.dims.order == (1, 2, 0):
+                            segmentation_arr = np.transpose(segmentation_arr, (2, 0, 1))
+                    
+                    else:
+                        display_warning_box(self, "Error", "Size of the segmentation file doesn't correspond to the size of the source image")
+                        self.status_label.setText("Ready")
+                        return
 
                 self.set_segmentation_layer(segmentation_arr)
                 self.reset_lock_push_button()
