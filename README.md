@@ -90,10 +90,10 @@ Hesperos plugin is designed to run on Windows operating system and macOS with Py
     
 # Hesperos: Manual Segmentation and Correction
 
-## Load your image (*Panel: "1. LOAD 3D IMAGE"*)
+## Load your image (*panel 1*)
 Hesperos plugin can be used with Digital Imaging and Communications in Medicine (DICOM), Neuroimaging Informatics Technology Initiative (NIfTI) or Tagged Image File Format (TIFF) images. To improve performances, use images that are located on your disk.
 
-1. To load a image file (.tiff, .tif, .nii or .nii.gz) use the <img src="materials/interface_tools_screenshots/open_Image_button.PNG" width="20px"/> button. To load a unique DICOM serie use the <img src="materials/interface_tools_screenshots/open_DICOM_button.PNG" width="20px"/> button. /!\ Folder with multiple DICOM series is not supported. 
+1. To load a image file (.tiff, .tif, .nii or .nii.gz) use the <img src="materials/interface_tools_screenshots/open_Image_button.PNG" width="60px"/> button. To load a unique DICOM serie use the <img src="materials/interface_tools_screenshots/open_DICOM_button.PNG" width="40px"/> button. /!\ Folder with multiple DICOM series is not supported. 
     
 2. After loading, a slider appears to zoom in/out on the image <img src="materials/interface_tools_screenshots/zoom_slider.PNG" width="20px"/> button.. Zooming is also possible with the mouse scroller. 
 
@@ -135,7 +135,7 @@ All actions can be undo/redo with ctrl-Z/shift-ctrl-Z.
     d. Double click on the filled area to deactivate the fill bucket and reactivate the paint brush mode
     
 
-## Annotate your image (*Panel: "2. ANNOTATE"*)
+## Annotate your image (*panel 2*)
     
 Manual annotation and correction on the segmented file is done with the layer controls of the *annotations* layer. Click on the layer to see them. /!\ You have to choose a structure to start annotation (see 2.).
     
@@ -149,7 +149,7 @@ Manual annotation and correction on the segmented file is done with the layer co
 4. If needed, you can fixe one TO DO TO EXPLICATE
         
 
-## Save annotations
+## Save annotations (*panel 3*)
     
 1.
 2.
