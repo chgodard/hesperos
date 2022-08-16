@@ -102,11 +102,11 @@ Hesperos plugin can be used with Digital Imaging and Communications in Medicine 
     - use the <img src="materials/interface_tools_screenshots/open_Image_button.PNG" width="100px"/> button for image file *(.tiff, .tif, .nii or .nii.gz)* 
     - use the <img src="materials/interface_tools_screenshots/open_DICOM_button.PNG" width="100px"/> button for unique DICOM serie. /!\ Folder with multiple DICOM series is not supported. 
     
-2. After loading, a slider appears to zoom in/out on the image <img src="materials/interface_tools_screenshots/zoom_slider.PNG" width="100px"/> button. Zooming is also possible with the mouse scroller. 
+2. After loading, a slider appears to zoom in/out on the image : <img src="materials/interface_tools_screenshots/zoom_slider.PNG" width="100px"/>. Zooming is also possible with the mouse scroller. 
 
-3. If your data is a DICOM serie, you have the possibility to directly change the contrast of the image (according to the Hounsfield Units):
-    - by choosing one of the 2 default contrasts : *CT bone* or *CT Soft*
-    - by creating a custom default contrast with the <img src="materials/interface_tools_screenshots/contrast_add_button.PNG" width="30px"/> button. The setting can be exported as a .json file with the <img src="materials/interface_tools_screenshots/contrast_export_button.PNG" width="30px"/> button
+3. If your data is a DICOM serie, you have the possibility to directly change the contrast of the image (according to the Hounsfield Unit):
+    - by choosing one of the two predefined contrasts : *CT bone* or *CT Soft*
+    - by creating a custom default contrast with the <img src="materials/interface_tools_screenshots/contrast_add_button.PNG" width="30px"/> button. Settings can be exported as a .json file with the <img src="materials/interface_tools_screenshots/contrast_export_button.PNG" width="30px"/> button
     - by loading a saved default contrast with the <img src="materials/interface_tools_screenshots/contrast_import_button.PNG" width="30px"/> button
 
 
@@ -115,7 +115,7 @@ Hesperos plugin can be used with Digital Imaging and Communications in Medicine 
 
 ## Layer controls
 
-When a data is loading, two layers are created : the *image* layer and the *annotations* layer. Order in the layer list correspond to SUPERPOSITION ,? order. By clicking on these layers you will have acces to different layer controls (at the top left corner of the application). All actions can be undo/redo with ctrl-Z/shift-ctrl-Z.
+When a data is loading, two layers are created : the ***image*** layer and the ***annotations*** layer. Order in the layer list correspond to the overlayed order. By clicking on these layers you will have acces to different layer controls (at the top left corner of the application). All actions can be undo/redo with ctrl-Z/shift-ctrl-Z.
     
     
 **For the *image* layer:**
