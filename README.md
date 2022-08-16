@@ -21,10 +21,10 @@ This [napari] plugin was generated with [Cookiecutter] using [@napari]'s [cookie
     * [Manual installation](#manual-installation)
     * [Upgrade Hesperos version](#upgrade-hesperos-version)
 - [Hesperos: Manual Segmentation and Correction](#hesperos-manual-segmentation-and-correction)
-    * [Load your image](#load-your-image)
+    * [Load your image](#load-your-image-use-panel-1)
     * [Layer controls](#layer-controls)
-    * [Annotate your image](#annotate-your-image)
-    * [Save annotations](#save-annotations)
+    * [Annotate your image](#annotate-your-image-use-panel-2)
+    * [Save annotations](#save-annotations-use-panel-3)
 
     
     
@@ -90,17 +90,17 @@ Hesperos plugin is designed to run on Windows operating system and macOS with Py
     
 # Hesperos: Manual Segmentation and Correction
 
-## Load your image (*panel 1*)
+## Load your image *(use panel 1)*
 Hesperos plugin can be used with Digital Imaging and Communications in Medicine (DICOM), Neuroimaging Informatics Technology Initiative (NIfTI) or Tagged Image File Format (TIFF) images. To improve performances, use images that are located on your disk.
-
+ 
 1. To load a image file (.tiff, .tif, .nii or .nii.gz) use the <img src="materials/interface_tools_screenshots/open_Image_button.PNG" width="100px"/> button. To load a unique DICOM serie use the <img src="materials/interface_tools_screenshots/open_DICOM_button.PNG" width="100px"/> button. /!\ Folder with multiple DICOM series is not supported. 
     
 2. After loading, a slider appears to zoom in/out on the image <img src="materials/interface_tools_screenshots/zoom_slider.PNG" width="100px"/> button. Zooming is also possible with the mouse scroller. 
 
 3. If your data is a DICOM serie, you have the possibility to directly change the contrast of the image (according to the Hounsfield Units):
-    - by choosing one of the 2 default contrasts : *"CT bone"* or *"CT Soft"*
-    - by creating a custom default contrast with the <img src="materials/interface_tools_screenshots/contrast_add_button.PNG" width="30px"/> button. The setting can be exported as a .json file with the <img src="materials/interface_tools_screenshots/contrast_export_button.PNG" width="30px"/> button.
-    - by loading a saved default contrast with the <img src="materials/interface_tools_screenshots/contrast_import_button.PNG" width="30px"/> button.
+    - by choosing one of the 2 default contrasts : *CT bone* or *CT Soft*
+    - by creating a custom default contrast with the <img src="materials/interface_tools_screenshots/contrast_add_button.PNG" width="30px"/> button. The setting can be exported as a .json file with the <img src="materials/interface_tools_screenshots/contrast_export_button.PNG" width="30px"/> button
+    - by loading a saved default contrast with the <img src="materials/interface_tools_screenshots/contrast_import_button.PNG" width="30px"/> button
     
     
 TODO ADD BUTTON TO ROTATE IMAGE AND CHANGE ORIENTATION
@@ -111,13 +111,11 @@ When a data is loading, two layers are created : the *image* layer and the *anno
     
     
 **For the *image* layer:**
-    
 - *opacity*: a slider to control the global opacity of the layer
-- *contrast limits*: a double slider to manual control the contrast of the image (same as the <img src="materials/interface_tools_screenshots/contrast_choose.PNG" width="20px"/> option for DICOM data.
+- *contrast limits*: a double slider to manual control the contrast of the image (same as the <img src="materials/interface_tools_screenshots/contrast_choose.PNG" width="150px"/> option for DICOM data.
     
     
 **For the *annotations* layer:**
-
 - <img src="materials/interface_tools_screenshots/layer_label_erase_button.PNG" width="25px"/>: select to use the erase brush to erase all labels at once (if *preserve labels* is not selected) or only selected label (if *preserve labels* is selected)
 - <img src="materials/interface_tools_screenshots/layer_label_paint_button.PNG" width="25px"/>: select to use the paint brush with the color showned in *label* rectangle
 - <img src="materials/interface_tools_screenshots/layer_label_fill_button.PNG" width="25px"/>: select to use the fill bucket with the color showned in *label* rectangle
@@ -129,28 +127,30 @@ When a data is loading, two layers are created : the *image* layer and the *anno
 - *show selected*: if selected only the selected label will be display on the layer, if not selected all labels are displayed
    
     
-*Remark:* An second option for filling has been added
-    a. Drawn the egde of a closed shape with the paint bruch mode
-    b. Double click to activate the fill bucket
-    c. Click inside the closed area to fill it
-    d. Double click on the filled area to deactivate the fill bucket and reactivate the paint brush mode
+*Remark: An second option for filling has been added*
+1. *Drawn the egde of a closed shape with the paint bruch mode*
+2. *Double click to activate the fill bucket*
+3. *Click inside the closed area to fill it*
+4. *Double click on the filled area to deactivate the fill bucket and reactivate the paint brush mode*
     
 
-## Annotate your image (*panel 2*)
+## Annotate your image *(use panel 2)*
     
 Manual annotation and correction on the segmented file is done with the layer controls of the *annotations* layer. Click on the layer to see them. **/!\** You have to choose a structure to start annotation *(see 2.)*.
     
-1. To modify an existed segmentation, you can directy open the segmented file with the <img src="materials/interface_tools_screenshots/annotation_load_button.PNG" width="100px"/> button. The file need to have the same dimensions than the original image (tiff, nifti or dicom). **/!\** Only .tiff, .tif, .nii and .nii.gz files are supported as segmented files. 
+1. To modify an existed segmentation, you can directy open the segmented file with the <img src="materials/interface_tools_screenshots/annotation_load_button.PNG" width="130px"/> button. The file need to have the same dimensions than the original image (tiff, nifti or dicom). **/!\** Only .tiff, .tif, .nii and .nii.gz files are supported as segmented files. 
 2. Choose a structure to annotate in the DEROULANT menu
     - Fetus : to annotate pregnancy image 
     - Shoulder : to annotate bones and muscles for shoulder surgery
     - Feta Challenge : to annotate fetal brain MRI with same label than the FeTA Challenge (see ADD LIEN WEB)
-    When selecting a structure a new panel appears with the list of all structures to annotate. Each strucutures has its own label and color. Select one structure in the list to automatically the paint bruth mode with the corresponding color (color is updated in the *label* rectangle in the layer controls panel)
- 3. All actions can be undo with the <img src="materials/interface_tools_screenshots/annotation_undo_button.PNG" width="20px"/> button or by ctrl-z
+    
+When selecting a structure a new panel appears with the list of all structures to annotate. Each strucuture has its own label and color. Select one structure in the list to automatically the paint bruth mode with the corresponding color (color is updated in the *label* rectangle in the layer controls panel).
+    
+3. All actions can be undo with the <img src="materials/interface_tools_screenshots/annotation_undo_button.PNG" width="30px"/> button or by ctrl-z
 4. If needed, you can fixe one TO DO TO EXPLICATE
         
 
-## Save annotations (*panel 3*)
+## Save annotations *(use panel 3)*
     
 1.
 2.
