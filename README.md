@@ -86,7 +86,7 @@ Hesperos plugin is designed to run on Windows operating system and macOS with Py
     3. Click on *Update* if a new version of Hesperos have been found. You can check the last version of Hesperos in the [Napari Hub](https://www.napari-hub.org/plugins/hesperos).
     4. When installation is done, close Napari. A restart of Napari is needed to take in consideration the new installed plugin.
    
-  TODO : ADD LIEN VERS MANUAL NAPARI OU SCREEN TOUTE APP EN ENTIER OU VIDEO GENERAL
+    TODO : ADD LIEN VERS MANUAL NAPARI OU SCREEN TOUTE APP EN ENTIER OU VIDEO GENERAL
     
 # Hesperos: Manual Segmentation and Correction
 
@@ -127,11 +127,11 @@ When a data is loading, two layers are created : the *image* layer and the *anno
 - *show selected*: if selected only the selected label will be display on the layer, if not selected all labels are displayed
    
     
-*Remark: An second option for filling has been added*
-1. *Drawn the egde of a closed shape with the paint bruch mode*
-2. *Double click to activate the fill bucket*
-3. *Click inside the closed area to fill it*
-4. *Double click on the filled area to deactivate the fill bucket and reactivate the paint brush mode*
+>*Remark*: a second option for filling has been added
+>1. Drawn the egde of a closed shape with the paint bruch mode  
+>2. Double click to activate the fill bucket  
+>3. Click inside the closed area to fill it  
+>4. Double click on the filled area to deactivate the fill bucket and reactivate the paint brush mode`
     
 
 ## Annotate your image *(use panel 2)*
@@ -144,7 +144,7 @@ Manual annotation and correction on the segmented file is done with the layer co
     - Shoulder : to annotate bones and muscles for shoulder surgery
     - Feta Challenge : to annotate fetal brain MRI with same label than the FeTA Challenge (see ADD LIEN WEB)
     
-When selecting a structure a new panel appears with the list of all structures to annotate. Each strucuture has its own label and color. Select one structure in the list to automatically the paint bruth mode with the corresponding color (color is updated in the *label* rectangle in the layer controls panel).
+>When selecting a structure a new panel appears with the list of all structures to annotate. Each strucuture has its own label and color. Select one structure in the list to automatically the paint bruth mode with the corresponding color (color is updated in the *label* rectangle in the layer controls panel).
     
 3. All actions can be undo with the <img src="materials/interface_tools_screenshots/annotation_undo_button.PNG" width="30px"/> button or by ctrl-z
 4. If needed, you can fixe one TO DO TO EXPLICATE
