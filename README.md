@@ -51,7 +51,7 @@ The Hesperos plugin is designed to run on Windows (VERSION) and macOS (VERSION) 
 
                 source ~/opt/anaconda3/etc/profile.d/conda.sh
 
-        2. In your terminal, chnage the permissions to allow the following .command files to be run (change *PATH* with the path of your .command files): 
+        2. In your terminal, change the permissions to allow the following .command files to be run (change *PATH* with the path of your .command files): 
             ``` 
             chmod u+x PATH/install_hesperos_env.command 
             chmod u+x PATH/run_hesperos.command 
@@ -115,7 +115,7 @@ The Hesperos plugin can be used with Digital Imaging and COmmunications in Medic
     - use the <img src="materials/interface_tools_screenshots/open_image_file_button.PNG" width="100px"/> button for *(.tiff, .tif, .nii or .nii.gz)* image files
     - use the <img src="materials/interface_tools_screenshots/open_dicom_serie_button.PNG" width="100px"/> button for a DICOM serie. /!\ Folder with multiple DICOM series is not supported. 
     
-2. After the image has loaded, a slider appears that allows to zoom in/out on the image : <img src="materials/interface_tools_screenshots/zoom_slider.PNG" width="100px"/>. Zooming is also possible with the <img src="materials/interface_tools_screenshots/layer_label_zoom_button.PNG" width="25px"/> button in the layer controls panel. 
+2. After the image has loaded, a slider appears that allows to zoom in/out : <img src="materials/interface_tools_screenshots/zoom_slider.PNG" width="100px"/>. Zooming is also possible with the <img src="materials/interface_tools_screenshots/layer_label_zoom_button.PNG" width="25px"/> button in the layer controls panel. 
 
 3. If your data is a DICOM serie, you have the possibility to directly change the contrast of the image (according to the Hounsfield Unit):
     - by choosing one of the two predefined contrasts : *CT bone* or *CT Soft* in <img src="materials/interface_tools_screenshots/contrast_choose.PNG" width="150px"/>
@@ -160,7 +160,7 @@ When data is loading, two layers are created : the ***image*** layer and the ***
     
 Manual annotation and correction on the segmented file is done using the layer controls of the *annotations* layer. Click on the layer to display them. /!\ You have to choose a structure to start annotating *(see 2.)*.
     
-1. To modify an existing segmentation, you can directy open the segmented file with the <img src="materials/interface_tools_screenshots/annotation_load_button.PNG" width="130px"/> button. The file need to have the same dimensions as the original image. 
+1. To modify an existing segmentation, you can directy open the segmented file with the <img src="materials/interface_tools_screenshots/annotation_load_button.PNG" width="130px"/> button. The file needs to have the same dimensions as the original image. 
     > /!\ Only .tiff, .tif, .nii and .nii.gz files are supported as segmented files. 
     
 2. Choose a structure to annotate in the drop-down menu
@@ -170,45 +170,40 @@ Manual annotation and correction on the segmented file is done using the layer c
     
 > When selecting a structure, a new panel appears with a list of elements to annotate. Each element has its own label and color. Select one element in the list to automatically activate the paint brush mode with the corresponding color (color is updated in the *`label`* rectangle in the layer controls panel).
     
-3. All actions can be undone with the <img src="materials/interface_tools_screenshots/annotation_undo_button.PNG" width="30px"/> button or by Ctrl-Z
+3. All actions can be undone with the <img src="materials/interface_tools_screenshots/annotation_undo_button.PNG" width="30px"/> button or Ctrl-Z
     
 4. If you need to work on a specific slice of your 3D image, but also have to explore the volume to understand some complex structures, you can use the locking option to facilitate the annotation task.
 
-    - To activate the functionnality : 
+    - To activate the functionality: 
         1. Go to the slice of interest
         2. Click on the <img src="materials/interface_tools_screenshots/annotation_unlock_button.PNG" width="30px"/> button => will change the button to <img src="materials/interface_tools_screenshots/annotation_lock_button.PNG" width="30px"/> and save the layer index
         3. Scroll in the z-axis to explore the data (with the mouse wheel or the slider under the image)
         4. To go back to your slice of interest, click on the <img src="materials/interface_tools_screenshots/annotation_lock_button.PNG" width="30px"/> button
 
-    - To deactivate the functionnality (or change the locked slice index) : 
+    - To deactivate the functionality (or change the locked slice index): 
         1. Go to the locked slice
         2. Click on the <img src="materials/interface_tools_screenshots/annotation_lock_button.PNG" width="30px"/> button  => change the button to <img src="materials/interface_tools_screenshots/annotation_unlock_button.PNG" width="30px"/> and "unlock" the slice
 
 ## Save annotations *(use Panel 3)*
     
-1. Annotations can be saved as .tif, .tiff, .nii or .nii.gz file with the <img src="materials/interface_tools_screenshots/annotation_save_button.PNG" width="100px"/> button with two saving mode :
-    - *`Unique`*: segmented data is saved as a unique 3D image with corresponding label ids (1-2-3-...). This file can be re-open for correction in the application.
+1. Annotations can be saved as .tif, .tiff, .nii or .nii.gz with the <img src="materials/interface_tools_screenshots/annotation_save_button.PNG" width="100px"/> button in one of the two following saving mode:
+    - *`Unique`*: segmented data is saved as a unique 3D image with corresponding label ids (1-2-3-...). This file can be re-opened in the application.
     - *`Several`*: segmented data is saved as several binary 3D images (0 or 255), one for each label id.
   
 2. <img src="materials/interface_tools_screenshots/annotation_delete_button.PNG" width="100px"/>: delete annotation data
     
-3. *`Automatic segmentation backup`*: if selected, the segmentation data wiil be automatically saved as a unique 3D image when the image slice is changed.
+3. *`Automatic segmentation backup`*: if selected, the segmentation data will be automatically saved as a unique 3D image when the image slice is changed.
     > /!\ This process can slow down the display if the image is large.
     
 
     
 # Hesperos: OneShot Segmentation
 
-    
-## Contributing
-
-Contributions are very welcome. Tests can be run with [tox], please ensure
-the coverage at least stays the same before you submit a pull request.
 
 ## License
 
 Distributed under the terms of the [BSD-3] license,
-"hesperos" is free and open source software
+"hesperos" is a free and open source software
 
 [napari]: https://github.com/napari/napari
 [Cookiecutter]: https://github.com/audreyr/cookiecutter
