@@ -120,8 +120,8 @@ Hesperos plugin can be used with Digital Imaging and Communications in Medicine 
     - by loading a saved default contrast with the <img src="materials/interface_tools_screenshots/contrast_import_button.PNG" width="30px"/> button and selecting *Custom Contrast*
 
 4. In the bottom left corner of the application you also have the possibility to : 
-    - <img src="materials/interface_tools_screenshots/image_change_axis_button.PNG" width="100px"/>: change order of the visible axis (for example go to sagittal, axial or coronal planes).
-    - <img src="materials/interface_tools_screenshots/image_transpose_button.PNG" width="100px"/>: transpose the 3D image on the current axis displayed
+    - <img src="materials/interface_tools_screenshots/image_change_axis_button.PNG" width="25px"/>: change order of the visible axis (for example go to sagittal, axial or coronal planes).
+    - <img src="materials/interface_tools_screenshots/image_transpose_button.PNG" width="25px"/>: transpose the 3D image on the current axis displayed
 
 
 ## Layer controls
