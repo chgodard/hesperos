@@ -30,56 +30,56 @@ This [napari] plugin was generated with [Cookiecutter] using [@napari]'s [cookie
 
     
 # Installation and Requirements
-Hesperos plugin is designed to run on Windows operating system and macOS with Python 3.8, 3.9 or 3.10.
+The Hesperos plugin is designed to run on Windows (VERSION) and macOS (VERSION) with Python 3.8 / 3.9 / 3.10.
      
     
 ## Automatic installation
-1. Install [Anaconda] and deselect *Add to PATH*. Note the path where you install anaconda.
+1. Install [Anaconda] and unselect *Add to PATH*. Keep in mind the path where you choose to install anaconda.
     
-2. Download only the *script_files* folder, for [Windows](/script_files/for_Windows/) or [Macos](/script_files/for_Windows/).
+2. Only download the *script_files* folder for [Windows](/script_files/for_Windows/) or [Macos](/script_files/for_Windows/).
     
-3. Add the Anaconda path in these script files:
+3. Add your Anaconda path in these script files:
     1. <ins>For Windows</ins>: 
-    Right click on the .bat files (for [installation](/script_files/for_Windows/install_hesperos_env.bat) and [running](/script_files/for_Windows/run_hesperos.bat)) and select *Modify*. Change *PATH_TO_ADD* with your Anaconda path. Then save changes.
+    Right click on the .bat files (for [installation](/script_files/for_Windows/install_hesperos_env.bat) and [running](/script_files/for_Windows/run_hesperos.bat)) and select *Modify*. Change *PATH_TO_ADD* with your Anaconda path. Then save the changes.
         > for exemple :
         
             anaconda_dir=C:\Users\chgodard\anaconda3
             
     2. <ins>For Macos</ins>:
-        1. Right click on the .command files (for [installation](/script_files/for_Macos/install_hesperos_env.command) and [running](/script_files/for_Macos/run_hesperos.command)) and select *Open with TextEdit*. Change *PATH_TO_ADD* with your Anaconda path. Then save changes.
+        1. Right click on the .command files (for [installation](/script_files/for_Macos/install_hesperos_env.command) and [running](/script_files/for_Macos/run_hesperos.command)) and select *Open with TextEdit*. Change *PATH_TO_ADD* with your Anaconda path. Then save the changes.
             > for exemple :
 
                 source ~/opt/anaconda3/etc/profile.d/conda.sh
 
-        2. On your terminal allow running of your .command files (change *PATH* with the path of your .command files): 
+        2. In your terminal, chnage the permissions to allow the following .command files to be run (change *PATH* with the path of your .command files): 
             ``` 
             chmod u+x PATH/install_hesperos_env.command 
             chmod u+x PATH/run_hesperos.command 
             ```
     
-4. Double click on the **install_hesperos_env file** to create a virtual environment in Anaconda with python 3.9 and Napari 0.4.14. /!\ Hesperos plugin is not yet compatible with Napari version superior to 0.4.14.
+4. Double click on the **install_hesperos_env file** to create a virtual environment in Anaconda with python 3.9 and Napari 0.4.14. /!\ The Hesperos plugin is not yet compatible with Napari versions superior to 0.4.14.
     
-5. Double click on the **run_hesperos file** to run napari from your virtual environment.
+5. Double click on the **run_hesperos file** to run Napari from your virtual environment.
     
-6. On Napari: 
+6. In Napari: 
     1. Go to *Plugins/Install Plugins...*
     2. Search for "hesperos" (it can take a while to load).
-    3. Install **hesperos** plugin.
-    4. When installation is done, close Napari. A restart of Napari is needed to take in consideration the new installed plugin.
+    3. Install the **hesperos** plugin.
+    4. When the installation is done, close Napari. A restart of Napari is required to finish the plugin installation.
     
 7. Double click on the **run_hesperos file** to run Napari.
     
-8. On Napari, use the hesperos plugin with *Plugins/hesperos*.
+8. In Napari, use the Hesperos plugin with *Plugins/hesperos*.
 
     
 ## Manual installation
-1. Install [Anaconda] and deselect *Add to PATH*.
+1. Install [Anaconda] and unselect *Add to PATH*.
 2. Open your Anaconda prompt command.
-3. Create a virtual environment with Python 3.8, 3.9 or 3.10 :
+3. Create a virtual environment with Python 3.8 / 3.9 / 3.10 :
     ```
     conda create -n hesperos_env python=3.9
     ```
-4. Install Python packages (in your virtual environment):
+4. Install the required Python packages in your virtual environment:
     ```
     conda activate hesperos_env
     conda install -c conda-forge napari=0.4.14 
@@ -94,25 +94,28 @@ Hesperos plugin is designed to run on Windows operating system and macOS with Py
     
 ## Upgrade Hesperos version
 1. Double click on the **run_hesperos file** to run Napari. 
-2. On Napari: 
+2. In Napari: 
     1. Go to *Plugins/Install Plugins...*
     2. Search for "hesperos" (it can take a while to load).
-    3. Click on *Update* if a new version of Hesperos have been found. You can check the last version of Hesperos in the [Napari Hub](https://www.napari-hub.org/plugins/hesperos).
-    4. When installation is done, close Napari. A restart of Napari is needed to take in consideration the new installed plugin.
+    3. Click on *Update* if a new version of Hesperos has been found. You can check the latest version of Hesperos in the [Napari Hub](https://www.napari-hub.org/plugins/hesperos).
+    4. When the installation is done, close Napari. A restart of Napari is required to finish the plugin installation.
    
     
 # Hesperos: Manual Segmentation and Correction
+    
+ <img src="materials/interface_tools_screenshots/hesperos_manual_interface.PNG" width="1000px"/>
+    
 
     TODO : ADD LIEN VERS MANUAL NAPARI OU SCREEN TOUTE APP EN ENTIER OU VIDEO GENERAL
 
 ## Load and adjust your image *(use Panel 1)*
-Hesperos plugin can be used with Digital Imaging and Communications in Medicine (DICOM), Neuroimaging Informatics Technology Initiative (NIfTI) or Tagged Image File Format (TIFF) images. To improve performances, use images that are located on your disk.
+The Hesperos plugin can be used with Digital Imaging and COmmunications in Medicine (DICOM), Neuroimaging Informatics Technology Initiative (NIfTI) or Tagged Image File Format (TIFF) images. To improve performances, use images that are located on your own disk.
  
-1. To load a data :
-    - use the <img src="materials/interface_tools_screenshots/open_image_file_button.PNG" width="100px"/> button for image file *(.tiff, .tif, .nii or .nii.gz)* 
-    - use the <img src="materials/interface_tools_screenshots/open_dicom_serie_button.PNG" width="100px"/> button for unique DICOM serie. /!\ Folder with multiple DICOM series is not supported. 
+1. To load data :
+    - use the <img src="materials/interface_tools_screenshots/open_image_file_button.PNG" width="100px"/> button for *(.tiff, .tif, .nii or .nii.gz)* image files
+    - use the <img src="materials/interface_tools_screenshots/open_dicom_serie_button.PNG" width="100px"/> button for a DICOM serie. /!\ Folder with multiple DICOM series is not supported. 
     
-2. After loading, a slider appears to zoom in/out on the image : <img src="materials/interface_tools_screenshots/zoom_slider.PNG" width="100px"/>. Zooming is also possible with the <img src="materials/interface_tools_screenshots/layer_label_zoom_button.PNG" width="25px"/> button in the layer controls panel. 
+2. After the image has loaded, a slider appears that allows to zoom in/out on the image : <img src="materials/interface_tools_screenshots/zoom_slider.PNG" width="100px"/>. Zooming is also possible with the <img src="materials/interface_tools_screenshots/layer_label_zoom_button.PNG" width="25px"/> button in the layer controls panel. 
 
 3. If your data is a DICOM serie, you have the possibility to directly change the contrast of the image (according to the Hounsfield Unit):
     - by choosing one of the two predefined contrasts : *CT bone* or *CT Soft* in <img src="materials/interface_tools_screenshots/contrast_choose.PNG" width="150px"/>
@@ -120,13 +123,13 @@ Hesperos plugin can be used with Digital Imaging and Communications in Medicine 
     - by loading a saved default contrast with the <img src="materials/interface_tools_screenshots/contrast_import_button.PNG" width="30px"/> button and selecting *Custom Contrast*
 
 4. In the bottom left corner of the application you also have the possibility to : 
-    - <img src="materials/interface_tools_screenshots/image_change_axis_button.PNG" width="25px"/>: change order of the visible axis (for example go to sagittal, axial or coronal planes).
-    - <img src="materials/interface_tools_screenshots/image_transpose_button.PNG" width="25px"/>: transpose the 3D image on the current axis displayed
+    - <img src="materials/interface_tools_screenshots/image_change_axis_button.PNG" width="25px"/>: change the order of the visible axis (for example go to sagittal, axial or coronal planes).
+    - <img src="materials/interface_tools_screenshots/image_transpose_button.PNG" width="25px"/>: transpose the 3D image on the current axis being displayed
 
 
 ## Layer controls
 
-When a data is loading, two layers are created : the ***image*** layer and the ***annotations*** layer. Order in the layer list correspond to the overlayed order. By clicking on these layers you will have acces to different layer controls (at the top left corner of the application). All actions can be undo/redo with ctrl-Z/shift-ctrl-Z.
+When data is loading, two layers are created : the ***image*** layer and the ***annotations*** layer. Order in the layer list correspond to the overlayed order. By clicking on these layers you will have acces to different layer controls (at the top left corner of the application). All actions can be undone/redone with the Ctrl-Z/Shift-Ctrl-Z keyboard shortcuts.
     
     
 **For the *image* layer:**
@@ -138,12 +141,12 @@ When a data is loading, two layers are created : the ***image*** layer and the *
 - <img src="materials/interface_tools_screenshots/layer_label_erase_button.PNG" width="25px"/>: erase brush to erase all labels at once (if *`preserve labels`* is not selected) or only erase the selected label (if *`preserve labels`* is selected)
 - <img src="materials/interface_tools_screenshots/layer_label_paint_button.PNG" width="25px"/>: paint brush with the same color than the *`label`* rectangle
 - <img src="materials/interface_tools_screenshots/layer_label_fill_button.PNG" width="25px"/>: fill bucket with the same color than the *`label`* rectangle
-- <img src="materials/interface_tools_screenshots/layer_label_zoom_button.PNG" width="25px"/>: select to zoom in and out with the mouse wheel (same as the zoom slider at the top rigth corner in Panel 1)
+- <img src="materials/interface_tools_screenshots/layer_label_zoom_button.PNG" width="25px"/>: select to zoom in and out with the mouse wheel (same as the zoom slider at the top right corner in Panel 1)
 - *`label`*: a colored rectangle to represent the selected label   
 - *`opacity`*: a slider to control the global opacity of the layer   
 - *`brush size limits`*: a slider to control size of the paint/erase brush    
-- *`preserve labels`*: if selected all actions are applied only on the selected label (see the *`label`* rectangle), if not selected actions are applied on all labels
-- *`show selected`*: if selected only the selected label will be display on the layer, if not selected all labels are displayed
+- *`preserve labels`*: if selected, all actions are applied only on the selected label (see the *`label`* rectangle); if not selected, actions are applied on all labels
+- *`show selected`*: if selected, only the selected label will be display on the layer; if not selected, all labels are displayed
    
     
 >*Remark*: a second option for filling has been added
@@ -155,29 +158,29 @@ When a data is loading, two layers are created : the ***image*** layer and the *
 
 ## Annotate your image *(use Panel 2)*
     
-Manual annotation and correction on the segmented file is done with the layer controls of the *annotations* layer. Click on the layer to see them. /!\ You have to choose a structure to start annotation *(see 2.)*.
+Manual annotation and correction on the segmented file is done using the layer controls of the *annotations* layer. Click on the layer to display them. /!\ You have to choose a structure to start annotating *(see 2.)*.
     
-1. To modify an existed segmentation, you can directy open the segmented file with the <img src="materials/interface_tools_screenshots/annotation_load_button.PNG" width="130px"/> button. The file need to have the same dimensions than the original image. 
+1. To modify an existing segmentation, you can directy open the segmented file with the <img src="materials/interface_tools_screenshots/annotation_load_button.PNG" width="130px"/> button. The file need to have the same dimensions as the original image. 
     > /!\ Only .tiff, .tif, .nii and .nii.gz files are supported as segmented files. 
     
 2. Choose a structure to annotate in the drop-down menu
     - Fetus : to annotate pregnancy image 
     - Shoulder : to annotate bones and muscles for shoulder surgery
-    - Feta Challenge : to annotate fetal brain MRI with same label than the FeTA Challenge (see ADD LIEN WEB)
+    - Feta Challenge : to annotate fetal brain MRI with the same label than the FeTA Challenge (see ADD LIEN WEB)
     
 > When selecting a structure, a new panel appears with a list of elements to annotate. Each element has its own label and color. Select one element in the list to automatically activate the paint brush mode with the corresponding color (color is updated in the *`label`* rectangle in the layer controls panel).
     
-3. All actions can be undo with the <img src="materials/interface_tools_screenshots/annotation_undo_button.PNG" width="30px"/> button or by ctrl-z
+3. All actions can be undone with the <img src="materials/interface_tools_screenshots/annotation_undo_button.PNG" width="30px"/> button or by Ctrl-Z
     
-4. If you need to work on a specific slice of your 3D image, but has to explore the volume to understand some complex structures you can use the locking option to facilitate the annotation task.
+4. If you need to work on a specific slice of your 3D image, but also have to explore the volume to understand some complex structures, you can use the locking option to facilitate the annotation task.
 
-    - To activate the functionnailty : 
+    - To activate the functionnality : 
         1. Go to the slice of interest
         2. Click on the <img src="materials/interface_tools_screenshots/annotation_unlock_button.PNG" width="30px"/> button => will change the button to <img src="materials/interface_tools_screenshots/annotation_lock_button.PNG" width="30px"/> and save the layer index
         3. Scroll in the z-axis to explore the data (with the mouse wheel or the slider under the image)
         4. To go back to your slice of interest, click on the <img src="materials/interface_tools_screenshots/annotation_lock_button.PNG" width="30px"/> button
 
-    - To deactivate the functionnailty (or change the locked slice index) : 
+    - To deactivate the functionnality (or change the locked slice index) : 
         1. Go to the locked slice
         2. Click on the <img src="materials/interface_tools_screenshots/annotation_lock_button.PNG" width="30px"/> button  => change the button to <img src="materials/interface_tools_screenshots/annotation_unlock_button.PNG" width="30px"/> and "unlock" the slice
 
