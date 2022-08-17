@@ -43,15 +43,15 @@ The Hesperos plugin is designed to run on Windows (11 or less) and MacOS with Py
     1. <ins>For Windows</ins>: 
     Right click on the .bat files (for [installation](/script_files/for_Windows/install_hesperos_env.bat) and [running](/script_files/for_Windows/run_hesperos.bat)) and select *Modify*. Change *PATH_TO_ADD* with your Anaconda path. Then save the changes.
         > for exemple:
-        
-            anaconda_dir=C:\Users\chgodard\anaconda3
-            
+        ```
+        anaconda_dir=C:\Users\chgodard\anaconda3
+        ```
     2. <ins>For Macos</ins>:
         1. Right click on the .command files (for [installation](/script_files/for_Macos/install_hesperos_env.command) and [running](/script_files/for_Macos/run_hesperos.command)) and select *Open with TextEdit*. Change *PATH_TO_ADD* with your Anaconda path. Then save the changes.
             > for exemple:
-
-                source ~/opt/anaconda3/etc/profile.d/conda.sh
-
+            ```
+            source ~/opt/anaconda3/etc/profile.d/conda.sh
+            ```
         2. In your terminal, change the permissions to allow the following .command files to be run (change *PATH* with the path of your .command files): 
             ``` 
             chmod u+x PATH/install_hesperos_env.command 
@@ -65,7 +65,6 @@ The Hesperos plugin is designed to run on Windows (11 or less) and MacOS with Py
     2. Search for "hesperos" (it can take a while to load).
     3. Install the **hesperos** plugin.
     4. When the installation is done, close Napari. A restart of Napari is required to finish the plugin installation.
-    
 7. Double click on the **run_hesperos file** to run Napari.
 8. In Napari, use the Hesperos plugin with *Plugins/hesperos*.
 
