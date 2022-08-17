@@ -202,15 +202,23 @@ Manual annotation and correction on the segmented file is done using the layer c
     
 # Hesperos: OneShot Segmentation
     
- REFERENCE GITHUB VOXELLEARNING ET A L ARTICLE FRONTIERS
+ The ***OneShot Segmentation*** mode of the Hesperos plugin is a 2D version of the VoxelLearning method implemented in DIVA (see [our Github](https://github.com/DecBayComp/VoxelLearning) and latest article [Guérinot, C., Marcon, V., Godard, C., et al. (2022). New Approach to Accelerated Image Annotation by Leveraging Virtual Reality and Cloud Computing. _Frontiers in Bioinformatics_. doi:10.3389/fbinf.2021.777101](https://www.frontiersin.org/articles/10.3389/fbinf.2021.777101/full).
+    
 
-    TODO : Principe du VoxelLearning
+The principle is to accelerate annotation without prior information. 
+The procedure consists of:
+    1. a rapid tagging of few pixels in the image with two labels : one for the structure of interest (named positives tags), and one for the other structures (named negatives tags).
+    2. a training of a simple random forest classifier with these tagged pixels and their features (mean, gaussian, ...)
+    3. a inference in all the pixels of the image to automatically segment the structure of interest. The output is a probability image (0-255) of belonging to a specific class.
+    4. iterative corrections if needed
     
 <img src="materials/interface_tools_screenshots/hesperos_oneshot_interface.PNG" width="1000px"/>
 
+    
 ## Load and adjust your image *(use Panel 1)*
     
-Same Panel as the manual widget *(see [panel 1 of the manual option](#load-and-adjust-your-image-use-panel-1))*.
+Same panel as used for the manual annotation mode *(see [panel 1 description](#load-and-adjust-your-image-use-panel-1))*.
+   
     
 ## Quickly annotate your image *(use Panel 2)*
     
@@ -222,11 +230,13 @@ Quick annotation and correction on the segmented file is done using the layer co
     > /!\ Only .tiff, .tif, .nii and .nii.gz files are supported as segmented files. 
          
 2. All actions can be undone with the <img src="materials/interface_tools_screenshots/annotation_undo_button.PNG" width="30px"/> button or Ctrl-Z
-        
+  
+    
 ## Run automatic segmentation *(use Panel 3)*
     
     TODO : DESCRIPTION
 
+    
 ## Save annotations *(use Panel 4)*
     
     TODO : DESCRIPTION
@@ -235,9 +245,9 @@ Quick annotation and correction on the segmented file is done using the layer co
 
 ## License
 
-Distributed under the terms of the [BSD-3] license,
-"hesperos" is a free and open source software
+Distributed under the terms of the [BSD-3] license, **hesperos** is a free and open source software.
 
+    
 [napari]: https://github.com/napari/napari
 [Cookiecutter]: https://github.com/audreyr/cookiecutter
 [@napari]: https://github.com/napari
@@ -247,5 +257,5 @@ Distributed under the terms of the [BSD-3] license,
 [tox]: https://tox.readthedocs.io/en/latest/
 [pip]: https://pypi.org/project/pip/
 [PyPI]: https://pypi.org/
-    
 [Anaconda]: https://www.anaconda.com/products/distribution#Downloads
+[VoxelLearning]: https://github.com/DecBayComp/VoxelLearning
