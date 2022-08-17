@@ -33,7 +33,7 @@ This [napari] plugin was generated with [Cookiecutter] using [@napari]'s [cookie
 
         
 # Installation and Requirements
-The Hesperos plugin is designed to run on Windows (VERSION) and macOS (VERSION) with Python 3.8 / 3.9 / 3.10.
+The Hesperos plugin is designed to run on Windows (11 or less) and MacOS with Python 3.8 / 3.9 / 3.10.
      
     
 ## Automatic installation
