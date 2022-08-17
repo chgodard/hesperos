@@ -1,6 +1,6 @@
 <div align="justify">
     
-# Hesperos plugin for Napari
+# HESPEROS PLUGIN FOR NAPARI
 
 [![License](https://img.shields.io/pypi/l/hesperos.svg?color=green)](https://github.com/DBC/hesperos/raw/main/LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/hesperos.svg?color=green)](https://pypi.org/project/hesperos)
@@ -26,9 +26,12 @@ This [napari] plugin was generated with [Cookiecutter] using [@napari]'s [cookie
     * [Annotate your image](#annotate-your-image-use-panel-2)
     * [Save annotations](#save-annotations-use-panel-3)
 - [Hesperos: OneShot Segmentation](#hesperos-oneshot-segmentation)
+    * [Load and adjust your image](#load-and-adjust-your-image-use-panel-1)
+    * [Quickly annotate your image](#quickly-annotate-your-image-use-panel-2)
+    * [Run automatic segmentation](#run-automatic-segmentation-use-panel-3)
+    * [Save annotations](#save-annotations-use-panel-4)
 
-
-    
+        
 # Installation and Requirements
 The Hesperos plugin is designed to run on Windows (VERSION) and macOS (VERSION) with Python 3.8 / 3.9 / 3.10.
      
@@ -198,7 +201,31 @@ Manual annotation and correction on the segmented file is done using the layer c
 
     
 # Hesperos: OneShot Segmentation
+    
+ REFERENCE GITHUB VOXELLEARNING ET A L ARTICLE FRONTIERS
 
+    TODO : Principe du VoxelLearning
+    
+<img src="materials/interface_tools_screenshots/hesperos_oneshot_interface.PNG" width="1000px"/>
+
+## Load and adjust your image *(use Panel 1)*
+    
+Same Panel as the manual widget *(see [panel 1 of the manual option](#load-and-adjust-your-image-use-panel-1))*.
+    
+## Quickly annotate your image *(use Panel 2)*
+    
+Quick annotation and correction on the segmented file is done using the layer controls of the *annotations* layer. Click on the layer to display them.
+    
+1. To modify an existing segmentation, you can directy open the segmented file with the <img src="materials/interface_tools_screenshots/annotation_load_button.PNG" width="130px"/> button. The file needs to have the same dimensions as the original image. 
+    > /!\ Only .tiff, .tif, .nii and .nii.gz files are supported as segmented files. 
+         
+2. All actions can be undone with the <img src="materials/interface_tools_screenshots/annotation_undo_button.PNG" width="30px"/> button or Ctrl-Z
+        
+## Run automatic segmentation *(use Panel 3)*
+    
+## Save annotations *(use Panel 4)*
+    
+    
 
 ## License
 
