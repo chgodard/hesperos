@@ -214,7 +214,9 @@ Same Panel as the manual widget *(see [panel 1 of the manual option](#load-and-a
     
 ## Quickly annotate your image *(use Panel 2)*
     
-Quick annotation and correction on the segmented file is done using the layer controls of the *annotations* layer. Click on the layer to display them.
+Quick annotation and correction on the segmented file is done using the layer controls of the *annotations* layer. Click on the layer to display them. Only two labels are available : *Structure of interest* and *Other*.
+    
+   TODO : Explain
     
 1. To modify an existing segmentation, you can directy open the segmented file with the <img src="materials/interface_tools_screenshots/annotation_load_button.PNG" width="130px"/> button. The file needs to have the same dimensions as the original image. 
     > /!\ Only .tiff, .tif, .nii and .nii.gz files are supported as segmented files. 
@@ -223,8 +225,12 @@ Quick annotation and correction on the segmented file is done using the layer co
         
 ## Run automatic segmentation *(use Panel 3)*
     
+    TODO : DESCRIPTION
+
 ## Save annotations *(use Panel 4)*
     
+    TODO : DESCRIPTION
+
     
 
 ## License
