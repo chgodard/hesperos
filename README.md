@@ -120,8 +120,8 @@ Hesperos plugin can be used with Digital Imaging and Communications in Medicine 
     - by loading a saved default contrast with the <img src="materials/interface_tools_screenshots/contrast_import_button.PNG" width="30px"/> button and selecting *Custom Contrast*
 
 4. In the bottom left corner of the application you also have the possibility to : 
-    - <img src="materials/interface_tools_screenshots/image_change_axis_button.PNG" width="100px"/>: change order of the visible axis (for example go to sagittal, axial or coronal planes).
-    - <img src="materials/interface_tools_screenshots/image_transpose_button.PNG" width="100px"/>: transpose the 3D image on the current axis displayed
+    - <img src="materials/interface_tools_screenshots/image_change_axis_button.PNG" width="25px"/>: change order of the visible axis (for example go to sagittal, axial or coronal planes).
+    - <img src="materials/interface_tools_screenshots/image_transpose_button.PNG" width="25px"/>: transpose the 3D image on the current axis displayed
 
 
 ## Layer controls
@@ -183,9 +183,14 @@ Manual annotation and correction on the segmented file is done with the layer co
 
 ## Save annotations *(use Panel 3)*
     
-1.
-2.
-3.
+1. Annotations can be saved as .tif, .tiff, .nii or .nii.gz file with the <img src="materials/interface_tools_screenshots/annotation_save_button.PNG" width="100px"/> button with two saving mode :
+    - *`Unique`*: segmented data is saved as a unique 3D image with corresponding label ids (1-2-3-...). This file can be re-open for correction in the application.
+    - *`Several`*: segmented data is saved as several binary 3D images (0 or 255), one for each label id.
+  
+2. <img src="materials/interface_tools_screenshots/annotation_delete_button.PNG" width="100px"/>: delete annotation data
+    
+3. *`Automatic segmentation backup`*: if selected, the segmentation data wiil be automatically saved as a unique 3D image when the image slice is changed.
+    > /!\ This process can slow down the display if the image is large.
     
 
     
