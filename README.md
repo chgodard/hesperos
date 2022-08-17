@@ -109,8 +109,8 @@ Hesperos plugin is designed to run on Windows operating system and macOS with Py
 Hesperos plugin can be used with Digital Imaging and Communications in Medicine (DICOM), Neuroimaging Informatics Technology Initiative (NIfTI) or Tagged Image File Format (TIFF) images. To improve performances, use images that are located on your disk.
  
 1. To load a data :
-    - use the <img src="materials/interface_tools_screenshots/open_Image_button.PNG" width="100px"/> button for image file *(.tiff, .tif, .nii or .nii.gz)* 
-    - use the <img src="materials/interface_tools_screenshots/open_DICOM_button.PNG" width="100px"/> button for unique DICOM serie. /!\ Folder with multiple DICOM series is not supported. 
+    - use the <img src="materials/interface_tools_screenshots/open_image_file_button.PNG" width="100px"/> button for image file *(.tiff, .tif, .nii or .nii.gz)* 
+    - use the <img src="materials/interface_tools_screenshots/open_dicom_serie_button.PNG" width="100px"/> button for unique DICOM serie. /!\ Folder with multiple DICOM series is not supported. 
     
 2. After loading, a slider appears to zoom in/out on the image : <img src="materials/interface_tools_screenshots/zoom_slider.PNG" width="100px"/>. Zooming is also possible with the mouse scroller. 
 
