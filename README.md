@@ -113,16 +113,16 @@ The Hesperos plugin is designed to run on Windows (11 or less) and MacOS with Py
 The Hesperos plugin can be used with Digital Imaging and COmmunications in Medicine (DICOM), Neuroimaging Informatics Technology Initiative (NIfTI) or Tagged Image File Format (TIFF) images. To improve performances, use images that are located on your own disk.
  
 1. To load data:
-    - use the <img src="materials/interface_tools_screenshots/open_image_file_button.PNG" width="100px"/> button for *(.tiff, .tif, .nii or .nii.gz)* image files
+    - use the <img src="materials/interface_tools_screenshots/open_image_file_button.PNG" width="100px"/> button for *(.tiff, .tif, .nii or .nii.gz)* image files.
     - use the <img src="materials/interface_tools_screenshots/open_dicom_serie_button.PNG" width="100px"/> button for a DICOM serie. /!\ Folder with multiple DICOM series is not supported.  
 2. After the image has loaded, a slider appears that allows to zoom in/out: <img src="materials/interface_tools_screenshots/zoom_slider.PNG" width="100px"/>. Zooming is also possible with the <img src="materials/interface_tools_screenshots/layer_label_zoom_button.PNG" width="25px"/> button in the layer controls panel. 
 3. If your data is a DICOM serie, you have the possibility to directly change the contrast of the image (according to the Hounsfield Unit):
-    - by choosing one of the two predefined contrasts: *CT bone* or *CT Soft* in <img src="materials/interface_tools_screenshots/contrast_choose.PNG" width="150px"/>
-    - by creating a custom default contrast with the <img src="materials/interface_tools_screenshots/contrast_add_button.PNG" width="30px"/> button and selecting *Custom Contrast*. Settings can be exported as a .json file with the <img src="materials/interface_tools_screenshots/contrast_export_button.PNG" width="30px"/> button
-    - by loading a saved default contrast with the <img src="materials/interface_tools_screenshots/contrast_import_button.PNG" width="30px"/> button and selecting *Custom Contrast*
+    - by choosing one of the two predefined contrasts: *CT bone* or *CT Soft* in <img src="materials/interface_tools_screenshots/contrast_choose.PNG" width="150px"/>.
+    - by creating a custom default contrast with the <img src="materials/interface_tools_screenshots/contrast_add_button.PNG" width="30px"/> button and selecting *Custom Contrast*. Settings can be exported as a .json file with the <img src="materials/interface_tools_screenshots/contrast_export_button.PNG" width="30px"/> button.
+    - by loading a saved default contrast with the <img src="materials/interface_tools_screenshots/contrast_import_button.PNG" width="30px"/> button and selecting *Custom Contrast*.
 4. In the bottom left corner of the application you also have the possibility to: 
     - <img src="materials/interface_tools_screenshots/image_change_axis_button.PNG" width="25px"/>: change the order of the visible axis (for example go to sagittal, axial or coronal planes).
-    - <img src="materials/interface_tools_screenshots/image_transpose_button.PNG" width="25px"/>: transpose the 3D image on the current axis being displayed
+    - <img src="materials/interface_tools_screenshots/image_transpose_button.PNG" width="25px"/>: transpose the 3D image on the current axis being displayed.
 
 
 ## Layer controls
@@ -131,27 +131,27 @@ When data is loading, two layers are created: the ***image*** layer and the ***a
     
     
 <ins>For the *image* layer:</ins>
-- *`opacity`*: a slider to control the global opacity of the layer
+- *`opacity`*: a slider to control the global opacity of the layer.
 - *`contrast limits`*: a double slider to manually control the contrast of the image (same as the <img src="materials/interface_tools_screenshots/contrast_choose.PNG" width="150px"/> option for DICOM data).
     
 
 <ins>For the *annotations* layer:</ins>
-- <img src="materials/interface_tools_screenshots/layer_label_erase_button.PNG" width="25px"/>: erase brush to erase all labels at once (if *`preserve labels`* is not selected) or only erase the selected label (if *`preserve labels`* is selected)
-- <img src="materials/interface_tools_screenshots/layer_label_paint_button.PNG" width="25px"/>: paint brush with the same color than the *`label`* rectangle
-- <img src="materials/interface_tools_screenshots/layer_label_fill_button.PNG" width="25px"/>: fill bucket with the same color than the *`label`* rectangle
-- <img src="materials/interface_tools_screenshots/layer_label_zoom_button.PNG" width="25px"/>: select to zoom in and out with the mouse wheel (same as the zoom slider at the top right corner in Panel 1)
-- *`label`*: a colored rectangle to represent the selected label   
-- *`opacity`*: a slider to control the global opacity of the layer   
-- *`brush size limits`*: a slider to control size of the paint/erase brush    
-- *`preserve labels`*: if selected, all actions are applied only on the selected label (see the *`label`* rectangle); if not selected, actions are applied on all labels
-- *`show selected`*: if selected, only the selected label will be display on the layer; if not selected, all labels are displayed
+- <img src="materials/interface_tools_screenshots/layer_label_erase_button.PNG" width="25px"/>: erase brush to erase all labels at once (if *`preserve labels`* is not selected) or only erase the selected label (if *`preserve labels`* is selected).
+- <img src="materials/interface_tools_screenshots/layer_label_paint_button.PNG" width="25px"/>: paint brush with the same color than the *`label`* rectangle.
+- <img src="materials/interface_tools_screenshots/layer_label_fill_button.PNG" width="25px"/>: fill bucket with the same color than the *`label`* rectangle.
+- <img src="materials/interface_tools_screenshots/layer_label_zoom_button.PNG" width="25px"/>: select to zoom in and out with the mouse wheel (same as the zoom slider at the top right corner in Panel 1).
+- *`label`*: a colored rectangle to represent the selected label.  
+- *`opacity`*: a slider to control the global opacity of the layer.  
+- *`brush size limits`*: a slider to control size of the paint/erase brush.    
+- *`preserve labels`*: if selected, all actions are applied only on the selected label (see the *`label`* rectangle); if not selected, actions are applied on all labels.
+- *`show selected`*: if selected, only the selected label will be display on the layer; if not selected, all labels are displayed.
    
     
 >*Remark*: a second option for filling has been added
->1. Drawn the egde of a closed shape with the paint brush mode  
->2. Double click to activate the fill bucket  
->3. Click inside the closed area to fill it  
->4. Double click on the filled area to deactivate the fill bucket and reactivate the paint brush mode`
+>1. Drawn the egde of a closed shape with the paint brush mode.  
+>2. Double click to activate the fill bucket.  
+>3. Click inside the closed area to fill it.  
+>4. Double click on the filled area to deactivate the fill bucket and reactivate the paint brush mode.
     
 
 ## Annotate your image *(use Panel 2)*
@@ -161,23 +161,23 @@ Manual annotation and correction on the segmented file is done using the layer c
     > /!\ Only .tiff, .tif, .nii and .nii.gz files are supported as segmented files.  
     
 2. Choose a structure to annotate in the drop-down menu
-    - *`Fetus`*: to annotate pregnancy image 
-    - *`Shoulder`*: to annotate bones and muscles for shoulder surgery
-    - *`Feta Challenge`*: to annotate fetal brain MRI with the same label than the FeTA Challenge (see ADD LIEN WEB)
+    - *`Fetus`*: to annotate pregnancy image.
+    - *`Shoulder`*: to annotate bones and muscles for shoulder surgery.
+    - *`Feta Challenge`*: to annotate fetal brain MRI with the same label than the FeTA Challenge (see ADD LIEN WEB).
     
 > When selecting a structure, a new panel appears with a list of elements to annotate. Each element has its own label and color. Select one element in the list to automatically activate the paint brush mode with the corresponding color (color is updated in the *`label`* rectangle in the layer controls panel).
     
-3. All actions can be undone with the <img src="materials/interface_tools_screenshots/annotation_undo_button.PNG" width="30px"/> button or Ctrl-Z
+3. All actions can be undone with the <img src="materials/interface_tools_screenshots/annotation_undo_button.PNG" width="30px"/> button or Ctrl-Z.
     
 4. If you need to work on a specific slice of your 3D image, but also have to explore the volume to understand some complex structures, you can use the locking option to facilitate the annotation task.
     - <ins>To activate the functionality</ins>: 
-        1. Go to the slice of interest
-        2. Click on the <img src="materials/interface_tools_screenshots/annotation_unlock_button.PNG" width="30px"/> button => will change the button to <img src="materials/interface_tools_screenshots/annotation_lock_button.PNG" width="30px"/> and save the layer index
-        3. Scroll in the z-axis to explore the data (with the mouse wheel or the slider under the image)
-        4. To go back to your slice of interest, click on the <img src="materials/interface_tools_screenshots/annotation_lock_button.PNG" width="30px"/> button
+        1. Go to the slice of interest.
+        2. Click on the <img src="materials/interface_tools_screenshots/annotation_unlock_button.PNG" width="30px"/> button => will change the button to <img src="materials/interface_tools_screenshots/annotation_lock_button.PNG" width="30px"/> and save the layer index.
+        3. Scroll in the z-axis to explore the data (with the mouse wheel or the slider under the image).
+        4. To go back to your slice of interest, click on the <img src="materials/interface_tools_screenshots/annotation_lock_button.PNG" width="30px"/> button.
     - <ins>To deactivate the functionality</ins> (or change the locked slice index): 
-        1. Go to the locked slice
-        2. Click on the <img src="materials/interface_tools_screenshots/annotation_lock_button.PNG" width="30px"/> button  => change the button to <img src="materials/interface_tools_screenshots/annotation_unlock_button.PNG" width="30px"/> and "unlock" the slice
+        1. Go to the locked slice.
+        2. Click on the <img src="materials/interface_tools_screenshots/annotation_lock_button.PNG" width="30px"/> button  => change the button to <img src="materials/interface_tools_screenshots/annotation_unlock_button.PNG" width="30px"/> and "unlock" the slice.
 
     
 ## Save annotations *(use Panel 3)*
@@ -185,7 +185,7 @@ Manual annotation and correction on the segmented file is done using the layer c
 1. Annotations can be saved as .tif, .tiff, .nii or .nii.gz with the <img src="materials/interface_tools_screenshots/annotation_save_button.PNG" width="100px"/> button in one of the two following saving mode:
     - *`Unique`*: segmented data is saved as a unique 3D image with corresponding label ids (1-2-3-...). This file can be re-opened in the application.
     - *`Several`*: segmented data is saved as several binary 3D images (0 or 255), one for each label id.
-2. <img src="materials/interface_tools_screenshots/annotation_delete_button.PNG" width="100px"/>: delete annotation data
+2. <img src="materials/interface_tools_screenshots/annotation_delete_button.PNG" width="100px"/>: delete annotation data.
 3. *`Automatic segmentation backup`*: if selected, the segmentation data will be automatically saved as a unique 3D image when the image slice is changed.
     > /!\ This process can slow down the display if the image is large.
     
@@ -197,9 +197,9 @@ Manual annotation and correction on the segmented file is done using the layer c
 
 The principle is to accelerate annotation without prior information. The procedure consists of:
 1. A **rapid tagging** of few pixels in the image with two labels: one for the structure of interest (named positive tags), and one for the other structures (named negative tags).
-2. A **training** of a simple random forest classifier with these tagged pixels and their features (mean, gaussian, ...)
+2. A **training** of a simple random forest classifier with these tagged pixels and their features (mean, gaussian, ...).
 3. An **inference** in all the pixels of the image to automatically segment the structure of interest. The output is a probability image (0-255) of belonging to a specific class.
-4. Iterative corrections if needed
+4. Iterative corrections if needed.
     
 <img src="materials/interface_tools_screenshots/hesperos_oneshot_interface.PNG" width="1000px"/>
 
@@ -217,8 +217,7 @@ Quick annotation and correction on the segmented file is done using the layer co
     
 1. To modify an existing segmentation, you can directy open the segmented file with the <img src="materials/interface_tools_screenshots/annotation_load_button.PNG" width="130px"/> button. The file needs to have the same dimensions as the original image. 
     > /!\ Only .tiff, .tif, .nii and .nii.gz files are supported as segmented files. 
-         
-2. All actions can be undone with the <img src="materials/interface_tools_screenshots/annotation_undo_button.PNG" width="30px"/> button or Ctrl-Z
+2. All actions can be undone with the <img src="materials/interface_tools_screenshots/annotation_undo_button.PNG" width="30px"/> button or Ctrl-Z.
   
     
 ## Run automatic segmentation *(use Panel 3)*
