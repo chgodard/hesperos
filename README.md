@@ -20,12 +20,12 @@ This [napari] plugin was generated with [Cookiecutter] using [@napari]'s [cookie
     * [Automatic installation](#automatic-installation)
     * [Manual installation](#manual-installation)
     * [Upgrade Hesperos version](#upgrade-hesperos-version)
-- [Hesperos: Manual Segmentation and Correction](#hesperos-manual-segmentation-and-correction)
+- [Hesperos: *Manual Segmentation and Correction* mode](#hesperos-manual-segmentation-and-correction-mode)
     * [Load and adjust your image](#load-and-adjust-your-image-use-panel-1)
     * [Layer controls](#layer-controls)
     * [Annotate your image](#annotate-your-image-use-panel-2)
     * [Save annotations](#save-annotations-use-panel-3)
-- [Hesperos: OneShot Segmentation](#hesperos-oneshot-segmentation)
+- [Hesperos: *OneShot Segmentation* mode](#hesperos-oneshot-segmentation-mode)
     * [Load and adjust your image](#load-and-adjust-your-image-use-panel-1)
     * [Quickly annotate your image](#quickly-annotate-your-image-use-panel-2)
     * [Run automatic segmentation](#run-automatic-segmentation-use-panel-3)
@@ -44,13 +44,13 @@ The Hesperos plugin is designed to run on Windows (11 or less) and MacOS with Py
 3. Add your Anaconda path in these script files:
     1. <ins>For Windows</ins>: 
     Right click on the .bat files (for [installation](/script_files/for_Windows/install_hesperos_env.bat) and [running](/script_files/for_Windows/run_hesperos.bat)) and select *Modify*. Change *PATH_TO_ADD* with your Anaconda path. Then save the changes.
-        > for exemple :
+        > for exemple:
         
             anaconda_dir=C:\Users\chgodard\anaconda3
             
     2. <ins>For Macos</ins>:
         1. Right click on the .command files (for [installation](/script_files/for_Macos/install_hesperos_env.command) and [running](/script_files/for_Macos/run_hesperos.command)) and select *Open with TextEdit*. Change *PATH_TO_ADD* with your Anaconda path. Then save the changes.
-            > for exemple :
+            > for exemple:
 
                 source ~/opt/anaconda3/etc/profile.d/conda.sh
 
@@ -78,7 +78,7 @@ The Hesperos plugin is designed to run on Windows (11 or less) and MacOS with Py
 ## Manual installation
 1. Install [Anaconda] and unselect *Add to PATH*.
 2. Open your Anaconda prompt command.
-3. Create a virtual environment with Python 3.8 / 3.9 / 3.10 :
+3. Create a virtual environment with Python 3.8 / 3.9 / 3.10:
     ```
     conda create -n hesperos_env python=3.9
     ```
@@ -104,35 +104,38 @@ The Hesperos plugin is designed to run on Windows (11 or less) and MacOS with Py
     4. When the installation is done, close Napari. A restart of Napari is required to finish the plugin installation.
    
     
-# Hesperos: Manual Segmentation and Correction
+# Hesperos: *Manual Segmentation and Correction* mode
+    
+ The ***Manual Segmentation and Correction*** mode of the Hesperos plugin is a simplified and optimized interface to do basic 2D manual segmentation of several structures in a 3D image using a mouse or a stylet with a tablet.
+    
     
  <img src="materials/interface_tools_screenshots/hesperos_manual_interface.PNG" width="1000px"/>
     
 
-    TODO : ADD LIEN VERS MANUAL NAPARI OU SCREEN TOUTE APP EN ENTIER OU VIDEO GENERAL
+    TODO : ADD LIEN VERS MANUAL NAPARI OU VIDEO GENERAL
 
 ## Load and adjust your image *(use Panel 1)*
 The Hesperos plugin can be used with Digital Imaging and COmmunications in Medicine (DICOM), Neuroimaging Informatics Technology Initiative (NIfTI) or Tagged Image File Format (TIFF) images. To improve performances, use images that are located on your own disk.
  
-1. To load data :
+1. To load data:
     - use the <img src="materials/interface_tools_screenshots/open_image_file_button.PNG" width="100px"/> button for *(.tiff, .tif, .nii or .nii.gz)* image files
     - use the <img src="materials/interface_tools_screenshots/open_dicom_serie_button.PNG" width="100px"/> button for a DICOM serie. /!\ Folder with multiple DICOM series is not supported. 
     
-2. After the image has loaded, a slider appears that allows to zoom in/out : <img src="materials/interface_tools_screenshots/zoom_slider.PNG" width="100px"/>. Zooming is also possible with the <img src="materials/interface_tools_screenshots/layer_label_zoom_button.PNG" width="25px"/> button in the layer controls panel. 
+2. After the image has loaded, a slider appears that allows to zoom in/out: <img src="materials/interface_tools_screenshots/zoom_slider.PNG" width="100px"/>. Zooming is also possible with the <img src="materials/interface_tools_screenshots/layer_label_zoom_button.PNG" width="25px"/> button in the layer controls panel. 
 
 3. If your data is a DICOM serie, you have the possibility to directly change the contrast of the image (according to the Hounsfield Unit):
-    - by choosing one of the two predefined contrasts : *CT bone* or *CT Soft* in <img src="materials/interface_tools_screenshots/contrast_choose.PNG" width="150px"/>
+    - by choosing one of the two predefined contrasts: *CT bone* or *CT Soft* in <img src="materials/interface_tools_screenshots/contrast_choose.PNG" width="150px"/>
     - by creating a custom default contrast with the <img src="materials/interface_tools_screenshots/contrast_add_button.PNG" width="30px"/> button and selecting *Custom Contrast*. Settings can be exported as a .json file with the <img src="materials/interface_tools_screenshots/contrast_export_button.PNG" width="30px"/> button
     - by loading a saved default contrast with the <img src="materials/interface_tools_screenshots/contrast_import_button.PNG" width="30px"/> button and selecting *Custom Contrast*
 
-4. In the bottom left corner of the application you also have the possibility to : 
+4. In the bottom left corner of the application you also have the possibility to: 
     - <img src="materials/interface_tools_screenshots/image_change_axis_button.PNG" width="25px"/>: change the order of the visible axis (for example go to sagittal, axial or coronal planes).
     - <img src="materials/interface_tools_screenshots/image_transpose_button.PNG" width="25px"/>: transpose the 3D image on the current axis being displayed
 
 
 ## Layer controls
 
-When data is loading, two layers are created : the ***image*** layer and the ***annotations*** layer. Order in the layer list correspond to the overlayed order. By clicking on these layers you will have acces to different layer controls (at the top left corner of the application). All actions can be undone/redone with the Ctrl-Z/Shift-Ctrl-Z keyboard shortcuts.
+When data is loading, two layers are created: the ***image*** layer and the ***annotations*** layer. Order in the layer list correspond to the overlayed order. By clicking on these layers you will have acces to different layer controls (at the top left corner of the application). All actions can be undone/redone with the Ctrl-Z/Shift-Ctrl-Z keyboard shortcuts.
     
     
 <ins>For the *image* layer:</ins>
@@ -167,9 +170,9 @@ Manual annotation and correction on the segmented file is done using the layer c
     > /!\ Only .tiff, .tif, .nii and .nii.gz files are supported as segmented files. 
     
 2. Choose a structure to annotate in the drop-down menu
-    - Fetus : to annotate pregnancy image 
-    - Shoulder : to annotate bones and muscles for shoulder surgery
-    - Feta Challenge : to annotate fetal brain MRI with the same label than the FeTA Challenge (see ADD LIEN WEB)
+    - *`Fetus`*: to annotate pregnancy image 
+    - *`Shoulder`*: to annotate bones and muscles for shoulder surgery
+    - *`Feta Challenge`*: to annotate fetal brain MRI with the same label than the FeTA Challenge (see ADD LIEN WEB)
     
 > When selecting a structure, a new panel appears with a list of elements to annotate. Each element has its own label and color. Select one element in the list to automatically activate the paint brush mode with the corresponding color (color is updated in the *`label`* rectangle in the layer controls panel).
     
@@ -200,17 +203,21 @@ Manual annotation and correction on the segmented file is done using the layer c
     
 
     
-# Hesperos: OneShot Segmentation
+# Hesperos: *OneShot Segmentation* mode
     
- The ***OneShot Segmentation*** mode of the Hesperos plugin is a 2D version of the VoxelLearning method implemented in DIVA (see [our Github](https://github.com/DecBayComp/VoxelLearning) and latest article [Guérinot, C., Marcon, V., Godard, C., et al. (2022). New Approach to Accelerated Image Annotation by Leveraging Virtual Reality and Cloud Computing. _Frontiers in Bioinformatics_. doi:10.3389/fbinf.2021.777101](https://www.frontiersin.org/articles/10.3389/fbinf.2021.777101/full).
+ The ***OneShot Segmentation*** mode of the Hesperos plugin is a 2D version of the VoxelLearning method implemented in DIVA (see [our Github](https://github.com/DecBayComp/VoxelLearning) and latest article [Guérinot, C., Marcon, V., Godard, C., et al. (2022). New Approach to Accelerated Image Annotation by Leveraging Virtual Reality and Cloud Computing. _Frontiers in Bioinformatics_. doi:10.3389/fbinf.2021.777101](https://www.frontiersin.org/articles/10.3389/fbinf.2021.777101/full)).
     
 
 The principle is to accelerate annotation without prior information. 
 The procedure consists of:
-    1. a rapid tagging of few pixels in the image with two labels : one for the structure of interest (named positives tags), and one for the other structures (named negatives tags).
-    2. a training of a simple random forest classifier with these tagged pixels and their features (mean, gaussian, ...)
-    3. a inference in all the pixels of the image to automatically segment the structure of interest. The output is a probability image (0-255) of belonging to a specific class.
-    4. iterative corrections if needed
+    
+1. A **rapid tagging** of few pixels in the image with two labels: one for the structure of interest (named positive tags), and one for the other structures (named negative tags).
+    
+2. A **training** of a simple random forest classifier with these tagged pixels and their features (mean, gaussian, ...)
+    
+3. An **inference** in all the pixels of the image to automatically segment the structure of interest. The output is a probability image (0-255) of belonging to a specific class.
+    
+4. Iterative corrections if needed
     
 <img src="materials/interface_tools_screenshots/hesperos_oneshot_interface.PNG" width="1000px"/>
 
@@ -222,9 +229,9 @@ Same panel as used for the manual annotation mode *(see [panel 1 description](#l
     
 ## Quickly annotate your image *(use Panel 2)*
     
-Quick annotation and correction on the segmented file is done using the layer controls of the *annotations* layer. Click on the layer to display them. Only two labels are available : *Structure of interest* and *Other*.
+Quick annotation and correction on the segmented file is done using the layer controls of the *annotations* layer. Click on the layer to display them. Only two labels are available: *`Structure of interest`* and *`Other`*.
     
-   TODO : Explain
+   TODO: Explain
     
 1. To modify an existing segmentation, you can directy open the segmented file with the <img src="materials/interface_tools_screenshots/annotation_load_button.PNG" width="130px"/> button. The file needs to have the same dimensions as the original image. 
     > /!\ Only .tiff, .tif, .nii and .nii.gz files are supported as segmented files. 
@@ -234,12 +241,12 @@ Quick annotation and correction on the segmented file is done using the layer co
     
 ## Run automatic segmentation *(use Panel 3)*
     
-    TODO : DESCRIPTION
+    TODO: DESCRIPTION
 
     
 ## Save annotations *(use Panel 4)*
     
-    TODO : DESCRIPTION
+    TODO: DESCRIPTION
 
     
 
