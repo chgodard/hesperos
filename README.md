@@ -132,12 +132,12 @@ The Hesperos plugin can be used with Digital Imaging and COmmunications in Medic
 When data is loading, two layers are created : the ***image*** layer and the ***annotations*** layer. Order in the layer list correspond to the overlayed order. By clicking on these layers you will have acces to different layer controls (at the top left corner of the application). All actions can be undone/redone with the Ctrl-Z/Shift-Ctrl-Z keyboard shortcuts.
     
     
-**For the *image* layer:**
+<ins>For the *image* layer:</ins>
 - *`opacity`*: a slider to control the global opacity of the layer
 - *`contrast limits`*: a double slider to manually control the contrast of the image (same as the <img src="materials/interface_tools_screenshots/contrast_choose.PNG" width="150px"/> option for DICOM data).
     
-    
-**For the *annotations* layer:**
+
+<ins>For the *annotations* layer:</ins>
 - <img src="materials/interface_tools_screenshots/layer_label_erase_button.PNG" width="25px"/>: erase brush to erase all labels at once (if *`preserve labels`* is not selected) or only erase the selected label (if *`preserve labels`* is selected)
 - <img src="materials/interface_tools_screenshots/layer_label_paint_button.PNG" width="25px"/>: paint brush with the same color than the *`label`* rectangle
 - <img src="materials/interface_tools_screenshots/layer_label_fill_button.PNG" width="25px"/>: fill bucket with the same color than the *`label`* rectangle
