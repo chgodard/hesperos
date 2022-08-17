@@ -38,9 +38,7 @@ The Hesperos plugin is designed to run on Windows (11 or less) and MacOS with Py
     
 ## Automatic installation
 1. Install [Anaconda] and unselect *Add to PATH*. Keep in mind the path where you choose to install anaconda.
-    
-2. Only download the *script_files* folder for [Windows](/script_files/for_Windows/) or [Macos](/script_files/for_Windows/).
-    
+2. Only download the *script_files* folder for [Windows](/script_files/for_Windows/) or [Macos](/script_files/for_Windows/). 
 3. Add your Anaconda path in these script files:
     1. <ins>For Windows</ins>: 
     Right click on the .bat files (for [installation](/script_files/for_Windows/install_hesperos_env.bat) and [running](/script_files/for_Windows/run_hesperos.bat)) and select *Modify*. Change *PATH_TO_ADD* with your Anaconda path. Then save the changes.
@@ -59,11 +57,9 @@ The Hesperos plugin is designed to run on Windows (11 or less) and MacOS with Py
             chmod u+x PATH/install_hesperos_env.command 
             chmod u+x PATH/run_hesperos.command 
             ```
-    
-4. Double click on the **install_hesperos_env file** to create a virtual environment in Anaconda with python 3.9 and Napari 0.4.14. /!\ The Hesperos plugin is not yet compatible with Napari versions superior to 0.4.14.
-    
+4. Double click on the **install_hesperos_env file** to create a virtual environment in Anaconda with python 3.9 and Napari 0.4.14. 
+    > /!\ The Hesperos plugin is not yet compatible with Napari versions superior to 0.4.14.
 5. Double click on the **run_hesperos file** to run Napari from your virtual environment.
-    
 6. In Napari: 
     1. Go to *Plugins/Install Plugins...*
     2. Search for "hesperos" (it can take a while to load).
@@ -71,7 +67,6 @@ The Hesperos plugin is designed to run on Windows (11 or less) and MacOS with Py
     4. When the installation is done, close Napari. A restart of Napari is required to finish the plugin installation.
     
 7. Double click on the **run_hesperos file** to run Napari.
-    
 8. In Napari, use the Hesperos plugin with *Plugins/hesperos*.
 
     
@@ -119,15 +114,12 @@ The Hesperos plugin can be used with Digital Imaging and COmmunications in Medic
  
 1. To load data:
     - use the <img src="materials/interface_tools_screenshots/open_image_file_button.PNG" width="100px"/> button for *(.tiff, .tif, .nii or .nii.gz)* image files
-    - use the <img src="materials/interface_tools_screenshots/open_dicom_serie_button.PNG" width="100px"/> button for a DICOM serie. /!\ Folder with multiple DICOM series is not supported. 
-    
+    - use the <img src="materials/interface_tools_screenshots/open_dicom_serie_button.PNG" width="100px"/> button for a DICOM serie. /!\ Folder with multiple DICOM series is not supported.  
 2. After the image has loaded, a slider appears that allows to zoom in/out: <img src="materials/interface_tools_screenshots/zoom_slider.PNG" width="100px"/>. Zooming is also possible with the <img src="materials/interface_tools_screenshots/layer_label_zoom_button.PNG" width="25px"/> button in the layer controls panel. 
-
 3. If your data is a DICOM serie, you have the possibility to directly change the contrast of the image (according to the Hounsfield Unit):
     - by choosing one of the two predefined contrasts: *CT bone* or *CT Soft* in <img src="materials/interface_tools_screenshots/contrast_choose.PNG" width="150px"/>
     - by creating a custom default contrast with the <img src="materials/interface_tools_screenshots/contrast_add_button.PNG" width="30px"/> button and selecting *Custom Contrast*. Settings can be exported as a .json file with the <img src="materials/interface_tools_screenshots/contrast_export_button.PNG" width="30px"/> button
     - by loading a saved default contrast with the <img src="materials/interface_tools_screenshots/contrast_import_button.PNG" width="30px"/> button and selecting *Custom Contrast*
-
 4. In the bottom left corner of the application you also have the possibility to: 
     - <img src="materials/interface_tools_screenshots/image_change_axis_button.PNG" width="25px"/>: change the order of the visible axis (for example go to sagittal, axial or coronal planes).
     - <img src="materials/interface_tools_screenshots/image_transpose_button.PNG" width="25px"/>: transpose the 3D image on the current axis being displayed
@@ -165,9 +157,8 @@ When data is loading, two layers are created: the ***image*** layer and the ***a
 ## Annotate your image *(use Panel 2)*
     
 Manual annotation and correction on the segmented file is done using the layer controls of the *annotations* layer. Click on the layer to display them. /!\ You have to choose a structure to start annotating *(see 2.)*.
-    
 1. To modify an existing segmentation, you can directy open the segmented file with the <img src="materials/interface_tools_screenshots/annotation_load_button.PNG" width="130px"/> button. The file needs to have the same dimensions as the original image. 
-    > /!\ Only .tiff, .tif, .nii and .nii.gz files are supported as segmented files. 
+    > /!\ Only .tiff, .tif, .nii and .nii.gz files are supported as segmented files.  
     
 2. Choose a structure to annotate in the drop-down menu
     - *`Fetus`*: to annotate pregnancy image 
@@ -179,44 +170,35 @@ Manual annotation and correction on the segmented file is done using the layer c
 3. All actions can be undone with the <img src="materials/interface_tools_screenshots/annotation_undo_button.PNG" width="30px"/> button or Ctrl-Z
     
 4. If you need to work on a specific slice of your 3D image, but also have to explore the volume to understand some complex structures, you can use the locking option to facilitate the annotation task.
-
-    - To activate the functionality: 
+    - <ins>To activate the functionality</ins>: 
         1. Go to the slice of interest
         2. Click on the <img src="materials/interface_tools_screenshots/annotation_unlock_button.PNG" width="30px"/> button => will change the button to <img src="materials/interface_tools_screenshots/annotation_lock_button.PNG" width="30px"/> and save the layer index
         3. Scroll in the z-axis to explore the data (with the mouse wheel or the slider under the image)
         4. To go back to your slice of interest, click on the <img src="materials/interface_tools_screenshots/annotation_lock_button.PNG" width="30px"/> button
-
-    - To deactivate the functionality (or change the locked slice index): 
+    - <ins>To deactivate the functionality</ins> (or change the locked slice index): 
         1. Go to the locked slice
         2. Click on the <img src="materials/interface_tools_screenshots/annotation_lock_button.PNG" width="30px"/> button  => change the button to <img src="materials/interface_tools_screenshots/annotation_unlock_button.PNG" width="30px"/> and "unlock" the slice
 
+    
 ## Save annotations *(use Panel 3)*
     
 1. Annotations can be saved as .tif, .tiff, .nii or .nii.gz with the <img src="materials/interface_tools_screenshots/annotation_save_button.PNG" width="100px"/> button in one of the two following saving mode:
     - *`Unique`*: segmented data is saved as a unique 3D image with corresponding label ids (1-2-3-...). This file can be re-opened in the application.
     - *`Several`*: segmented data is saved as several binary 3D images (0 or 255), one for each label id.
-  
 2. <img src="materials/interface_tools_screenshots/annotation_delete_button.PNG" width="100px"/>: delete annotation data
-    
 3. *`Automatic segmentation backup`*: if selected, the segmentation data will be automatically saved as a unique 3D image when the image slice is changed.
     > /!\ This process can slow down the display if the image is large.
     
-
     
 # Hesperos: *OneShot Segmentation* mode
     
  The ***OneShot Segmentation*** mode of the Hesperos plugin is a 2D version of the VoxelLearning method implemented in DIVA (see [our Github](https://github.com/DecBayComp/VoxelLearning) and latest article [Guérinot, C., Marcon, V., Godard, C., et al. (2022). New Approach to Accelerated Image Annotation by Leveraging Virtual Reality and Cloud Computing. _Frontiers in Bioinformatics_. doi:10.3389/fbinf.2021.777101](https://www.frontiersin.org/articles/10.3389/fbinf.2021.777101/full)).
     
 
-The principle is to accelerate annotation without prior information. 
-The procedure consists of:
-    
+The principle is to accelerate annotation without prior information. The procedure consists of:
 1. A **rapid tagging** of few pixels in the image with two labels: one for the structure of interest (named positive tags), and one for the other structures (named negative tags).
-    
 2. A **training** of a simple random forest classifier with these tagged pixels and their features (mean, gaussian, ...)
-    
 3. An **inference** in all the pixels of the image to automatically segment the structure of interest. The output is a probability image (0-255) of belonging to a specific class.
-    
 4. Iterative corrections if needed
     
 <img src="materials/interface_tools_screenshots/hesperos_oneshot_interface.PNG" width="1000px"/>
