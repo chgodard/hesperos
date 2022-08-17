@@ -21,7 +21,7 @@ This [napari] plugin was generated with [Cookiecutter] using [@napari]'s [cookie
     * [Manual installation](#manual-installation)
     * [Upgrade Hesperos version](#upgrade-hesperos-version)
 - [Hesperos: Manual Segmentation and Correction](#hesperos-manual-segmentation-and-correction)
-    * [Load your image](#load-your-image-use-panel-1)
+    * [Load and adjust your image](#load-and-adjust-your-image-use-panel-1)
     * [Layer controls](#layer-controls)
     * [Annotate your image](#annotate-your-image-use-panel-2)
     * [Save annotations](#save-annotations-use-panel-3)
@@ -105,22 +105,23 @@ Hesperos plugin is designed to run on Windows operating system and macOS with Py
 
     TODO : ADD LIEN VERS MANUAL NAPARI OU SCREEN TOUTE APP EN ENTIER OU VIDEO GENERAL
 
-## Load your image *(use Panel 1)*
+## Load and adjust your image *(use Panel 1)*
 Hesperos plugin can be used with Digital Imaging and Communications in Medicine (DICOM), Neuroimaging Informatics Technology Initiative (NIfTI) or Tagged Image File Format (TIFF) images. To improve performances, use images that are located on your disk.
  
 1. To load a data :
-    - use the <img src="materials/interface_tools_screenshots/open_Image_button.PNG" width="100px"/> button for image file *(.tiff, .tif, .nii or .nii.gz)* 
-    - use the <img src="materials/interface_tools_screenshots/open_DICOM_button.PNG" width="100px"/> button for unique DICOM serie. /!\ Folder with multiple DICOM series is not supported. 
+    - use the <img src="materials/interface_tools_screenshots/open_image_file_button.PNG" width="100px"/> button for image file *(.tiff, .tif, .nii or .nii.gz)* 
+    - use the <img src="materials/interface_tools_screenshots/open_dicom_serie_button.PNG" width="100px"/> button for unique DICOM serie. /!\ Folder with multiple DICOM series is not supported. 
     
-2. After loading, a slider appears to zoom in/out on the image : <img src="materials/interface_tools_screenshots/zoom_slider.PNG" width="100px"/>. Zooming is also possible with the mouse scroller. 
+2. After loading, a slider appears to zoom in/out on the image : <img src="materials/interface_tools_screenshots/zoom_slider.PNG" width="100px"/>. Zooming is also possible with the <img src="materials/interface_tools_screenshots/layer_label_zoom_button.PNG" width="25px"/> button in the layer controls panel. 
 
 3. If your data is a DICOM serie, you have the possibility to directly change the contrast of the image (according to the Hounsfield Unit):
     - by choosing one of the two predefined contrasts : *CT bone* or *CT Soft* in <img src="materials/interface_tools_screenshots/contrast_choose.PNG" width="150px"/>
     - by creating a custom default contrast with the <img src="materials/interface_tools_screenshots/contrast_add_button.PNG" width="30px"/> button and selecting *Custom Contrast*. Settings can be exported as a .json file with the <img src="materials/interface_tools_screenshots/contrast_export_button.PNG" width="30px"/> button
     - by loading a saved default contrast with the <img src="materials/interface_tools_screenshots/contrast_import_button.PNG" width="30px"/> button and selecting *Custom Contrast*
 
-
-    TODO ADD BUTTON TO ROTATE IMAGE AND CHANGE ORIENTATION
+4. In the bottom left corner of the application you also have the possibility to : 
+    - <img src="materials/interface_tools_screenshots/image_change_axis_button.PNG" width="100px"/>: change order of the visible axis (for example go to sagittal, axial or coronal planes).
+    - <img src="materials/interface_tools_screenshots/image_transpose_button.PNG" width="100px"/>: transpose the 3D image on the current axis displayed
 
 
 ## Layer controls
@@ -137,7 +138,7 @@ When a data is loading, two layers are created : the ***image*** layer and the *
 - <img src="materials/interface_tools_screenshots/layer_label_erase_button.PNG" width="25px"/>: erase brush to erase all labels at once (if *`preserve labels`* is not selected) or only erase the selected label (if *`preserve labels`* is selected)
 - <img src="materials/interface_tools_screenshots/layer_label_paint_button.PNG" width="25px"/>: paint brush with the same color than the *`label`* rectangle
 - <img src="materials/interface_tools_screenshots/layer_label_fill_button.PNG" width="25px"/>: fill bucket with the same color than the *`label`* rectangle
-- <img src="materials/interface_tools_screenshots/layer_label_zoom_button.PNG" width="25px"/>: select to zoom in and out by mouse scrolling (same as the zoom slider at the top rigth corner in Panel 1)
+- <img src="materials/interface_tools_screenshots/layer_label_zoom_button.PNG" width="25px"/>: select to zoom in and out with the mouse wheel (same as the zoom slider at the top rigth corner in Panel 1)
 - *`label`*: a colored rectangle to represent the selected label   
 - *`opacity`*: a slider to control the global opacity of the layer   
 - *`brush size limits`*: a slider to control size of the paint/erase brush    
@@ -168,8 +169,17 @@ Manual annotation and correction on the segmented file is done with the layer co
     
 3. All actions can be undo with the <img src="materials/interface_tools_screenshots/annotation_undo_button.PNG" width="30px"/> button or by ctrl-z
     
-4. If needed, you can fixe one TO DO TO EXPLICATE
-        
+4. If you need to work on a specific slice of your 3D image, but has to explore the volume to understand some complex structures you can use the locking option to facilitate the annotation task.
+
+    - To activate the functionnailty : 
+        1. Go to the slice of interest
+        2. Click on the <img src="materials/interface_tools_screenshots/annotation_unlock_button.PNG" width="30px"/> button => will change the button to <img src="materials/interface_tools_screenshots/annotation_lock_button.PNG" width="30px"/> and save the layer index
+        3. Scroll in the z-axis to explore the data (with the mouse wheel or the slider under the image)
+        4. To go back to your slice of interest, click on the <img src="materials/interface_tools_screenshots/annotation_lock_button.PNG" width="30px"/> button
+
+    - To deactivate the functionnailty (or change the locked slice index) : 
+        1. Go to the locked slice
+        2. Click on the <img src="materials/interface_tools_screenshots/annotation_lock_button.PNG" width="30px"/> button  => change the button to <img src="materials/interface_tools_screenshots/annotation_unlock_button.PNG" width="30px"/> and "unlock" the slice
 
 ## Save annotations *(use Panel 3)*
     
