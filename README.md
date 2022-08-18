@@ -9,14 +9,13 @@
 [![codecov](https://codecov.io/gh/DBC/hesperos/branch/main/graph/badge.svg)](https://codecov.io/gh/DBC/hesperos)
 [![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/hesperos)](https://napari-hub.org/plugins/hesperos)
 
-    TODO : DESCRIPTION
-
+A Napari plugin for pre-defined manual segmentation or semi-automatic segmentation with a one-shot learning procedure. The objective was to simplify the interface as much as possible so that the user can concentrate on annotation tasks using a pen on a tablet, or a mouse on a computer. 
+    
 This [napari] plugin was generated with [Cookiecutter] using [@napari]'s [cookiecutter-napari-plugin] template.
 
     
-   
 # Table of Contents
-- [Installation and Requirements](#installation-and-requirements)
+- [Installation and Usage](#installation-and-usage)
     * [Automatic installation](#automatic-installation)
     * [Manual installation](#manual-installation)
     * [Upgrade Hesperos version](#upgrade-hesperos-version)
@@ -32,7 +31,7 @@ This [napari] plugin was generated with [Cookiecutter] using [@napari]'s [cookie
     * [Save annotations](#save-annotations-use-panel-4)
 
         
-# Installation and Requirements
+# Installation and Usage
 The Hesperos plugin is designed to run on Windows (11 or less) and MacOS with Python 3.8 / 3.9 / 3.10.
      
     
@@ -105,9 +104,6 @@ The Hesperos plugin is designed to run on Windows (11 or less) and MacOS with Py
     
  <img src="materials/interface_tools_screenshots/hesperos_manual_interface.PNG" width="1000px"/>
     
-
-    TODO : ADD LIEN VERS MANUAL NAPARI OU VIDEO GENERAL
-
 ## Load and adjust your image *(use Panel 1)*
 The Hesperos plugin can be used with Digital Imaging and COmmunications in Medicine (DICOM), Neuroimaging Informatics Technology Initiative (NIfTI) or Tagged Image File Format (TIFF) images. To improve performances, use images that are located on your own disk.
  
@@ -212,11 +208,13 @@ Same panel as used for the *Manual Segmentation and Correction* mode *(see [pane
     
 Annotation and correction on the segmented file is done using the layer controls of the *`annotations`* layer. Click on the layer to display them. Only two labels are available: *`Structure of interest`* and *`Other`*. 
 
-The rapid manual tagging step of the one-shot learning method in Hesperos aims to learn and attribute different features for each label. For that, the user has to:
+The rapid manual tagging step of the one-shot learning method in Hesperos aims to learn and attribute different features for each label.
+<img align="right" src="materials/interface_tools_screenshots/screen_tagging_step.PNG" width="220px"/> 
+For that, the user has to:
 - tag, with the label *`Structure of interest`*, few pixels of your structure of interest.
 - tag, with the label *`Other`*, the greatest diversity of uninteresting structures in your 3D image (but not too much pixels).
 
-> for exemple : IMAGE
+> see the exemple image with *`Structure of interest`* label in red and *`Other`* label in cyan.
     
 1. To modify an existing segmentation, you can directy open the segmented file with the <img src="materials/interface_tools_screenshots/annotation_load_button.PNG" width="130px"/> button. The file needs to have the same dimensions as the original image. 
     > /!\ Only .tiff, .tif, .nii and .nii.gz files are supported as segmented files. 
