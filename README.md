@@ -27,7 +27,7 @@ This [napari] plugin was generated with [Cookiecutter] using [@napari]'s [cookie
     * [Save annotations](#save-annotations-use-panel-3)
 - [Hesperos: *OneShot Segmentation* mode](#hesperos-oneshot-segmentation-mode)
     * [Load and adjust your image](#load-and-adjust-your-image-use-panel-1)
-    * [Quickly annotate your image](#quickly-annotate-your-image-use-panel-2)
+    * [Annotate your image](#annotate-your-image-use-panel-2)
     * [Run automatic segmentation](#run-automatic-segmentation-use-panel-3)
     * [Save annotations](#save-annotations-use-panel-4)
 
@@ -126,7 +126,7 @@ The Hesperos plugin can be used with Digital Imaging and COmmunications in Medic
 
 ## Layer controls
 
-When data is loading, two layers are created: the ***image*** layer and the ***annotations*** layer. Order in the layer list correspond to the overlayed order. By clicking on these layers you will have acces to different layer controls (at the top left corner of the application). All actions can be undone/redone with the Ctrl-Z/Shift-Ctrl-Z keyboard shortcuts.
+When data is loading, two layers are created: the *`image`* layer and the *`annotations`* layer. Order in the layer list correspond to the overlayed order. By clicking on these layers you will have acces to different layer controls (at the top left corner of the application). All actions can be undone/redone with the Ctrl-Z/Shift-Ctrl-Z keyboard shortcuts. You can also hide a layer by clicking on its eye icon on the layer list.
     
     
 <ins>For the *image* layer:</ins>
@@ -155,7 +155,7 @@ When data is loading, two layers are created: the ***image*** layer and the ***a
 
 ## Annotate your image *(use Panel 2)*
     
-Manual annotation and correction on the segmented file is done using the layer controls of the *annotations* layer. Click on the layer to display them. /!\ You have to choose a structure to start annotating *(see 2.)*.
+Manual annotation and correction on the segmented file is done using the layer controls of the *`annotations`* layer. Click on the layer to display them. /!\ You have to choose a structure to start annotating *(see 2.)*.
 1. To modify an existing segmentation, you can directy open the segmented file with the <img src="materials/interface_tools_screenshots/annotation_load_button.PNG" width="130px"/> button. The file needs to have the same dimensions as the original image. 
     > /!\ Only .tiff, .tif, .nii and .nii.gz files are supported as segmented files.  
     
@@ -181,7 +181,7 @@ Manual annotation and correction on the segmented file is done using the layer c
     
 ## Save annotations *(use Panel 3)*
     
-1. Annotations can be saved as .tif, .tiff, .nii or .nii.gz with the <img src="materials/interface_tools_screenshots/annotation_save_button.PNG" width="100px"/> button in one of the two following saving mode:
+1. Annotations can be saved as .tif, .tiff, .nii or .nii.gz file with the <img src="materials/interface_tools_screenshots/annotation_save_button.PNG" width="100px"/> button in one of the two following saving mode:
     - *`Unique`*: segmented data is saved as a unique 3D image with corresponding label ids (1-2-3-...). This file can be re-opened in the application.
     - *`Several`*: segmented data is saved as several binary 3D images (0 or 255), one for each label id.
 2. <img src="materials/interface_tools_screenshots/annotation_delete_button.PNG" width="100px"/>: delete annotation data.
@@ -208,11 +208,15 @@ The principle is to accelerate annotation without prior information. The procedu
 Same panel as used for the manual annotation mode *(see [panel 1 description](#load-and-adjust-your-image-use-panel-1))*.
    
     
-## Quickly annotate your image *(use Panel 2)*
+## Annotate your image *(use Panel 2)*
     
-Quick annotation and correction on the segmented file is done using the layer controls of the *annotations* layer. Click on the layer to display them. Only two labels are available: *`Structure of interest`* and *`Other`*.
-    
-   TODO: Explain
+Annotation and correction on the segmented file is done using the layer controls of the *`annotations`* layer. Click on the layer to display them. Only two labels are available: *`Structure of interest`* and *`Other`*. 
+
+The rapid manual tagging step of the one-shot learning method in Hesperos aims to learn and attribute different features for each label. For that, the user has to:
+- tag, with the label *`Structure of interest`*, few pixels of your structure of interest.
+- tag, with the label *`Other`*, the greatest diversity of uninteresting structures in your 3D image (but not too much pixels).
+
+> for exemple : IMAGE
     
 1. To modify an existing segmentation, you can directy open the segmented file with the <img src="materials/interface_tools_screenshots/annotation_load_button.PNG" width="130px"/> button. The file needs to have the same dimensions as the original image. 
     > /!\ Only .tiff, .tif, .nii and .nii.gz files are supported as segmented files. 
@@ -220,9 +224,20 @@ Quick annotation and correction on the segmented file is done using the layer co
   
     
 ## Run automatic segmentation *(use Panel 3)*
-    
-    TODO: DESCRIPTION
 
+From the previously tagged pixels, features are extracted and used to train a basic classifier : the Random Forest Classifier (RFC). When the training of the pixel classifier is done, the classifier is applied to each pixels of the complete volume and output a probability to belong to the structure of interest.
+
+To run training and inference, click on the <img src="materials/interface_tools_screenshots/run_segmentation_button.PNG" width="100px"/> button:
+1. You will be asking to save a .pckl file which corrresponds to the model.
+2. A new status will appears under the *Panel 4* : *`Computing...`*. You must wait for the message to change to: *`Ready`* before doing anything in the application. Otherwise the application will freeze or crash.
+3. When running is done, two new layers will appear:
+    - the *`probabilities`* layer which corresponds to the direct probability (between 0 and 1) of a pixel to belong to the structure of interest. This layer is disabled by default, to enable it click on its eye icon in the layer list.
+    - the *`segmented probabilities`* layer which corresponds to a binary image obtained from the probability image normed and thresholded according to a value manually defined with the <img src="materials/interface_tools_screenshots/proba_threshold_slider.PNG" width="100px"/> slider.
+
+>Remark: If the output is not perfect, you have two possibilities to improve the result:
+>1. Add some tags with the paint brush to take in consideration mode unintersting structures or to add information in critical area of your structure of interest (such as in thin section). And then, run again the training and inference process. /!\ This will overwrite all previous segmentation data.
+>2. Save your segmentation data and re-open it with the *Manual Annotation and Correction* mode of Hesperos to mannually erase or add annotation.
+    
     
 ## Save annotations *(use Panel 4)*
     
