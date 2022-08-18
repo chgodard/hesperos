@@ -9,14 +9,13 @@
 [![codecov](https://codecov.io/gh/DBC/hesperos/branch/main/graph/badge.svg)](https://codecov.io/gh/DBC/hesperos)
 [![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/hesperos)](https://napari-hub.org/plugins/hesperos)
 
-    TODO : DESCRIPTION
-
+A Napari plugin for pre-defined manual segmentation or semi-automatic segmentation with a one-shot learning procedure. The objective was to simplify the interface as much as possible so that the user can concentrate on annotation tasks using a pen on a tablet, or a mouse on a computer. 
+    
 This [napari] plugin was generated with [Cookiecutter] using [@napari]'s [cookiecutter-napari-plugin] template.
 
     
-   
 # Table of Contents
-- [Installation and Requirements](#installation-and-requirements)
+- [Installation and Usage](#installation-and-usage)
     * [Automatic installation](#automatic-installation)
     * [Manual installation](#manual-installation)
     * [Upgrade Hesperos version](#upgrade-hesperos-version)
@@ -32,7 +31,7 @@ This [napari] plugin was generated with [Cookiecutter] using [@napari]'s [cookie
     * [Save annotations](#save-annotations-use-panel-4)
 
         
-# Installation and Requirements
+# Installation and Usage
 The Hesperos plugin is designed to run on Windows (11 or less) and MacOS with Python 3.8 / 3.9 / 3.10.
      
     
@@ -105,9 +104,6 @@ The Hesperos plugin is designed to run on Windows (11 or less) and MacOS with Py
     
  <img src="materials/interface_tools_screenshots/hesperos_manual_interface.PNG" width="1000px"/>
     
-
-    TODO : ADD LIEN VERS MANUAL NAPARI OU VIDEO GENERAL
-
 ## Load and adjust your image *(use Panel 1)*
 The Hesperos plugin can be used with Digital Imaging and COmmunications in Medicine (DICOM), Neuroimaging Informatics Technology Initiative (NIfTI) or Tagged Image File Format (TIFF) images. To improve performances, use images that are located on your own disk.
  
