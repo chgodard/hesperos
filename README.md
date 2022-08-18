@@ -246,9 +246,9 @@ To run training and inference, click on the <img src="materials/interface_tools_
 3. <img src="materials/interface_tools_screenshots/annotation_delete_button.PNG" width="100px"/>: delete annotation data.
     
 
-## License
+# License
 
-Distributed under the terms of the [BSD-3] license, **hesperos** is a free and open source software.
+Distributed under the terms of the [BSD-3] license, **Hesperos** is a free and open source software.
 
     
 [napari]: https://github.com/napari/napari
