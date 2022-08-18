@@ -212,11 +212,13 @@ Same panel as used for the *Manual Segmentation and Correction* mode *(see [pane
     
 Annotation and correction on the segmented file is done using the layer controls of the *`annotations`* layer. Click on the layer to display them. Only two labels are available: *`Structure of interest`* and *`Other`*. 
 
-The rapid manual tagging step of the one-shot learning method in Hesperos aims to learn and attribute different features for each label. For that, the user has to:
+The rapid manual tagging step of the one-shot learning method in Hesperos aims to learn and attribute different features for each label.
+<img align="right" src="materials/interface_tools_screenshots/screen_tagging_step.PNG" width="220px"/> 
+For that, the user has to:
 - tag, with the label *`Structure of interest`*, few pixels of your structure of interest.
 - tag, with the label *`Other`*, the greatest diversity of uninteresting structures in your 3D image (but not too much pixels).
 
-> for exemple : IMAGE
+> see the exemple image with *`Structure of interest`* label in red and *`Other`* label in cyan.
     
 1. To modify an existing segmentation, you can directy open the segmented file with the <img src="materials/interface_tools_screenshots/annotation_load_button.PNG" width="130px"/> button. The file needs to have the same dimensions as the original image. 
     > /!\ Only .tiff, .tif, .nii and .nii.gz files are supported as segmented files. 
