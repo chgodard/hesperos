@@ -205,7 +205,7 @@ The principle is to accelerate annotation without prior information. The procedu
     
 ## Load and adjust your image *(use Panel 1)*
     
-Same panel as used for the manual annotation mode *(see [panel 1 description](#load-and-adjust-your-image-use-panel-1))*.
+Same panel as used for the *Manual Segmentation and Correction* mode *(see [panel 1 description](#load-and-adjust-your-image-use-panel-1))*.
    
     
 ## Annotate your image *(use Panel 2)*
@@ -225,14 +225,14 @@ The rapid manual tagging step of the one-shot learning method in Hesperos aims t
     
 ## Run automatic segmentation *(use Panel 3)*
 
-From the previously tagged pixels, features are extracted and used to train a basic classifier : the Random Forest Classifier (RFC). When the training of the pixel classifier is done, the classifier is applied to each pixels of the complete volume and output a probability to belong to the structure of interest.
+From the previously tagged pixels, features are extracted and used to train a basic classifier : the Random Forest Classifier (RFC). When the training of the pixel classifier is done, the classifier is applied to each pixel of the complete volume and output a probability to belong to the structure of interest.
 
 To run training and inference, click on the <img src="materials/interface_tools_screenshots/run_segmentation_button.PNG" width="100px"/> button:
 1. You will be asking to save a .pckl file which corrresponds to the model.
 2. A new status will appears under the *Panel 4* : *`Computing...`*. You must wait for the message to change to: *`Ready`* before doing anything in the application. Otherwise the application will freeze or crash.
 3. When running is done, two new layers will appear:
     - the *`probabilities`* layer which corresponds to the direct probability (between 0 and 1) of a pixel to belong to the structure of interest. This layer is disabled by default, to enable it click on its eye icon in the layer list.
-    - the *`segmented probabilities`* layer which corresponds to a binary image obtained from the probability image normed and thresholded according to a value manually defined with the <img src="materials/interface_tools_screenshots/proba_threshold_slider.PNG" width="100px"/> slider.
+    - the *`segmented probabilities`* layer which corresponds to a binary image obtained from the probability image normed and thresholded according to a value manually defined with the *`Probability threshold`* <img src="materials/interface_tools_screenshots/proba_threshold_slider.PNG" width="100px"/> slider.
 
 >Remark: If the output is not perfect, you have two possibilities to improve the result:
 >1. Add some tags with the paint brush to take in consideration mode unintersting structures or to add information in critical area of your structure of interest (such as in thin section). And then, run again the training and inference process. /!\ This will overwrite all previous segmentation data.
@@ -241,8 +241,9 @@ To run training and inference, click on the <img src="materials/interface_tools_
     
 ## Save annotations *(use Panel 4)*
     
-    TODO: DESCRIPTION
-
+1. Segmented probabilites can be saved as .tif, .tiff, .nii or .nii.gz file with the <img src="materials/interface_tools_screenshots/save_segmentation_button.PNG" width="100px"/> button. The image is saved as a unique 3D binary image (value 0 and 255). This file can be re-opened in the application for correction.
+2. Probabilities can be saved as .tif, .tiff, .nii or .nii.gz file with the <img src="materials/interface_tools_screenshots/save_probabilities_button.PNG" width="100px"/> button as a unique 3D image. The probabilities is normed between 0 and 255.
+3. <img src="materials/interface_tools_screenshots/annotation_delete_button.PNG" width="100px"/>: delete annotation data.
     
 
 ## License
