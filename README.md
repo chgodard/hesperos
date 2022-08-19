@@ -187,13 +187,13 @@ Manual annotation and correction on the segmented file is done using the layer c
     
 # Hesperos: *OneShot Segmentation* mode
     
- The ***OneShot Segmentation*** mode of the Hesperos plugin is a 2D version of the VoxelLearning method implemented in DIVA (see [our Github](https://github.com/DecBayComp/VoxelLearning) and latest article [Guérinot, C., Marcon, V., Godard, C., et al. (2022). New Approach to Accelerated Image Annotation by Leveraging Virtual Reality and Cloud Computing. _Frontiers in Bioinformatics_. doi:10.3389/fbinf.2021.777101](https://www.frontiersin.org/articles/10.3389/fbinf.2021.777101/full)).
+ The ***OneShot Segmentation*** mode of the Hesperos plugin is a 2D version of the VoxelLearning method implemented in DIVA (see [our Github](https://github.com/DecBayComp/VoxelLearning) and the latest article [Guérinot, C., Marcon, V., Godard, C., et al. (2022). New Approach to Accelerated Image Annotation by Leveraging Virtual Reality and Cloud Computing. _Frontiers in Bioinformatics_. doi:10.3389/fbinf.2021.777101](https://www.frontiersin.org/articles/10.3389/fbinf.2021.777101/full)).
     
 
-The principle is to accelerate annotation without prior information. The procedure consists of:
+The principle is to accelerate the segmentation without prior information. The procedure consists of:
 1. A **rapid tagging** of few pixels in the image with two labels: one for the structure of interest (named positive tags), and one for the other structures (named negative tags).
 2. A **training** of a simple random forest classifier with these tagged pixels and their features (mean, gaussian, ...).
-3. An **inference** in all the pixels of the image to automatically segment the structure of interest. The output is a probability image (0-255) of belonging to a specific class.
+3. An **inference** of all the pixels of the image to automatically segment the structure of interest. The output is a probability image (0-255) of belonging to a specific class.
 4. Iterative corrections if needed.
     
 <img src="materials/interface_tools_screenshots/hesperos_oneshot_interface.PNG" width="1000px"/>
@@ -201,18 +201,18 @@ The principle is to accelerate annotation without prior information. The procedu
     
 ## Load and adjust your image *(use Panel 1)*
     
-Same panel as used for the *Manual Segmentation and Correction* mode *(see [panel 1 description](#load-and-adjust-your-image-use-panel-1))*.
+Same panel as the *Manual Segmentation and Correction* mode *(see [panel 1 description](#load-and-adjust-your-image-use-panel-1))*.
    
     
 ## Annotate your image *(use Panel 2)*
     
-Annotation and correction on the segmented file is done using the layer controls of the *`annotations`* layer. Click on the layer to display them. Only two labels are available: *`Structure of interest`* and *`Other`*. 
+Annotations and corrections on the segmented file is done using the layer controls of the *`annotations`* layer. Click on the layer to display them. Only two labels are available: *`Structure of interest`* and *`Other`*. 
 
-The rapid manual tagging step of the one-shot learning method in Hesperos aims to learn and attribute different features for each label.
+The rapid manual tagging step of the one-shot learning method aims to learn and attribute different features to each label.
 <img align="right" src="materials/interface_tools_screenshots/screen_tagging_step.PNG" width="220px"/> 
-For that, the user has to:
-- tag, with the label *`Structure of interest`*, few pixels of your structure of interest.
-- tag, with the label *`Other`*, the greatest diversity of uninteresting structures in your 3D image (but not too much pixels).
+To achieve that, the user has to:
+- with the label *`Structure of interest`*, tag few pixels of the structure of interest.
+- with the label *`Other`*, tag the greatest diversity of uninteresting structures in the 3D image (avoid tagging too much pixels).
 
 > see the exemple image with *`Structure of interest`* label in red and *`Other`* label in cyan.
     
@@ -223,18 +223,18 @@ For that, the user has to:
     
 ## Run automatic segmentation *(use Panel 3)*
 
-From the previously tagged pixels, features are extracted and used to train a basic classifier : the Random Forest Classifier (RFC). When the training of the pixel classifier is done, the classifier is applied to each pixel of the complete volume and output a probability to belong to the structure of interest.
+From the previously tagged pixels, features are extracted and used to train a basic classifier : the Random Forest Classifier (RFC). When the training of the pixel classifier is done, it is applied to each pixel of the complete volume and outputs a probability to belong to the structure of interest.
 
 To run training and inference, click on the <img src="materials/interface_tools_screenshots/run_segmentation_button.PNG" width="115px"/> button:
-1. You will be asking to save a .pckl file which corrresponds to the model.
-2. A new status will appears under the *Panel 4* : *`Computing...`*. You must wait for the message to change to: *`Ready`* before doing anything in the application. Otherwise the application will freeze or crash.
-3. When running is done, two new layers will appear:
+1. You will be asked to save a .pckl file which corresponds to the model.
+2. A new status will appears under the *Panel 4* : *`Computing...`*. You must wait for the message to change to: *`Ready`* before doing anything in the application (otherwise the application may freeze or crash).
+3. When the processing is done, two new layers will appear:
     - the *`probabilities`* layer which corresponds to the direct probability (between 0 and 1) of a pixel to belong to the structure of interest. This layer is disabled by default, to enable it click on its eye icon in the layer list.
     - the *`segmented probabilities`* layer which corresponds to a binary image obtained from the probability image normed and thresholded according to a value manually defined with the *`Probability threshold`* slider: <img src="materials/interface_tools_screenshots/proba_threshold_slider.PNG" width="80px"/>.
 
 >Remark: If the output is not perfect, you have two possibilities to improve the result:
->1. Add some tags with the paint brush to take in consideration mode unintersting structures or to add information in critical area of your structure of interest (such as in thin section). And then, run again the training and inference process. /!\ This will overwrite all previous segmentation data.
->2. Save your segmentation data and re-open it with the *Manual Annotation and Correction* mode of Hesperos to mannually erase or add annotation.
+>1. Add some tags with the paint brush to take in consideration unintersting structures or add information in critical areas of your structure of interest (such as in thin sections). Then, run the training and inference process again. /!\ This will overwrite all previous segmentation data.
+>2. Save your segmentation data and re-open it with the *Manual Annotation and Correction* mode of Hesperos to manually erase or add annotations.
     
     
 ## Save annotations *(use Panel 4)*
