@@ -222,7 +222,7 @@ class OneShotWidget(QWidget):
             callback_function=self.set_custom_contrast,
             row=0,
             column=0,
-            tooltip_text="Add custom contrast limit setting. Open it by selecting the Custom contrast choice.",
+            tooltip_text="Add custom contrast limit setting. Open it by selecting the Custom Contrast choice.",
             isHBoxLayout=True,
         )        
         self.custom_contrast_limits = None
@@ -249,7 +249,7 @@ class OneShotWidget(QWidget):
         )
 
         self.default_contrast_combo_box = add_combo_box(
-            list_items=["Set a default contrast", "CT Bone", "CT Soft", "Custom contrast"],
+            list_items=["Set a default contrast", "CT Bone", "CT Soft", "Custom Contrast"],
             layout=self.tool_loading_layout,
             callback_function=self.set_default_contrast,
             row=0,
@@ -547,7 +547,7 @@ class OneShotWidget(QWidget):
 
         series_found = reader.GetGDCMSeriesIDs(dicom_path)
         if len(series_found) > 1:
-            display_warning_box(self, "Error", "More than 1 DICOM serie in the folder. Select a folder containing a single DICOM series.")
+            display_warning_box(self, "Error", "More than one DICOM serie in the folder. Select a folder containing a single DICOM serie.")
             return None
 
         img_names = reader.GetGDCMSeriesFileNames(dicom_path)
@@ -700,7 +700,7 @@ class OneShotWidget(QWidget):
             display_warning_box(self, "Error", "The imported contrast limit is outside of the image contrast range.")
             return
 
-        self.default_contrast_combo_box.setCurrentText("Custom contrast")
+        self.default_contrast_combo_box.setCurrentText("Custom Contrast")
 
 
 # ============ Update data ============
@@ -1015,12 +1015,12 @@ class OneShotWidget(QWidget):
 # ============ Apply widget value ============
     def set_custom_contrast(self):
         """
-        Save the current contrast limits as a "Custom contrast" to be re-used.
+        Save the current contrast limits as a "Custom Contrast" to be re-used.
 
         """
         if "image" in self.viewer.layers:
             self.custom_contrast_limits = self.viewer.layers['image'].contrast_limits
-            self.default_contrast_combo_box.setCurrentText("Custom contrast")
+            self.default_contrast_combo_box.setCurrentText("Custom Contrast")
 
     def set_default_contrast(self):
         """
@@ -1040,7 +1040,7 @@ class OneShotWidget(QWidget):
                 self.hu_limits = (-160, 240)
                 self.viewer.layers['image'].contrast_limits = self.hu_limits
 
-            elif self.default_contrast_combo_box.currentText() == "Custom contrast":
+            elif self.default_contrast_combo_box.currentText() == "Custom Contrast":
                 if self.custom_contrast_limits is not None:
                     self.viewer.layers['image'].contrast_limits = self.custom_contrast_limits
                 else:

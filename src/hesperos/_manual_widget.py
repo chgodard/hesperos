@@ -251,7 +251,7 @@ class ManualSegmentationWidget(QWidget):
             callback_function=self.set_custom_contrast,
             row=0,
             column=0,
-            tooltip_text="Add custom contrast limit setting. Open it by selecting the Custom contrast choice.",
+            tooltip_text="Add custom contrast limit setting. Open it by selecting the Custom Contrast choice.",
             isHBoxLayout=True,
         )        
         self.custom_contrast_limits = None
@@ -278,7 +278,7 @@ class ManualSegmentationWidget(QWidget):
         )
 
         self.default_contrast_combo_box = add_combo_box(
-            list_items=["Set a default contrast", "CT Bone", "CT Soft", "Custom contrast"],
+            list_items=["Set a default contrast", "CT Bone", "CT Soft", "Custom Contrast"],
             layout=self.tool_loading_layout,
             callback_function=self.set_default_contrast,
             row=0,
@@ -725,12 +725,16 @@ class ManualSegmentationWidget(QWidget):
 
         if (extensions[-1] == ".tif") or (extensions[-1] == ".tiff"):
             image_arr = tif.imread(file_path)
+            if len(image_arr.shape) == 2:
+                image_arr = np.expand_dims(image_arr, 0)
             self.image_sitk = sitk.Image(image_arr.shape[2], image_arr.shape[1], image_arr.shape[0], sitk.sitkInt16)
             self.file_name_label.setText(Path(file_path).stem)
         
         elif extensions[-1] == ".nii":
             self.image_sitk = sitk.ReadImage(file_path)
             image_arr = sitk.GetArrayFromImage(self.image_sitk)
+            if len(image_arr.shape) == 2:
+                image_arr = np.expand_dims(image_arr, 0)
             self.file_name_label.setText(Path(file_path).stem)
        
         elif extensions[-1] == ".gz":
@@ -738,6 +742,8 @@ class ManualSegmentationWidget(QWidget):
                 if extensions[-2] == ".nii":               
                     self.image_sitk = sitk.ReadImage(file_path)
                     image_arr = sitk.GetArrayFromImage(self.image_sitk)
+                    if len(image_arr.shape) == 2:
+                        image_arr = np.expand_dims(image_arr, 0)
                     self.file_name_label.setText(Path(Path(file_path).stem).stem)
                 else:
                     return None
@@ -780,11 +786,16 @@ class ManualSegmentationWidget(QWidget):
 
         if (extensions[-1] == ".tif") or (extensions[-1] == ".tiff"):
             segmentation_arr = tif.imread(file_path)
+            if len(segmentation_arr.shape) == 2:
+                segmentation_arr = np.expand_dims(segmentation_arr, 0)
 
         elif extensions[-1] == ".nii":                
             segmentation_sitk = sitk.ReadImage(file_path)
             segmentation_arr = sitk.GetArrayFromImage(segmentation_sitk)
             segmentation_arr = segmentation_arr.astype(np.uint8)
+
+            if len(segmentation_arr.shape) == 2:
+                segmentation_arr = np.expand_dims(segmentation_arr, 0)
 
             if any(n < 0 for n in np.unique(segmentation_arr)):
                 display_warning_box(self, "Error", "Incorrect NIFTI format : negative value")
@@ -796,6 +807,9 @@ class ManualSegmentationWidget(QWidget):
                     segmentation_sitk = sitk.ReadImage(file_path)
                     segmentation_arr = sitk.GetArrayFromImage(segmentation_sitk)
                     segmentation_arr = segmentation_arr.astype(np.uint8)
+
+                    if len(segmentation_arr.shape) == 2:
+                        segmentation_arr = np.expand_dims(segmentation_arr, 0)
 
                     if any(n < 0 for n in np.unique(segmentation_arr)):
                         display_warning_box(self, "Error", "Incorrect NIFTI format : negative value")
@@ -847,7 +861,7 @@ class ManualSegmentationWidget(QWidget):
             display_warning_box(self, "Error", "The imported contrast limits is outside of the image contrast range.")
             return
         
-        self.default_contrast_combo_box.setCurrentText("Custom contrast")
+        self.default_contrast_combo_box.setCurrentText("Custom Contrast")
 
 
 # ============ Update data ============
@@ -1182,12 +1196,12 @@ class ManualSegmentationWidget(QWidget):
 
     def set_custom_contrast(self):
         """
-        Save the current contrast limits as a "Custom contrast" to be re-used and apply it.
+        Save the current contrast limits as a "Custom Contrast" to be re-used and apply it.
 
         """
         if "image" in self.viewer.layers:
             self.custom_contrast_limits = self.viewer.layers['image'].contrast_limits
-            self.default_contrast_combo_box.setCurrentText("Custom contrast")
+            self.default_contrast_combo_box.setCurrentText("Custom Contrast")
 
     def set_default_contrast(self):
         """
@@ -1207,7 +1221,7 @@ class ManualSegmentationWidget(QWidget):
                 self.hu_limits = (-160, 240)
                 self.viewer.layers['image'].contrast_limits = self.hu_limits
 
-            elif self.default_contrast_combo_box.currentText() == "Custom contrast":
+            elif self.default_contrast_combo_box.currentText() == "Custom Contrast":
                 if self.custom_contrast_limits is not None:
                     self.viewer.layers['image'].contrast_limits = self.custom_contrast_limits
                 else:
