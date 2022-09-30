@@ -100,24 +100,24 @@ The Hesperos plugin is designed to run on Windows (11 or less) and MacOS with Py
 # Hesperos: *Manual Segmentation and Correction* mode
     
  The ***Manual Segmentation and Correction*** mode of the Hesperos plugin is a simplified and optimized interface to do basic 2D manual segmentation of several structures in a 3D image using a mouse or a stylet with a tablet.
+
     
-    
- <img src="materials/interface_tools_screenshots/hesperos_manual_interface.PNG" width="1000px"/>
+ <img src="https://user-images.githubusercontent.com/49953723/193262711-710673f2-5b53-4eb6-a7c7-6dada9d28d92.PNG" width="1000px"/>
     
 ## Load and adjust your image *(use Panel 1)*
 The Hesperos plugin can be used with Digital Imaging and COmmunications in Medicine (DICOM), Neuroimaging Informatics Technology Initiative (NIfTI) or Tagged Image File Format (TIFF) images. To improve performances, use images that are located on your own disk.
- 
+
 1. To load data:
-    - use the <img src="materials/interface_tools_screenshots/open_image_file_button.PNG" width="100px"/> button for *(.tiff, .tif, .nii or .nii.gz)* image files.
-    - use the <img src="materials/interface_tools_screenshots/open_dicom_serie_button.PNG" width="100px"/> button for a DICOM serie. /!\ Folder with multiple DICOM series is not supported.  
-2. After the image has loaded, a slider appears that allows to zoom in/out: <img src="materials/interface_tools_screenshots/zoom_slider.PNG" width="100px"/>. Zooming is also possible with the <img src="materials/interface_tools_screenshots/layer_label_zoom_button.PNG" width="25px"/> button in the layer controls panel. 
+    - use the <img src="https://user-images.githubusercontent.com/49953723/193262334-3c28e733-36ab-4504-9a6d-acd298c15994.PNG" width="100px"/> button for *(.tiff, .tif, .nii or .nii.gz)* image files.
+    - use the <img src="https://user-images.githubusercontent.com/49953723/193262624-149a4461-fbac-4498-a2b8-33bdd88e3a9f.PNG" width="100px"/> button for a DICOM serie. /!\ Folder with multiple DICOM series is not supported.  
+2. After the image has loaded, a slider appears that allows to zoom in/out: <img src="https://user-images.githubusercontent.com/49953723/193262738-7e6e68a9-0890-4e18-92a9-dbf2168a6bb5.PNG" width="100px"/>. Zooming is also possible with the <img src="https://user-images.githubusercontent.com/49953723/193262725-7d4f7b09-d119-45cf-a9d4-c42c5f848c1a.PNG" width="25px"/> button in the layer controls panel. 
 3. If your data is a DICOM serie, you have the possibility to directly change the contrast of the image (according to the Hounsfield Unit):
-    - by choosing one of the two predefined contrasts: *CT bone* or *CT Soft* in <img src="materials/interface_tools_screenshots/contrast_choose.PNG" width="150px"/>.
-    - by creating a custom default contrast with the <img src="materials/interface_tools_screenshots/contrast_add_button.PNG" width="30px"/> button and selecting *Custom Contrast*. Settings can be exported as a .json file with the <img src="materials/interface_tools_screenshots/contrast_export_button.PNG" width="30px"/> button.
-    - by loading a saved default contrast with the <img src="materials/interface_tools_screenshots/contrast_import_button.PNG" width="30px"/> button and selecting *Custom Contrast*.
+    - by choosing one of the two predefined contrasts: *CT bone* or *CT Soft* in <img src="https://user-images.githubusercontent.com/49953723/193262708-17e1d301-0a9a-497f-9feb-613e69893c06.PNG" width="150px"/>.
+    - by creating a custom default contrast with the <img src="https://user-images.githubusercontent.com/49953723/193262707-466917b4-b885-429b-9924-6481fa6410bb.PNG" width="30px"/> button and selecting *Custom Contrast*. Settings can be exported as a .json file with the <img src="https://user-images.githubusercontent.com/49953723/193262709-e1ad5321-1f60-4b60-a715-7c494670e1cd.PNG" width="30px"/> button.
+    - by loading a saved default contrast with the <img src="https://user-images.githubusercontent.com/49953723/193262710-c9f66354-f896-4e59-8718-70e5509875af.PNG" width="30px"/> button and selecting *Custom Contrast*.
 4. In the bottom left corner of the application you also have the possibility to: 
-    - <img src="materials/interface_tools_screenshots/image_change_axis_button.PNG" width="25px"/>: change the order of the visible axis (for example go to sagittal, axial or coronal planes).
-    - <img src="materials/interface_tools_screenshots/image_transpose_button.PNG" width="25px"/>: transpose the 3D image on the current axis being displayed.
+    - <img src="https://user-images.githubusercontent.com/49953723/193262716-d9947eb9-d87f-4251-af76-2d906cd36018.PNG" width="25px"/>: change the order of the visible axis (for example go to sagittal, axial or coronal planes).
+    - <img src="https://user-images.githubusercontent.com/49953723/193262717-12afbfb1-49ae-4a77-a83e-5bc99850734a.PNG" width="25px"/>: transpose the 3D image on the current axis being displayed.
 
 
 ## Layer controls
@@ -127,14 +127,14 @@ When data is loading, two layers are created: the *`image`* layer and the *`anno
     
 <ins>For the *image* layer:</ins>
 - *`opacity`*: a slider to control the global opacity of the layer.
-- *`contrast limits`*: a double slider to manually control the contrast of the image (same as the <img src="materials/interface_tools_screenshots/contrast_choose.PNG" width="150px"/> option for DICOM data).
+- *`contrast limits`*: a double slider to manually control the contrast of the image (same as the <img src="https://user-images.githubusercontent.com/49953723/193262708-17e1d301-0a9a-497f-9feb-613e69893c06.PNG" width="150px"/> option for DICOM data).
     
 
 <ins>For the *annotations* layer:</ins>
-- <img src="materials/interface_tools_screenshots/layer_label_erase_button.PNG" width="25px"/>: erase brush to erase all labels at once (if *`preserve labels`* is not selected) or only erase the selected label (if *`preserve labels`* is selected).
-- <img src="materials/interface_tools_screenshots/layer_label_paint_button.PNG" width="25px"/>: paint brush with the same color than the *`label`* rectangle.
-- <img src="materials/interface_tools_screenshots/layer_label_fill_button.PNG" width="25px"/>: fill bucket with the same color than the *`label`* rectangle.
-- <img src="materials/interface_tools_screenshots/layer_label_zoom_button.PNG" width="25px"/>: select to zoom in and out with the mouse wheel (same as the zoom slider at the top right corner in Panel 1).
+- <img src="https://user-images.githubusercontent.com/49953723/193262718-30882770-59eb-4d2b-9cfe-8b88537560c4.PNG" width="25px"/>: erase brush to erase all labels at once (if *`preserve labels`* is not selected) or only erase the selected label (if *`preserve labels`* is selected).
+- <img src="https://user-images.githubusercontent.com/49953723/193262722-6bb6e6a4-ae7a-4ad1-b7f8-898e54ad62c3.PNG" width="25px"/>: paint brush with the same color than the *`label`* rectangle.
+- <img src="https://user-images.githubusercontent.com/49953723/193262719-f816b21e-78fd-4ba7-b415-30a461cbd652.PNG" width="25px"/>: fill bucket with the same color than the *`label`* rectangle.
+- <img src="https://user-images.githubusercontent.com/49953723/193262725-7d4f7b09-d119-45cf-a9d4-c42c5f848c1a.PNG" width="25px"/>: select to zoom in and out with the mouse wheel (same as the zoom slider at the top right corner in Panel 1).
 - *`label`*: a colored rectangle to represent the selected label.  
 - *`opacity`*: a slider to control the global opacity of the layer.  
 - *`brush size limits`*: a slider to control size of the paint/erase brush.    
@@ -152,7 +152,7 @@ When data is loading, two layers are created: the *`image`* layer and the *`anno
 ## Annotate your image *(use Panel 2)*
     
 Manual annotation and correction on the segmented file is done using the layer controls of the *`annotations`* layer. Click on the layer to display them. /!\ You have to choose a structure to start annotating *(see 2.)*.
-1. To modify an existing segmentation, you can directy open the segmented file with the <img src="materials/interface_tools_screenshots/annotation_load_button.PNG" width="130px"/> button. The file needs to have the same dimensions as the original image. 
+1. To modify an existing segmentation, you can directy open the segmented file with the <img src="https://user-images.githubusercontent.com/49953723/193262702-df3b4fb8-63d0-4a1b-b1c9-8391cf8c3f22.PNG" width="130px"/> button. The file needs to have the same dimensions as the original image. 
     > /!\ Only .tiff, .tif, .nii and .nii.gz files are supported as segmented files.  
     
 2. Choose a structure to annotate in the drop-down menu
@@ -162,25 +162,25 @@ Manual annotation and correction on the segmented file is done using the layer c
     
 > When selecting a structure, a new panel appears with a list of elements to annotate. Each element has its own label and color. Select one element in the list to automatically activate the paint brush mode with the corresponding color (color is updated in the *`label`* rectangle in the layer controls panel).
     
-3. All actions can be undone with the <img src="materials/interface_tools_screenshots/annotation_undo_button.PNG" width="30px"/> button or Ctrl-Z.
+3. All actions can be undone with the <img src="https://user-images.githubusercontent.com/49953723/193265848-8c458035-609a-433e-aa82-5d9588971425.PNG" width="30px"/> button or Ctrl-Z.
     
 4. If you need to work on a specific slice of your 3D image, but also have to explore the volume to understand some complex structures, you can use the locking option to facilitate the annotation task.
     - <ins>To activate the functionality</ins>: 
         1. Go to the slice of interest.
-        2. Click on the <img src="materials/interface_tools_screenshots/annotation_unlock_button.PNG" width="30px"/> button => will change the button to <img src="materials/interface_tools_screenshots/annotation_lock_button.PNG" width="30px"/> and save the layer index.
+        2. Click on the <img src="https://user-images.githubusercontent.com/49953723/193262706-40f3dbca-5589-406d-81e8-e150ae8bfab6.PNG" width="30px"/> button => will change the button to <img src="https://user-images.githubusercontent.com/49953723/193262703-2b2ea2dc-24fa-438b-a75c-3aa42b210f53.PNG" width="30px"/> and save the layer index.
         3. Scroll in the z-axis to explore the data (with the mouse wheel or the slider under the image).
-        4. To go back to your slice of interest, click on the <img src="materials/interface_tools_screenshots/annotation_lock_button.PNG" width="30px"/> button.
+        4. To go back to your slice of interest, click on the <img src="https://user-images.githubusercontent.com/49953723/193262703-2b2ea2dc-24fa-438b-a75c-3aa42b210f53.PNG" width="30px"/> button.
     - <ins>To deactivate the functionality</ins> (or change the locked slice index): 
         1. Go to the locked slice.
-        2. Click on the <img src="materials/interface_tools_screenshots/annotation_lock_button.PNG" width="30px"/> button  => change the button to <img src="materials/interface_tools_screenshots/annotation_unlock_button.PNG" width="30px"/> and "unlock" the slice.
+        2. Click on the <img src="https://user-images.githubusercontent.com/49953723/193262703-2b2ea2dc-24fa-438b-a75c-3aa42b210f53.PNG" width="30px"/> button  => change the button to <img src="https://user-images.githubusercontent.com/49953723/193262706-40f3dbca-5589-406d-81e8-e150ae8bfab6.PNG" width="30px"/> and "unlock" the slice.
 
     
 ## Save annotations *(use Panel 3)*
     
-1. Annotations can be saved as .tif, .tiff, .nii or .nii.gz file with the <img src="materials/interface_tools_screenshots/annotation_save_button.PNG" width="95px"/> button in one of the two following saving mode:
+1. Annotations can be saved as .tif, .tiff, .nii or .nii.gz file with the <img src="https://user-images.githubusercontent.com/49953723/193262704-d80bc858-96d5-4d2e-9995-6799d78ae864.PNG" width="95px"/> button in one of the two following saving mode:
     - *`Unique`*: segmented data is saved as a unique 3D image with corresponding label ids (1-2-3-...). This file can be re-opened in the application.
     - *`Several`*: segmented data is saved as several binary 3D images (0 or 255), one for each label id.
-2. <img src="materials/interface_tools_screenshots/annotation_delete_button.PNG" width="100px"/>: delete annotation data.
+2. <img src="https://user-images.githubusercontent.com/49953723/193262699-95758bdb-ac40-439b-8959-d924781a2368.PNG" width="100px"/>: delete annotation data.
 3. *`Automatic segmentation backup`*: if selected, the segmentation data will be automatically saved as a unique 3D image when the image slice is changed.
     > /!\ This process can slow down the display if the image is large.
     
@@ -196,7 +196,7 @@ The principle is to accelerate the segmentation without prior information. The p
 3. An **inference** of all the pixels of the image to automatically segment the structure of interest. The output is a probability image (0-255) of belonging to a specific class.
 4. Iterative corrections if needed.
     
-<img src="materials/interface_tools_screenshots/hesperos_oneshot_interface.PNG" width="1000px"/>
+<img src="https://user-images.githubusercontent.com/49953723/193262714-8699cd59-3825-4d71-b27a-bbcad1e36d55.PNG" width="1000px"/>
 
     
 ## Load and adjust your image *(use Panel 1)*
@@ -209,28 +209,28 @@ Same panel as the *Manual Segmentation and Correction* mode *(see [panel 1 descr
 Annotations and corrections on the segmented file is done using the layer controls of the *`annotations`* layer. Click on the layer to display them. Only two labels are available: *`Structure of interest`* and *`Other`*. 
 
 The rapid manual tagging step of the one-shot learning method aims to learn and attribute different features to each label.
-<img align="right" src="materials/interface_tools_screenshots/screen_tagging_step.PNG" width="220px"/> 
+<img align="right" src="https://user-images.githubusercontent.com/49953723/193262735-5dce56fb-8a2c-4aeb-9ee7-9727122d8089.PNG" width="220px"/> 
 To achieve that, the user has to:
 - with the label *`Structure of interest`*, tag few pixels of the structure of interest.
 - with the label *`Other`*, tag the greatest diversity of uninteresting structures in the 3D image (avoid tagging too much pixels).
 
 > see the exemple image with *`Structure of interest`* label in red and *`Other`* label in cyan.
     
-1. To modify an existing segmentation, you can directy open the segmented file with the <img src="materials/interface_tools_screenshots/annotation_load_button.PNG" width="130px"/> button. The file needs to have the same dimensions as the original image. 
+1. To modify an existing segmentation, you can directy open the segmented file with the <img src="https://user-images.githubusercontent.com/49953723/193266118-dfd241f6-8f0b-4cb9-94e7-5e74a3ce8b6e.PNG" width="130px"/> button. The file needs to have the same dimensions as the original image. 
     > /!\ Only .tiff, .tif, .nii and .nii.gz files are supported as segmented files. 
-2. All actions can be undone with the <img src="materials/interface_tools_screenshots/annotation_undo_button.PNG" width="30px"/> button or Ctrl-Z.
-  
+2. All actions can be undone with the <img src="https://user-images.githubusercontent.com/49953723/193265848-8c458035-609a-433e-aa82-5d9588971425.PNG" width="30px"/> button or Ctrl-Z.
+
     
 ## Run automatic segmentation *(use Panel 3)*
 
 From the previously tagged pixels, features are extracted and used to train a basic classifier : the Random Forest Classifier (RFC). When the training of the pixel classifier is done, it is applied to each pixel of the complete volume and outputs a probability to belong to the structure of interest.
 
-To run training and inference, click on the <img src="materials/interface_tools_screenshots/run_segmentation_button.PNG" width="115px"/> button:
+To run training and inference, click on the <img src="https://user-images.githubusercontent.com/49953723/193262731-719c226a-f7c5-4252-b2bb-fade4ab7f5b3.PNG" width="115px"/> button:
 1. You will be asked to save a .pckl file which corresponds to the model.
 2. A new status will appears under the *Panel 4* : *`Computing...`*. You must wait for the message to change to: *`Ready`* before doing anything in the application (otherwise the application may freeze or crash).
 3. When the processing is done, two new layers will appear:
     - the *`probabilities`* layer which corresponds to the direct probability (between 0 and 1) of a pixel to belong to the structure of interest. This layer is disabled by default, to enable it click on its eye icon in the layer list.
-    - the *`segmented probabilities`* layer which corresponds to a binary image obtained from the probability image normed and thresholded according to a value manually defined with the *`Probability threshold`* slider: <img src="materials/interface_tools_screenshots/proba_threshold_slider.PNG" width="80px"/>.
+    - the *`segmented probabilities`* layer which corresponds to a binary image obtained from the probability image normed and thresholded according to a value manually defined with the *`Probability threshold`* slider: <img src="https://user-images.githubusercontent.com/49953723/193262730-6998c8a5-92f1-4ff1-bbf5-6972a373afd2.PNG" width="80px"/>.
 
 >Remark: If the output is not perfect, you have two possibilities to improve the result:
 >1. Add some tags with the paint brush to take in consideration unintersting structures or add information in critical areas of your structure of interest (such as in thin sections). Then, run the training and inference process again. /!\ This will overwrite all previous segmentation data.
@@ -239,10 +239,10 @@ To run training and inference, click on the <img src="materials/interface_tools_
     
 ## Save annotations *(use Panel 4)*
     
-1. Segmented probabilites can be saved as .tif, .tiff, .nii or .nii.gz file with the <img src="materials/interface_tools_screenshots/save_segmentation_button.PNG" width="105px"/> button. The image is saved as a unique 3D binary image (value 0 and 255). This file can be re-opened in the application for correction.
-2. Probabilities can be saved as .tif, .tiff, .nii or .nii.gz file with the <img src="materials/interface_tools_screenshots/save_probabilities_button.PNG" width="105px"/> button as a unique 3D image. The probabilities image is normed between 0 and 255.
-3. <img src="materials/interface_tools_screenshots/annotation_delete_button.PNG" width="100px"/>: delete annotation data.
-    
+1. Segmented probabilites can be saved as .tif, .tiff, .nii or .nii.gz file with the <img src="https://user-images.githubusercontent.com/49953723/193262734-57159a97-2f46-4aba-b3bf-b55a35dfacbd.PNG" width="105px"/> button. The image is saved as a unique 3D binary image (value 0 and 255). This file can be re-opened in the application for correction.
+2. Probabilities can be saved as .tif, .tiff, .nii or .nii.gz file with the <img src="https://user-images.githubusercontent.com/49953723/193262733-26e37392-55b2-4c36-9287-b2f5d8d30e03.PNG" width="105px"/> button as a unique 3D image. The probabilities image is normed between 0 and 255.
+3. <img src="https://user-images.githubusercontent.com/49953723/193266056-9514b648-b3e0-43f5-901a-a45fa1390f00.PNG" width="100px"/>: delete annotation data.
+
 
 # License
 
