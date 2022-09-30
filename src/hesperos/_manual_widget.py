@@ -986,7 +986,7 @@ class ManualSegmentationWidget(QWidget):
         """
         files_types = "Image File (*.tif *.tiff *.nii.gz *.nii)"
 
-        default_filepath = Path(self.image_dir).joinpath(self.file_name_label.text() + "_segmentation.nii.gz")
+        default_filepath = Path(self.image_dir).joinpath(self.file_name_label.text() + "_segmentation.tif")
         file_path, _ = QFileDialog.getSaveFileName(self, "Save Segmentation", str(default_filepath), files_types)
 
         # If choose "Cancel"
