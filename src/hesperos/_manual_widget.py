@@ -824,6 +824,9 @@ class ManualSegmentationWidget(QWidget):
             display_warning_box(self, "Error", "Incorrect file size. Need to be a 3D image")
             return None
         
+        if not isinstance(segmentation_arr.flat[0], np.integer):
+            segmentation_arr = segmentation_arr.astype(np.int)
+        
         return segmentation_arr
 
     def has_corresponding_segmentation_file(self):
