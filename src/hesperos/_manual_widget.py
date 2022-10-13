@@ -18,6 +18,7 @@ from hesperos.resources._icons import get_icon_path, get_relative_icon_path
 
 import hesperos.annotation.fetus as fetus_data
 import hesperos.annotation.shoulder as shoulder_data
+import hesperos.annotation.shoulder_bones as shoulder_bones_data
 import hesperos.annotation.feta as feta_data
 from hesperos.annotation.structuresubpanel import StructureSubPanel
 
@@ -147,6 +148,14 @@ class ManualSegmentationWidget(QWidget):
             list_structures=shoulder_data.LIST_STRUCTURES,
             dict_substructures=shoulder_data.DICT_SUB_STRUCTURES,
             dict_sub_substructures=shoulder_data.DICT_SUB_SUB_STRUCTURES)
+
+        self.shoulder_bones = StructureSubPanel(
+            parent=self,
+            row=row,
+            column=0,
+            list_structures=shoulder_bones_data.LIST_STRUCTURES,
+            dict_substructures=shoulder_bones_data.DICT_SUB_STRUCTURES,
+            dict_sub_substructures=[])
 
     # def generate_help_layout(self):
 
@@ -364,7 +373,7 @@ class ManualSegmentationWidget(QWidget):
         self.annotation_layout.addLayout(self.tool_annotation_layout, 1, 0)
 
         self.annotation_combo_box = add_combo_box(
-            list_items=["Choose a structure", "Fetus", "Shoulder", "Feta Challenge"],
+            list_items=["Choose a structure", "Fetus", "Shoulder Bones", "Feta Challenge"],
             layout=self.annotation_layout,
             callback_function=self.toggle_annotation_sub_panel,
             row=1,
@@ -583,26 +592,37 @@ class ManualSegmentationWidget(QWidget):
 
         if structure_name == "Fetus":
             toggle_fetus = True
-            toggle_shoulder = False
+            # toggle_shoulder = False
+            toggle_shoulder_bones = False
             toggle_feta = False
 
-        elif structure_name == "Shoulder":
+        # elif structure_name == "Shoulder":
+        #     toggle_fetus = False
+        #     toggle_shoulder = True
+        #     toggle_shoulder_bones = False
+        #     toggle_feta = False
+        
+        elif structure_name == "Shoulder Bones":
             toggle_fetus = False
-            toggle_shoulder = True
+            # toggle_shoulder = False
+            toggle_shoulder_bones = True
             toggle_feta = False
 
         elif structure_name == "Feta Challenge":
             toggle_fetus = False
-            toggle_shoulder = False
+            # toggle_shoulder = False
+            toggle_shoulder_bones = False
             toggle_feta = True
 
         else:
             toggle_fetus = False
-            toggle_shoulder = False
+            # toggle_shoulder = False
+            toggle_shoulder_bones = False
             toggle_feta = False
 
         self.fetus.toggle_sub_panel(toggle_fetus)
-        self.shoulder.toggle_sub_panel(toggle_shoulder)
+        # self.shoulder.toggle_sub_panel(toggle_shoulder)
+        self.shoulder_bones.toggle_sub_panel(toggle_shoulder_bones)
         self.feta.toggle_sub_panel(toggle_feta)
 
         self.reset_annotation_radio_button_checked_id()
@@ -1027,8 +1047,10 @@ class ManualSegmentationWidget(QWidget):
                     structure_name = self.annotation_combo_box.currentText()
                     if structure_name == "Fetus":
                         structure_list = self.fetus.list_structure_name
-                    elif structure_name == "Shoulder":
-                        structure_list = self.shoulder.list_structure_name
+                    # elif structure_name == "Shoulder":
+                    #     structure_list = self.shoulder.list_structure_name
+                    elif structure_name == "Shoulder Bones":
+                        structure_list = self.shoulder_bones.list_structure_name
                     elif structure_name == "Feta Challenge":
                         structure_list = self.feta.list_structure_name
                     else:
@@ -1264,8 +1286,12 @@ class ManualSegmentationWidget(QWidget):
             radio_button_to_check = self.fetus.group_radio_button.button(1)
             radio_button_to_check.setChecked(True)
 
-        elif structure_name == "Shoulder":
-            radio_button_to_check = self.shoulder.group_radio_button.button(1)
+        # elif structure_name == "Shoulder":
+        #     radio_button_to_check = self.shoulder.group_radio_button.button(1)
+        #     radio_button_to_check.setChecked(True)
+        
+        elif structure_name == "Shoulder Bones":
+            radio_button_to_check = self.shoulder_bones.group_radio_button.button(1)
             radio_button_to_check.setChecked(True)
 
         elif structure_name == "Feta Challenge":

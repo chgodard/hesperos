@@ -157,7 +157,7 @@ Manual annotation and correction on the segmented file is done using the layer c
     
 2. Choose a structure to annotate in the drop-down menu
     - *`Fetus`*: to annotate pregnancy image.
-    - *`Shoulder`*: to annotate bones and muscles for shoulder surgery.
+    - *`Shoulder Bones`*: to annotate bones for shoulder surgery.
     - *`Feta Challenge`*: to annotate fetal brain MRI with the same label than the FeTA Challenge (see ADD LIEN WEB).
     
 > When selecting a structure, a new panel appears with a list of elements to annotate. Each element has its own label and color. Select one element in the list to automatically activate the paint brush mode with the corresponding color (color is updated in the *`label`* rectangle in the layer controls panel).
