@@ -592,36 +592,36 @@ class ManualSegmentationWidget(QWidget):
 
         if structure_name == "Fetus":
             toggle_fetus = True
-            # toggle_shoulder = False
+            toggle_shoulder = False
             toggle_shoulder_bones = False
             toggle_feta = False
 
-        # elif structure_name == "Shoulder":
-        #     toggle_fetus = False
-        #     toggle_shoulder = True
-        #     toggle_shoulder_bones = False
-        #     toggle_feta = False
+        elif structure_name == "Shoulder":
+            toggle_fetus = False
+            toggle_shoulder = True
+            toggle_shoulder_bones = False
+            toggle_feta = False
         
         elif structure_name == "Shoulder Bones":
             toggle_fetus = False
-            # toggle_shoulder = False
+            toggle_shoulder = False
             toggle_shoulder_bones = True
             toggle_feta = False
 
         elif structure_name == "Feta Challenge":
             toggle_fetus = False
-            # toggle_shoulder = False
+            toggle_shoulder = False
             toggle_shoulder_bones = False
             toggle_feta = True
 
         else:
             toggle_fetus = False
-            # toggle_shoulder = False
+            toggle_shoulder = False
             toggle_shoulder_bones = False
             toggle_feta = False
 
         self.fetus.toggle_sub_panel(toggle_fetus)
-        # self.shoulder.toggle_sub_panel(toggle_shoulder)
+        self.shoulder.toggle_sub_panel(toggle_shoulder)
         self.shoulder_bones.toggle_sub_panel(toggle_shoulder_bones)
         self.feta.toggle_sub_panel(toggle_feta)
 
@@ -1047,8 +1047,8 @@ class ManualSegmentationWidget(QWidget):
                     structure_name = self.annotation_combo_box.currentText()
                     if structure_name == "Fetus":
                         structure_list = self.fetus.list_structure_name
-                    # elif structure_name == "Shoulder":
-                    #     structure_list = self.shoulder.list_structure_name
+                    elif structure_name == "Shoulder":
+                        structure_list = self.shoulder.list_structure_name
                     elif structure_name == "Shoulder Bones":
                         structure_list = self.shoulder_bones.list_structure_name
                     elif structure_name == "Feta Challenge":
@@ -1286,9 +1286,9 @@ class ManualSegmentationWidget(QWidget):
             radio_button_to_check = self.fetus.group_radio_button.button(1)
             radio_button_to_check.setChecked(True)
 
-        # elif structure_name == "Shoulder":
-        #     radio_button_to_check = self.shoulder.group_radio_button.button(1)
-        #     radio_button_to_check.setChecked(True)
+        elif structure_name == "Shoulder":
+            radio_button_to_check = self.shoulder.group_radio_button.button(1)
+            radio_button_to_check.setChecked(True)
         
         elif structure_name == "Shoulder Bones":
             radio_button_to_check = self.shoulder_bones.group_radio_button.button(1)
