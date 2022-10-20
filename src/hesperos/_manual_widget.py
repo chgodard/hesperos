@@ -373,7 +373,7 @@ class ManualSegmentationWidget(QWidget):
         self.annotation_layout.addLayout(self.tool_annotation_layout, 1, 0)
 
         self.annotation_combo_box = add_combo_box(
-            list_items=["Choose a structure", "Fetus", "Shoulder Bones", "Feta Challenge"],
+            list_items=["Choose a structure", "Fetus", "Shoulder", "Shoulder Bones", "Feta Challenge"],
             layout=self.annotation_layout,
             callback_function=self.toggle_annotation_sub_panel,
             row=1,
