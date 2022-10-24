@@ -12,5 +12,7 @@ DICT_SUB_STRUCTURES = {
         'Ribs',
         'Scapula',
         'Sternum',
-        'Vertebrae']
+        'Vertebrae', 
+        'Radius',
+        'Ulna']
 }
