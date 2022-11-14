@@ -23,7 +23,7 @@ This [napari] plugin was generated with [Cookiecutter] using [@napari]'s [cookie
     * [Import and adjust your image](#import-and-adjust-your-image-use-panel-1)
     * [Layer controls](#layer-controls)
     * [Annotate your image](#annotate-your-image-use-panel-2)
-    * [Select interesting slices](#select-interesting-slices-use-panel-3----only-displayed-for-the-shoulder-bones-category)
+    * [Select slices of interest](#select-slices-of-interest-use-panel-3----only-displayed-for-the-shoulder-bones-category)
     * [Export annotations](#export-annotations-use-panel-3----or-4-if-the-shoulder-bones-category-is-selected)
 - [Hesperos: *OneShot Segmentation* mode](#hesperos-oneshot-segmentation-mode)
     * [Import and adjust your image](#import-and-adjust-your-image-use-panel-1)
@@ -177,11 +177,11 @@ Manual annotation and correction on the segmented file is done using the layer c
         2. Click on the <img src="https://user-images.githubusercontent.com/49953723/193262703-2b2ea2dc-24fa-438b-a75c-3aa42b210f53.PNG" width="30px"/> button  => change the button to <img src="https://user-images.githubusercontent.com/49953723/193262706-40f3dbca-5589-406d-81e8-e150ae8bfab6.PNG" width="30px"/> and "unlock" the slice.
 
 
-## Select interesting slices *(use Panel 3 -- only displayed for the Shoulder Bones category)*
+## Select slices of interest *(use Panel 3 -- only displayed for the Shoulder Bones category)*
 
 This panel will only be displayed if the *`Shoulder Bones`* category is selected. A maxiumum of 10 slices can be selected in a 3D image and the corresponding z-indexes will be integrated in the metadata during the exportation of the segmentation file.
    
-   > /!\ Metadata integration is available only for exported .tiff and .tif files. 
+   > /!\ Metadata integration is available only for exported .tiff and .tif files and with the *`Unique`* save option. 
 
 - <img src="https://user-images.githubusercontent.com/49953723/201736039-4ed10553-4a4b-4d5e-9d61-826dc139e437.png" width="25px"/> : to add the currently displayed z-index in the drop-down menu.
 - <img src="https://user-images.githubusercontent.com/49953723/201736105-a9c45264-412a-453b-8475-5a9ab856b07d.png" width="25px"/> : to remove the currently displayed z-index from the drop-down menu.

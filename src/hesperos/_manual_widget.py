@@ -533,7 +533,7 @@ class ManualSegmentationWidget(QWidget):
         """
         
         # === Set panel parameters ===
-        self.slice_selection_panel = QGroupBox("3. SLICE SELECTION")
+        self.slice_selection_panel = QGroupBox("3. SELECT SLICES OF INTEREST")
         self.slice_selection_panel.setStyleSheet("margin-top : 5px;")
 
         # === Set panel layout parameters ===
@@ -553,7 +553,7 @@ class ManualSegmentationWidget(QWidget):
             callback_function=self.add_selected_slice,
             row=0,
             column=0,
-            tooltip_text="Add the current z index displayed in the combo box options. Click on the map button to go to the selected slice.",
+            tooltip_text="Add the currently displayed z-index in the drop-down menu. Click on the map button to go to the selected slice.",
             isHBoxLayout=True,
         )
 
@@ -563,7 +563,7 @@ class ManualSegmentationWidget(QWidget):
             callback_function=self.remove_selected_slice,
             row=0,
             column=1,
-            tooltip_text="Remove the current z index displayed from the combo box options (if present).",
+            tooltip_text="Remove the currently displayed z-index in the drop-down menu.",
             isHBoxLayout=True,
         )
         
@@ -573,7 +573,7 @@ class ManualSegmentationWidget(QWidget):
             callback_function=self.go_to_selected_slice,
             row=0,
             column=2,
-            tooltip_text="Go to the selected z index of the combo box.",
+            tooltip_text="Go to the z-index selected in the drop-down menu.",
             isHBoxLayout=True,
         )
         self.go_to_selected_slice_push_button.setCheckable(True)
@@ -594,7 +594,7 @@ class ManualSegmentationWidget(QWidget):
             callback_function=self.go_to_selected_slice,
             row=0,
             column=1,
-            tooltip_text="Choose a z index from the list to work with.",
+            tooltip_text="Select a z-index from the list to work with it more easily.",
         )
 
         self.slice_selection_panel.setLayout(self.slice_selection_layout)
@@ -995,7 +995,7 @@ class ManualSegmentationWidget(QWidget):
             self.selected_slice_list = loaded_selected_slice_list
 
             if len(self.selected_slice_list) >= 10:
-                display_warning_box(self, "Error", "More than 10 selected slices are not allowed. Please remove some selected slice to add new.")
+                display_warning_box(self, "Error", "More than 10 selected slices are not allowed. Please remove some selected slices to add new ones.")
                 return
         
             self.selected_slice_list.sort()
@@ -1335,7 +1335,7 @@ class ManualSegmentationWidget(QWidget):
         selected_slice_z = self.viewer.dims.current_step[0]
         
         if len(self.selected_slice_list) >= 10:
-            display_warning_box(self, "Error", "More than 10 selected slices are not allowed. Please remove some selected slice to add new.")
+            display_warning_box(self, "Error", "More than 10 selected slices are not allowed. Please remove some selected slices to add new ones.")
             return
 
         elif selected_slice_z in self.selected_slice_list:
