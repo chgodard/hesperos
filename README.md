@@ -23,8 +23,8 @@ This [napari] plugin was generated with [Cookiecutter] using [@napari]'s [cookie
     * [Import and adjust your image](#import-and-adjust-your-image-use-panel-1)
     * [Layer controls](#layer-controls)
     * [Annotate your image](#annotate-your-image-use-panel-2)
-    * [Select interesting slices](#select-interesting-slices-use-panel-3-only-displayed-for-the-shoulder-bones-category)
-    * [Export annotations](#export-annotations-use-panel-3-or-4-if-the-shoulder-bones-category-is-selected)
+    * [Select interesting slices](#select-interesting-slices-use-panel-3----only-displayed-for-the-shoulder-bones-category)
+    * [Export annotations](#export-annotations-use-panel-3----or-4-if-the-shoulder-bones-category-is-selected)
 - [Hesperos: *OneShot Segmentation* mode](#hesperos-oneshot-segmentation-mode)
     * [Import and adjust your image](#import-and-adjust-your-image-use-panel-1)
     * [Annotate your image](#annotate-your-image-use-panel-2)
@@ -179,25 +179,25 @@ Manual annotation and correction on the segmented file is done using the layer c
 
 ## Select interesting slices *(use Panel 3 -- only displayed for the Shoulder Bones category)*
 
-A maxiumum of 10 slices can be selected in a 3D image and the corresponding z-indexes will be integrated in the metadata during the exportation of the segmentation file (only for .tif and .tiff files).
-This panel will only be displayed if the *`Shoulder Bones`* category is selected and will be composed of : 
+This panel will only be displayed if the *`Shoulder Bones`* category is selected. A maxiumum of 10 slices can be selected in a 3D image and the corresponding z-indexes will be integrated in the metadata during the exportation of the segmentation file.
+   
+   > /!\ Metadata integration is available only for exported .tiff and .tif files. 
 
-- IMAGETOADD : to add the currently displayed z-index in the drop-down menu.
-- IMAGETOADD : to remove the currently displayed z-index from the drop-down menu.
-- IMAGETOADD : to go to the z-index selected in the drop-down menu. The icon will be checked when the currently displayed z-index matches the selected z-index in the drop-down menu.
-- IMAGETOADD : a drop-down menu containing the list of selected z-indexes. Select a z-index from the list to work with it more easily.
+- <img src="https://user-images.githubusercontent.com/49953723/201736039-4ed10553-4a4b-4d5e-9d61-826dc139e437.png" width="25px"/> : to add the currently displayed z-index in the drop-down menu.
+- <img src="https://user-images.githubusercontent.com/49953723/201736105-a9c45264-412a-453b-8475-5a9ab856b07d.png" width="25px"/> : to remove the currently displayed z-index from the drop-down menu.
+- <img src="https://user-images.githubusercontent.com/49953723/201736152-319d8559-dbfc-4e52-aeb3-e8e34445f67a.png" width="25px"/> : to go to the z-index selected in the drop-down menu. The icon will be checked when the currently displayed z-index matches the selected z-index in the drop-down menu.
+- <img src="https://user-images.githubusercontent.com/49953723/201733835-7bee453a-bc07-416f-8b95-aaf803683cac.png" width="100px"/> : a drop-down menu containing the list of selected z-indexes. Select a z-index from the list to work with it more easily.
 
 
 ## Export annotations *(use Panel 3 -- or 4 if the Shoulder Bones category is selected)*
     
-1. Annotations can be exported as .tif, .tiff, .nii or .nii.gz file with the <img src="https://user-images.githubusercontent.com/49953723/193262704-d80bc858-96d5-4d2e-9995-6799d78ae864.PNG" width="95px"/> button in one of the two following saving mode:
+1. Annotations can be exported as .tif, .tiff, .nii or .nii.gz file with the <img src="https://user-images.githubusercontent.com/49953723/201735102-113f64b7-4da4-40ee-b058-9900268d270d.png" width="95px"/> button in one of the two following saving mode:
     - *`Unique`*: segmented data is exported as a unique 3D image with corresponding label ids (1-2-3-...). This file can be re-opened in the application.
     - *`Several`*: segmented data is exported as several binary 3D images (0 or 255), one for each label id.
 2. <img src="https://user-images.githubusercontent.com/49953723/193262699-95758bdb-ac40-439b-8959-d924781a2368.PNG" width="100px"/>: delete annotation data.
 3. *`Automatic segmentation backup`*: if selected, the segmentation data will be automatically exported as a unique 3D image when the image slice is changed.
     > /!\ This process can slow down the display if the image is large.
-    
-    
+
 # Hesperos: *OneShot Segmentation* mode
     
  The ***OneShot Segmentation*** mode of the Hesperos plugin is a 2D version of the VoxelLearning method implemented in DIVA (see [our Github](https://github.com/DecBayComp/VoxelLearning) and the latest article [Guérinot, C., Marcon, V., Godard, C., et al. (2022). New Approach to Accelerated Image Annotation by Leveraging Virtual Reality and Cloud Computing. _Frontiers in Bioinformatics_. doi:10.3389/fbinf.2021.777101](https://www.frontiersin.org/articles/10.3389/fbinf.2021.777101/full)).
