@@ -241,7 +241,7 @@ def add_image_widget(name, layout, image_path, row, column, column_span=1, visib
 
     return label
 
-def add_label(text, layout, row, column, column_span=1, visibility=False, minimum_width=0):
+def add_label(text, layout, row, column, column_span=1, visibility=False, minimum_width=0, isHBoxLayout=False):
     """
     Create a QLabel and add it to the corresponding layout
 
@@ -249,7 +249,7 @@ def add_label(text, layout, row, column, column_span=1, visibility=False, minimu
     ----------
     text : str
         text to display in the widget
-    layout : QGridLayout
+    layout : QGridLayout or QHBoxLayout
         layout containing the widget
     row : int
         row of the widget in the grid
@@ -261,6 +261,8 @@ def add_label(text, layout, row, column, column_span=1, visibility=False, minimu
         visibility status of the widget
     minimum_width : int
         minimum width of the widget
+    isHBoxLayout : bool
+        status of the layout : true if the layout is a QGridLayout, false if not
 
     Returns
     ----------
@@ -270,7 +272,11 @@ def add_label(text, layout, row, column, column_span=1, visibility=False, minimu
     label = QLabel(text)
     label.setVisible(visibility)
     label.setMinimumWidth(minimum_width)
-    layout.addWidget(label, row, column, 1, column_span)
+    
+    if isHBoxLayout:
+        layout.addWidget(label)
+    else:
+        layout.addWidget(label, row, column, 1, column_span)
 
     return label
 

@@ -25,7 +25,7 @@ def rfc_training(features_df, output_classifier_path):
                 ...
             }
     output_classifier_path : str
-        path file where the classifier will be saved as a .pckl file
+        path file where the classifier will be exported as a .pckl file
     """
 
     # === Create Random Forest Classifier
@@ -38,7 +38,7 @@ def rfc_training(features_df, output_classifier_path):
     rfc.model.fit(rfc.features, rfc.labels)
     # score = rfc.model.score(rfc.features, rfc.labels)
 
-    # === Save the classifier
+    # === Export the classifier
     pickle.dump(rfc.model, open(output_classifier_path, 'wb'))
 
 

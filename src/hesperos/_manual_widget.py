@@ -13,7 +13,7 @@ from hesperos.layout.gui_elements import (
     display_ok_cancel_question_box,
     display_yes_no_question_box
 )
-from hesperos.layout.napari_elements import disable_napari_buttons, disable_layer_widgets, reset_dock_widget, disable_dock_widget_buttons, label_colors
+from hesperos.layout.napari_elements import disable_napari_buttons, disable_layer_widgets, reset_dock_widget, disable_dock_widget_buttons, label_colors, disable_napari_change_dim_button
 from hesperos.resources._icons import get_icon_path, get_relative_icon_path
 
 import hesperos.annotation.fetus as fetus_data
@@ -24,7 +24,6 @@ from hesperos.annotation.structuresubpanel import StructureSubPanel
 
 
 # ============ Import python packages ============
-import os
 import json
 import napari
 import functools
@@ -58,7 +57,7 @@ class ManualSegmentationWidget(QWidget):
 
     """
     def __init__(self, napari_viewer):
-        """ 
+        """
         Initilialisation of the widget in the current napari viewer
 
         Parameters
@@ -75,6 +74,7 @@ class ManualSegmentationWidget(QWidget):
         self.viewer = napari_viewer
 
         disable_napari_buttons(self.viewer)
+        self.viewer.dims.events.current_step.connect(self.update_go_to_selected_slice_push_button_check_status)
 
         self.generate_main_layout()
 
@@ -97,24 +97,25 @@ class ManualSegmentationWidget(QWidget):
         self.layout.setSpacing(5)
 
         # === Create and add panels to the layout ===
-        self.add_loading_panel(1)
+        self.add_import_panel(1)
         self.add_annotation_panel(2)
         self.add_sub_annotation_panel(3)
-        self.add_reset_save_panel(4)
+        self.add_slice_selection_panel(4)
+        self.add_reset_export_panel(5)
 
         # Display status (cannot display progressing bar because napari is freezing)
         self.status_label = add_label(
             text='Ready',
             layout=self.layout,
-            row=5,
+            row=6,
             column=0,
             visibility=True
             )
 
-        self.toggle_panels(["annotation_panel", "reset_save_panel"], False)
+        self.toggle_panels(["annotation_panel", "slice_selection_panel", "reset_export_panel"], False)
 
         self.setLayout(self.layout)
-        
+
     def add_sub_annotation_panel(self, row):
         """
         Create annotation sub panel with the list of all struture to annotate
@@ -125,20 +126,20 @@ class ManualSegmentationWidget(QWidget):
             row position of the sub panel in the main QGridLayout
 
         """
-        self.fetus = StructureSubPanel(
-            parent=self,
-            row=row,
-            column=0,
-            list_structures=fetus_data.LIST_STRUCTURES,
-            dict_substructures=fetus_data.DICT_SUB_STRUCTURES,
-            dict_sub_substructures=[])
-
         self.feta = StructureSubPanel(
             parent=self,
             row=row,
             column=0,
             list_structures=feta_data.LIST_STRUCTURES,
             dict_substructures=feta_data.DICT_SUB_STRUCTURES,
+            dict_sub_substructures=[])
+    
+        self.fetus = StructureSubPanel(
+            parent=self,
+            row=row,
+            column=0,
+            list_structures=fetus_data.LIST_STRUCTURES,
+            dict_substructures=fetus_data.DICT_SUB_STRUCTURES,
             dict_sub_substructures=[])
 
         self.shoulder = StructureSubPanel(
@@ -157,25 +158,9 @@ class ManualSegmentationWidget(QWidget):
             dict_substructures=shoulder_bones_data.DICT_SUB_STRUCTURES,
             dict_sub_substructures=[])
 
-    # def generate_help_layout(self):
-
-    #     self.help_layout = QGridLayout()
-    #     self.help_layout.setContentsMargins(10, 10, 10, 10)
-    #     # self.help_layout.setAlignment(QtCore.Qt.AlignTop)
-    #     self.help_layout.setSpacing(4)
-
-    #     self.add_view_panel(row=0, column=0)
-    #     self.add_atlas_panel(row=0, column=1)
-
-    #     self.help_container = QWidget()
-
-    #     self.help_container.setLayout(self.help_layout)
-
-    #     self.help_dock = self.viewer.window.add_dock_widget(widget=self.help_container, area='bottom')
-
-    def add_loading_panel(self, row, column=0):
+    def add_import_panel(self, row, column=0):
         """
-        Create loading panel
+        Create import panel
 
         Parameters
         ----------
@@ -187,39 +172,39 @@ class ManualSegmentationWidget(QWidget):
         """
 
         # === Set panel parameters ===
-        self.loading_panel = QGroupBox("1. LOAD 3D IMAGE")
-        self.loading_panel.setStyleSheet("margin-top : 5px;")
+        self.import_panel = QGroupBox("1. IMPORT 3D IMAGE")
+        self.import_panel.setStyleSheet("margin-top : 5px;")
 
         # === Set panel layout parameters ===
-        self.loading_layout = QGridLayout()
-        self.loading_layout.setContentsMargins(10, 10, 10, 10)
-        self.loading_layout.setSpacing(5)
-        self.loading_layout.setAlignment(QtCore.Qt.AlignTop)
+        self.import_layout = QGridLayout()
+        self.import_layout.setContentsMargins(10, 10, 10, 10)
+        self.import_layout.setSpacing(5)
+        self.import_layout.setAlignment(QtCore.Qt.AlignTop)
 
         # === Add Qwidgets to the panel layout ===
-        self.load_dicom_image_push_button = add_push_button(
+        self.import_dicom_image_push_button = add_push_button(
             name="Open DICOM serie",
-            layout=self.loading_layout,
-            callback_function=functools.partial(self.update_image_with_path, "folder"),
+            layout=self.import_layout,
+            callback_function=functools.partial(self.set_image_with_path, "folder"),
             row=0,
             column=0,
             minimum_width=COLUMN_WIDTH,
-            tooltip_text="Load DICOM data from a folder containing one serie",
+            tooltip_text="Import DICOM data from a folder containing one serie",
         )
 
-        self.load_file_image_push_button = add_push_button(
+        self.import_file_image_push_button = add_push_button(
             name="Open image file",
-            layout=self.loading_layout,
-            callback_function=functools.partial(self.update_image_with_path, "file"),
+            layout=self.import_layout,
+            callback_function=functools.partial(self.set_image_with_path, "file"),
             row=0,
             column=1,
             minimum_width=COLUMN_WIDTH,
-            tooltip_text="Load image data from one file",
+            tooltip_text="Import image data from one file",
         )
 
         self.file_name_text = add_label(
             text='File/Folder name: ',
-            layout=self.loading_layout,
+            layout=self.import_layout,
             row=1,
             column=0,
             minimum_width=COLUMN_WIDTH,
@@ -227,14 +212,14 @@ class ManualSegmentationWidget(QWidget):
 
         self.file_name_label = add_label(
             text='',
-            layout=self.loading_layout,
+            layout=self.import_layout,
             row=1,
             column=1,
             minimum_width=COLUMN_WIDTH,
             )
 
         self.zoom_slider = add_slider(
-            layout=self.loading_layout,
+            layout=self.import_layout,
             bounds=[50, 500],
             callback_function=self.zoom,
             row=2,
@@ -251,24 +236,24 @@ class ManualSegmentationWidget(QWidget):
                 background: transparent;
                 }}""".format(get_relative_icon_path('zoom')))
 
-        # Loading tools are created in another layout
-        self.tool_loading_layout = QHBoxLayout()
+        # Import tools are created in another layout
+        self.tool_import_layout = QHBoxLayout()
 
         self.set_custom_contrast_push_button = add_icon_push_button(
             icon=QIcon(get_icon_path('plus')),
-            layout=self.tool_loading_layout,
+            layout=self.tool_import_layout,
             callback_function=self.set_custom_contrast,
             row=0,
             column=0,
             tooltip_text="Add custom contrast limit setting. Open it by selecting the Custom Contrast choice.",
             isHBoxLayout=True,
-        )        
+        )
         self.custom_contrast_limits = None
         self.hu_limits = []
 
         self.import_custom_contrast_push_button = add_icon_push_button(
             icon=QIcon(get_icon_path('import')),
-            layout=self.tool_loading_layout,
+            layout=self.tool_import_layout,
             callback_function=self.import_custom_contrast,
             row=0,
             column=1,
@@ -278,7 +263,7 @@ class ManualSegmentationWidget(QWidget):
 
         self.export_custom_contrast_push_button = add_icon_push_button(
             icon=QIcon(get_icon_path('export')),
-            layout=self.tool_loading_layout,
+            layout=self.tool_import_layout,
             callback_function=self.export_custom_contrast,
             row=0,
             column=2,
@@ -288,7 +273,7 @@ class ManualSegmentationWidget(QWidget):
 
         self.default_contrast_combo_box = add_combo_box(
             list_items=["Set a default contrast", "CT Bone", "CT Soft", "Custom Contrast"],
-            layout=self.tool_loading_layout,
+            layout=self.tool_import_layout,
             callback_function=self.set_default_contrast,
             row=0,
             column=3,
@@ -297,20 +282,20 @@ class ManualSegmentationWidget(QWidget):
             isHBoxLayout=True,
         )
 
-        self.loading_layout.addLayout(self.tool_loading_layout, 3, 0, 1, 2)
+        self.import_layout.addLayout(self.tool_import_layout, 3, 0, 1, 2)
 
-        self.loading_panel.setLayout(self.loading_layout)
-        
+        self.import_panel.setLayout(self.import_layout)
+
         # === Add panel to the main layout ===
-        self.layout.addWidget(self.loading_panel, row, column)
+        self.layout.addWidget(self.import_panel, row, column)
 
         # === Make widgets visible (after adding to the main layout to preventing them from briefly appearing in a separate window) ===
-        self.loading_panel.setVisible(True)
-        self.load_dicom_image_push_button.setVisible(True)
-        self.load_file_image_push_button.setVisible(True)
+        self.import_panel.setVisible(True)
+        self.import_dicom_image_push_button.setVisible(True)
+        self.import_file_image_push_button.setVisible(True)
 
-        self.toggle_loading_panel_widget(False)
-        
+        self.toggle_import_panel_widget(False)
+
     def add_annotation_panel(self, row, column=0):
         """
         Create annotation panel
@@ -335,10 +320,10 @@ class ManualSegmentationWidget(QWidget):
         self.annotation_layout.setAlignment(QtCore.Qt.AlignTop)
 
         # === Add Qwidgets to the panel layout ===
-        self.load_segmentation_push_button = add_push_button(
+        self.import_segmentation_push_button = add_push_button(
             name="Open segmentation file",
             layout=self.annotation_layout,
-            callback_function=lambda: self.update_segmentation_with_path(None),
+            callback_function=lambda: self.set_segmentation_with_path(None),
             row=0,
             column=0,
             column_span=2,
@@ -381,15 +366,15 @@ class ManualSegmentationWidget(QWidget):
             minimum_width=COLUMN_WIDTH,
             tooltip_text="Select the pre-defined structure to annotate",
         )
-         
+
         self.annotation_panel.setLayout(self.annotation_layout)
 
         # === Add panel to the main layout ===
         self.layout.addWidget(self.annotation_panel, row, column)
 
-    def add_reset_save_panel(self, row, column=0):
+    def add_reset_export_panel(self, row, column=0):
         """
-        Create reset and save panel
+        Create reset and export panel
 
         Parameters
         ----------
@@ -401,27 +386,27 @@ class ManualSegmentationWidget(QWidget):
         """
 
         # === Set panel parameters ===
-        self.reset_save_panel = QGroupBox("3. SAVE ANNOTATION")
-        self.reset_save_panel.setStyleSheet("margin-top : 5px;")
+        self.reset_export_panel = QGroupBox("3. EXPORT ANNOTATION")
+        self.reset_export_panel.setStyleSheet("margin-top : 5px;")
 
         # === Set panel layout parameters ===
-        self.reset_save_layout = QGridLayout()
-        self.reset_save_layout.setSpacing(5)
+        self.reset_export_layout = QGridLayout()
+        self.reset_export_layout.setSpacing(5)
 
         # === Add Qwidgets to the panel layout ===
-        self.save_push_button = add_push_button(
-            name="Save",
-            layout=self.reset_save_layout,
-            callback_function=self.save_segmentation,
+        self.export_push_button = add_push_button(
+            name="Export",
+            layout=self.reset_export_layout,
+            callback_function=self.export_segmentation,
             row=0,
             column=0,
             minimum_width=COLUMN_WIDTH,
-            tooltip_text="Save only the segmented data",
+            tooltip_text="Export only the segmented data",
         )
 
         self.reset_push_button = add_push_button(
             name="Delete all",
-            layout=self.reset_save_layout,
+            layout=self.reset_export_layout,
             callback_function=self.reset_segmentation,
             row=0,
             column=1,
@@ -431,7 +416,7 @@ class ManualSegmentationWidget(QWidget):
 
         self.backup_check_box = add_check_box(
             text="Automatic segmentation backup",
-            layout=self.reset_save_layout,
+            layout=self.reset_export_layout,
             callback_function=self.activate_backup_segmentation,
             row=1,
             column=0,
@@ -441,10 +426,10 @@ class ManualSegmentationWidget(QWidget):
         )
         self.backup_check_box.setChecked(False)
 
-        self.reset_save_panel.setLayout(self.reset_save_layout)
+        self.reset_export_panel.setLayout(self.reset_export_layout)
 
         # === Add panel to the main layout ===
-        self.layout.addWidget(self.reset_save_panel, row, column)
+        self.layout.addWidget(self.reset_export_panel, row, column)
 
     def add_view_panel(self, row, column):
         """
@@ -534,6 +519,89 @@ class ManualSegmentationWidget(QWidget):
         # === Add panel to the help layout ===
         self.help_layout.addWidget(self.atlas_panel, row, column)
 
+    def add_slice_selection_panel(self, row, column=0):
+        """
+        Create slice selection panel (for ShoulderBones category only)
+
+        Parameters
+        ----------
+        row : int
+            row position of the panel in the main QGridLayout
+        column : int
+            column position of the panel in the main QGridLayout
+
+        """
+        
+        # === Set panel parameters ===
+        self.slice_selection_panel = QGroupBox("3. SLICE SELECTION")
+        self.slice_selection_panel.setStyleSheet("margin-top : 5px;")
+
+        # === Set panel layout parameters ===
+        self.slice_selection_layout = QGridLayout()
+        self.slice_selection_layout.setContentsMargins(10, 10, 10, 10)
+        self.slice_selection_layout.setSpacing(5)
+        self.slice_selection_layout.setAlignment(QtCore.Qt.AlignTop)
+
+        # === Add Qwidgets to the panel layout ===
+
+        # Slice selection tools are created in another layout
+        self.tool_slice_selection_layout = QHBoxLayout()
+
+        self.add_selected_slice_push_button = add_icon_push_button(
+            icon=QIcon(get_icon_path('plus')),
+            layout=self.tool_slice_selection_layout,
+            callback_function=self.add_selected_slice,
+            row=0,
+            column=0,
+            tooltip_text="Add the current z index displayed in the combo box options. Click on the map button to go to the selected slice.",
+            isHBoxLayout=True,
+        )
+
+        self.remove_selected_slice_push_button = add_icon_push_button(
+            icon=QIcon(get_icon_path('minus')),
+            layout=self.tool_slice_selection_layout,
+            callback_function=self.remove_selected_slice,
+            row=0,
+            column=1,
+            tooltip_text="Remove the current z index displayed from the combo box options (if present).",
+            isHBoxLayout=True,
+        )
+        
+        self.go_to_selected_slice_push_button = add_icon_push_button(
+            icon=QIcon(get_icon_path('map')),
+            layout=self.tool_slice_selection_layout,
+            callback_function=self.go_to_selected_slice,
+            row=0,
+            column=2,
+            tooltip_text="Go to the selected z index of the combo box.",
+            isHBoxLayout=True,
+        )
+        self.go_to_selected_slice_push_button.setCheckable(True)
+        
+        self.slice_selection_text = add_label(
+            text='Slice: ',
+            layout=self.tool_slice_selection_layout,
+            row=0,
+            column=2,
+            isHBoxLayout=True,
+            )
+
+        self.slice_selection_layout.addLayout(self.tool_slice_selection_layout, 0, 0)
+        
+        self.selected_slice_combo_box = add_combo_box(
+            list_items=[" "],
+            layout=self.slice_selection_layout,
+            callback_function=self.go_to_selected_slice,
+            row=0,
+            column=1,
+            tooltip_text="Choose a z index from the list to work with.",
+        )
+
+        self.slice_selection_panel.setLayout(self.slice_selection_layout)
+
+        # === Add panel to the main layout ===
+        self.layout.addWidget(self.slice_selection_panel, row, column)
+        
 
 # ============ Toggle widgets and panel ============
     def toggle_panels(self, list_panel_names, isVisible):
@@ -548,108 +616,105 @@ class ManualSegmentationWidget(QWidget):
             visible status of the panels
 
         """
-        for panel_name in list_panel_names:            
+        for panel_name in list_panel_names:
             if panel_name == "annotation_panel":
                 self.annotation_panel.setVisible(isVisible)
                 self.annotation_combo_box.setVisible(isVisible)
-                self.load_segmentation_push_button.setVisible(isVisible)
+                self.import_segmentation_push_button.setVisible(isVisible)
                 self.undo_push_button.setVisible(isVisible)
                 self.lock_push_button.setVisible(isVisible)
+            
+            elif panel_name == "slice_selection_panel":
+                self.slice_selection_panel.setVisible(isVisible)
+                self.add_selected_slice_push_button.setVisible(isVisible)
+                self.remove_selected_slice_push_button.setVisible(isVisible)
+                self.go_to_selected_slice_push_button.setVisible(isVisible)
+                self.slice_selection_text.setVisible(isVisible)
+                self.selected_slice_combo_box.setVisible(isVisible)
 
-            elif panel_name == "reset_save_panel":
-                self.reset_save_panel.setVisible(isVisible)
+            elif panel_name == "reset_export_panel":
+                self.reset_export_panel.setVisible(isVisible)
                 self.backup_check_box.setVisible(isVisible)
                 self.reset_push_button.setVisible(isVisible)
-                self.save_push_button.setVisible(isVisible)
+                self.export_push_button.setVisible(isVisible)
 
             elif panel_name == "view_panel":
                 self.view_panel.setVisible(isVisible)
                 self.view_image_1.setVisible(isVisible)
                 self.view_image_2.setVisible(isVisible)
-            
+
             elif panel_name == "atlas_panel":
                 self.atlas_panel.setVisible(isVisible)
                 self.atlas_label.setVisible(isVisible)
 
     def toggle_annotation_sub_panel(self):
         """
-            Toggle sub panel of the structure to annotate
+            Toggle sub panel of the structure to annotate and toggle SliceSelection panel if "Shoulder Bones" is visible
 
         """
         structure_name = self.annotation_combo_box.currentText()
 
-        # isFetus = self.fetus.subpanel.isVisible()
-        # isShoulder = self.shoulder.subpanel.isVisible()
-        # isFeta = self.feta.subpanel.isVisible()
-
-        # if (isFetus and structure_name != "Fetus") or (isShoulder and structure_name != "Shoulder") or (isFeta and structure_name != "Feta Challenge"):
-        #     canRemoveSegmentation = self.can_remove_segmentation_data()
-        # elif (isFetus and structure_name == "Fetus") or (isShoulder and structure_name == "Shoulder") or (isFeta and structure_name == "Feta Challenge"):
-        #     return
-        # else:
-        #     canRemoveSegmentation = True
-
-
         if structure_name == "Fetus":
+            toggle_feta = False
             toggle_fetus = True
             toggle_shoulder = False
             toggle_shoulder_bones = False
-            toggle_feta = False
+            toggle_slice_selection_panel = False
 
         elif structure_name == "Shoulder":
+            toggle_feta = False
             toggle_fetus = False
             toggle_shoulder = True
             toggle_shoulder_bones = False
-            toggle_feta = False
-        
+            toggle_slice_selection_panel = False
+
         elif structure_name == "Shoulder Bones":
+            toggle_feta = False
             toggle_fetus = False
             toggle_shoulder = False
             toggle_shoulder_bones = True
-            toggle_feta = False
+            toggle_slice_selection_panel = True
 
         elif structure_name == "Feta Challenge":
-            toggle_fetus = False
-            toggle_shoulder = False
-            toggle_shoulder_bones = False
             toggle_feta = True
-
-        else:
             toggle_fetus = False
             toggle_shoulder = False
             toggle_shoulder_bones = False
+            toggle_slice_selection_panel = False
+            
+        else:
             toggle_feta = False
-
+            toggle_fetus = False
+            toggle_shoulder = False
+            toggle_shoulder_bones = False
+            toggle_slice_selection_panel = False
+            
+        # == toggle sub panels ==
+        self.feta.toggle_sub_panel(toggle_feta)
         self.fetus.toggle_sub_panel(toggle_fetus)
         self.shoulder.toggle_sub_panel(toggle_shoulder)
         self.shoulder_bones.toggle_sub_panel(toggle_shoulder_bones)
-        self.feta.toggle_sub_panel(toggle_feta)
-
+        self.toggle_panels(["slice_selection_panel"], toggle_slice_selection_panel)
+        
+        # == reset widgets ==
         self.reset_annotation_radio_button_checked_id()
         self.reset_annotation_layer_selected_label()
-
-        # reset choice
-        # else:
-        #     if isFetus:
-        #         self.annotation_combo_box.setCurrentText("Fetus")
-        #     elif isShoulder:
-        #         self.annotation_combo_box.setCurrentText("Shoulder")
-        #     elif isFeta:
-        #         self.annotation_combo_box.setCurrentText("Feta Challenge")
-        #     else:
-        #         self.annotation_combo_box.setCurrentText("Choose a structure")
-
-    def toggle_loading_panel_widget(self, isVisible, file_type=None):
-        """
-        Toggle widget or the loading panel (default contrast option only for DICOM image (use housfield value))
         
+        # == Update dimension button and panel name ==
+        self.update_reset_export_panel_title(toggle_slice_selection_panel)
+        disable_napari_change_dim_button(self.viewer, not toggle_slice_selection_panel)
+
+    def toggle_import_panel_widget(self, isVisible, file_type=None):
+        """
+        Toggle widget or the import panel (default contrast option only for DICOM image (use housfield value))
+
         Parameters
         ----------
         isVisible : bool
             visible status of the widgets
         file_type : str
             type of image loaded : "file" for .tiff, .tif, .nii and .nii.gz and "folder" for DICOM folder
-            
+
         """
         self.file_name_text.setVisible(isVisible)
         self.file_name_label.setVisible(isVisible)
@@ -666,7 +731,7 @@ class ManualSegmentationWidget(QWidget):
             self.import_custom_contrast_push_button.setVisible(True)
             self.export_custom_contrast_push_button.setVisible(True)
             self.default_contrast_combo_box.setVisible(True)
-            
+
         else:
             self.set_custom_contrast_push_button.setVisible(isVisible)
             self.import_custom_contrast_push_button.setVisible(isVisible)
@@ -674,15 +739,55 @@ class ManualSegmentationWidget(QWidget):
             self.default_contrast_combo_box.setVisible(isVisible)
 
 
-# ============ Load data ============
-    def load_dicom_folder(self):
+# ============ Update widget status or panel title ============
+    def update_reset_export_panel_title(self, isSelectionSlicePanelVisible):
         """
-        Load a complete DICOM serie from a folder
+        Update the number in the ResetExport panel title to match the actual number of panels displayed (based on the SelectionSlice panel display)
+        
+        Parameters
+        ----------
+        isSelectionSlicePanelVisible : bool
+            visible status of the SelectionSlice panel
+            
+        """
+        if isSelectionSlicePanelVisible:
+            self.reset_export_panel.setTitle("4. EXPORT ANNOTATION")
+        else:
+            self.reset_export_panel.setTitle("3. EXPORT ANNOTATION")
+                
+    def update_go_to_selected_slice_push_button_check_status(self, event):
+        """
+        Update the checked status of the go_to_selected_slice push button according to the currently selected slice and the currently displayed slice
+        
+        Parameters
+        ----------
+        event : event
+            event with the index of the current slice displayed in value as (x, y, z)      
+        
+        """       
+        if len(event.value) == 3:
+            if (self.go_to_selected_slice_push_button.isChecked() == True) and (self.selected_slice_combo_box.currentText() != " "):
+                current_slice_z = self.viewer.dims.current_step[0]
+                selected_slice_z = int(self.selected_slice_combo_box.currentText())
+                if current_slice_z != selected_slice_z:
+                    self.go_to_selected_slice_push_button.setChecked(False)
+                    
+            elif (self.go_to_selected_slice_push_button.isChecked() == False) and (self.selected_slice_combo_box.currentText() != " "):
+                current_slice_z = self.viewer.dims.current_step[0]
+                selected_slice_z = int(self.selected_slice_combo_box.currentText())
+                if current_slice_z == selected_slice_z:
+                    self.go_to_selected_slice_push_button.setChecked(True)
+                
+        
+# ============ Import image data ============
+    def import_dicom_folder(self):
+        """
+        Import a complete DICOM serie from a folder
 
         Returns
         ----------
         image_arr : ndarray
-            3D image as a 3D array. None if loading failed.
+            3D image as a 3D array. None if importation failed.
 
         """
         dicom_path = QFileDialog.getExistingDirectory(self, 'Choose a DICOM serie directory')
@@ -724,14 +829,14 @@ class ManualSegmentationWidget(QWidget):
 
         return image_arr
 
-    def load_image_file(self):
+    def import_image_file(self):
         """
-        Load a 3D image file of type .tiff, .tif, .nii or .nii.gz
+        Import a 3D image file of type .tiff, .tif, .nii or .nii.gz
 
         Returns
         ----------
         image_arr : ndarray
-            3D image as a 3D array. None if loading failed.
+            3D image as a 3D array. None if importation failed.
 
         """
         files_types = "Image File (*.tif *.tiff *.nii.gz *.nii)"
@@ -743,53 +848,46 @@ class ManualSegmentationWidget(QWidget):
         extensions = Path(file_path).suffixes
         self.image_dir = Path(file_path).parents[0]
 
-        if (extensions[-1] == ".tif") or (extensions[-1] == ".tiff"):
-            image_arr = tif.imread(file_path)
-            if len(image_arr.shape) == 2:
-                image_arr = np.expand_dims(image_arr, 0)
-            self.image_sitk = sitk.Image(image_arr.shape[2], image_arr.shape[1], image_arr.shape[0], sitk.sitkInt16)
-            self.file_name_label.setText(Path(file_path).stem)
+        # if (extensions[-1] == ".tif") or (extensions[-1] == ".tiff"):
+        #     image_arr = tif.imread(file_path)
+        #     self.image_sitk = sitk.Image(image_arr.shape[2], image_arr.shape[1], image_arr.shape[0], sitk.sitkInt16)
+        #     self.file_name_label.setText(Path(file_path).stem)
         
-        elif extensions[-1] == ".nii":
+        if (extensions[-1] in [".tif", ".tiff", ".nii"]) or (extensions == [".nii", ".gz"]):
             self.image_sitk = sitk.ReadImage(file_path)
             image_arr = sitk.GetArrayFromImage(self.image_sitk)
             if len(image_arr.shape) == 2:
                 image_arr = np.expand_dims(image_arr, 0)
-            self.file_name_label.setText(Path(file_path).stem)
-       
-        elif extensions[-1] == ".gz":
-            if len(extensions) >= 2:
-                if extensions[-2] == ".nii":               
-                    self.image_sitk = sitk.ReadImage(file_path)
-                    image_arr = sitk.GetArrayFromImage(self.image_sitk)
-                    if len(image_arr.shape) == 2:
-                        image_arr = np.expand_dims(image_arr, 0)
-                    self.file_name_label.setText(Path(Path(file_path).stem).stem)
-                else:
-                    return None
-
+            
+            if len(extensions) == 2:
+                self.file_name_label.setText(Path(Path(file_path).stem).stem)
+            else:
+                self.file_name_label.setText(Path(file_path).stem)
+            
         else:
             return None
 
         if len(image_arr.shape) != 3:
             display_warning_box(self, "Error", "Incorrect file size. Need to be a 3D image")
             return None
-        
+
         return image_arr
 
-    def load_segmentation_file(self, default_file_path=None):
+    def import_segmentation_file(self, default_file_path=None):
         """
-        Load segmentation image file of type .tiff, .tif, .nii or .nii.gz
+        Import segmentation image file of type .tiff, .tif, .nii or .nii.gz
 
         Parameters
         ----------
         default_file_path : Pathlib.Path
-            path of the segmentation image to load. If None, a QFileDialog is open to aks a path.
+            path of the segmentation image to import. If None, a QFileDialog is open to aks a path.
 
         Returns
         ----------
         segmentation_arr : ndarray
-            segmentation image as a 3D array. None if loading failed.
+            segmentation image as a 3D array. None if importation failed.
+        segmentation_sitk : SimpleITK image
+            segmentation image as SimpleITK image
 
         """
         if default_file_path is None:
@@ -800,16 +898,14 @@ class ManualSegmentationWidget(QWidget):
                 return None
 
         else:
-            file_path = str(default_file_path) 
+            file_path = str(default_file_path)
 
         extensions = Path(file_path).suffixes
 
-        if (extensions[-1] == ".tif") or (extensions[-1] == ".tiff"):
-            segmentation_arr = tif.imread(file_path)
-            if len(segmentation_arr.shape) == 2:
-                segmentation_arr = np.expand_dims(segmentation_arr, 0)
-
-        elif extensions[-1] == ".nii":                
+        # if (extensions[-1] == ".tif") or (extensions[-1] == ".tiff"):
+        #     segmentation_arr = tif.imread(file_path)
+        
+        if (extensions[-1] in [".tif", ".tiff", ".nii"]) or (extensions == [".nii", ".gz"]):
             segmentation_sitk = sitk.ReadImage(file_path)
             segmentation_arr = sitk.GetArrayFromImage(segmentation_sitk)
             segmentation_arr = segmentation_arr.astype(np.uint8)
@@ -820,48 +916,41 @@ class ManualSegmentationWidget(QWidget):
             if any(n < 0 for n in np.unique(segmentation_arr)):
                 display_warning_box(self, "Error", "Incorrect NIFTI format : negative value")
                 return
-
-        elif extensions[-1] == ".gz":
-            if len(extensions) >= 2:
-                if extensions[-2] == ".nii":                
-                    segmentation_sitk = sitk.ReadImage(file_path)
-                    segmentation_arr = sitk.GetArrayFromImage(segmentation_sitk)
-                    segmentation_arr = segmentation_arr.astype(np.uint8)
-
-                    if len(segmentation_arr.shape) == 2:
-                        segmentation_arr = np.expand_dims(segmentation_arr, 0)
-
-                    if any(n < 0 for n in np.unique(segmentation_arr)):
-                        display_warning_box(self, "Error", "Incorrect NIFTI format : negative value")
-                        return
-                else:
-                    return None
-
+            
         else:
             return None
-
+            
         if len(segmentation_arr.shape) != 3:
             display_warning_box(self, "Error", "Incorrect file size. Need to be a 3D image")
             return None
-        
+
         if not isinstance(segmentation_arr.flat[0], np.integer):
             segmentation_arr = segmentation_arr.astype(np.int)
-        
-        return segmentation_arr
+
+        return segmentation_arr, segmentation_sitk
 
     def has_corresponding_segmentation_file(self):
-        """ 
-        Check is there exist a segmentation file (.tiff, .tif, .nii, .nii.gz) matching the name of the open image file. 
+        """
+        Check is there exist a segmentation file (.tiff, .tif, .nii, .nii.gz) matching the name of the open image file.
         The segmentation file name has to be : image_file_name + "_segmentation".
+        
+        Returns
+        ----------
+        hasCorrespondingSegmentation : bool
+            True if there exist a segmentation file, False if not.
+        segmentation_file_path : Pathlib.Path
+            path of the segmentation image to import if there exist a segmentation file, None if not.
 
         """
         for type_extensions in (".tiff", ".tif", ".nii", ".nii.gz"):
             segmentation_file_path = Path(self.image_dir).joinpath(self.file_name_label.text() + "_segmentation" + type_extensions)
             if segmentation_file_path.exists():
                 return True, segmentation_file_path
-        
-        return False, ""   
 
+        return False, ""
+
+
+# ============ Import metadata ============
     def import_custom_contrast(self):
         """
         Import custom contrast limits from a .json file and apply it
@@ -877,137 +966,55 @@ class ManualSegmentationWidget(QWidget):
 
         with open(file_path) as f:
             import_contrast = json.load(f)
-        
+
         if (np.max(import_contrast) <= self.viewer.layers['image'].contrast_limits_range[1]) and (np.min(import_contrast) >= self.viewer.layers['image'].contrast_limits_range[0]):
             self.custom_contrast_limits = import_contrast
-        else: 
+        else:
             display_warning_box(self, "Error", "The imported contrast limits is outside of the image contrast range.")
             return
-        
+
         self.default_contrast_combo_box.setCurrentText("Custom Contrast")
 
-
-# ============ Update data ============
-    def update_image_with_path(self, file_type):
+    def import_selected_slice(self, segmentation_sitk=None):
         """
-        Update image data by asking file path to the user.
-        Load image data, add it to napari, toggle panels, check if a corresponding segmentation data file exist (if so, load it and add it to napari).
+        Import metadata containing in the 'ImageDescription'/'Hesperos_SelectedSlices' as a list. (works only for tiff file TOIMPROVE)   
         
         Parameters
         ----------
-        file_type : str
-            type of image loaded : "file" for .tiff, .tif, .nii and .nii.gz and "folder" for DICOM folder
-            
-        """
-        canRemove = self.can_remove_all()
-
-        if canRemove:
-            self.status_label.setText("Loading...")
-
-            if file_type == "file":
-                image_arr = self.load_image_file()
-            elif file_type == 'folder':
-                image_arr = self.load_dicom_folder()
-
-            if image_arr is None:
-                self.status_label.setText("Ready")
-                return
-
-            self.set_image_layer(image_arr)
-
-            self.reset_zoom_slider()
-            self.reset_lock_push_button()
-            self.backup_check_box.setChecked(False)
-            self.default_contrast_combo_box.setCurrentText("")
-
-            self.toggle_loading_panel_widget(True, file_type)
-            self.toggle_panels(["annotation_panel", "reset_save_panel"], True)
-            
-            hasCorrespondingSegmentation, segmentation_file_path = self.has_corresponding_segmentation_file()
-
-            if hasCorrespondingSegmentation:
-                choice = display_yes_no_question_box(
-                "Warning",
-                "A corresponding segmentation file has been found. Do you want to open it ?",
-                )
-
-                if choice: #Yes
-                    self.update_segmentation_with_path(segmentation_file_path)
-                else:
-                    segmentation_arr = np.zeros(image_arr.shape, dtype=np.int8)
-                    self.set_segmentation_layer(segmentation_arr)
-
-            else:
-                segmentation_arr = np.zeros(image_arr.shape, dtype=np.int8)
-                self.set_segmentation_layer(segmentation_arr)
-
-            self.annotation_combo_box.setCurrentText("Choose a structure")
-
-            self.status_label.setText("Ready")
-
-        else:
+        segmentation_sitk : SimpleITK image
+            segmentation data in sitk format
+        
+        """        
+        try:
+            description = json.loads(segmentation_sitk.GetMetaData('ImageDescription'))
+            loaded_selected_slice_list = json.loads(description['Hesperos_SelectedSlices'])
+        except:
             return
 
-    def update_segmentation_with_path(self, segmentation_path=None):
-        """
-        Update segmentation data from a file path : load data and add it to napari.
-        
-        Parameters
-        ----------
-        segmentation_path : str
-            path of the segmentation file
-            
-        """
+        if loaded_selected_slice_list != []:
+            self.selected_slice_list = loaded_selected_slice_list
 
-        # not from a corresponding segmentation file found for the image
-        if segmentation_path is None:
-            canRemove = self.can_remove_segmentation_data()
-        # from a corresponding segmentation file found for the image (not ask for remove because all ready done)
-        else:
-            canRemove = True
-
-        if canRemove:
-            self.status_label.setText("Loading...")
-
-            segmentation_arr = self.load_segmentation_file(segmentation_path)
-
-            if segmentation_arr is None:
-                self.status_label.setText("Ready")
+            if len(self.selected_slice_list) >= 10:
+                display_warning_box(self, "Error", "More than 10 selected slices are not allowed. Please remove some selected slice to add new.")
                 return
-            
-            if "image" in self.viewer.layers:
-                image_arr = self.viewer.layers['image'].data 
-    
-                if segmentation_arr.shape != image_arr.shape:
-                    image_arr_viewer = np.transpose(image_arr, self.viewer.dims.order)
+        
+            self.selected_slice_list.sort()
 
-                    if segmentation_arr.shape == image_arr_viewer.shape:
-                        if self.viewer.dims.order == (2, 0, 1):
-                            segmentation_arr = np.transpose(segmentation_arr, (1, 2, 0))
-                        elif self.viewer.dims.order == (1, 2, 0):
-                            segmentation_arr = np.transpose(segmentation_arr, (2, 0, 1))
-                    
-                    else:
-                        display_warning_box(self, "Error", "Size of the segmentation file doesn't correspond to the size of the source image")
-                        self.status_label.setText("Ready")
-                        return
-
-                self.set_segmentation_layer(segmentation_arr)
-                self.reset_lock_push_button()
-
-                self.status_label.setText("Ready")
+            for slice_index in self.selected_slice_list:
+                new_text = str(slice_index)
+                self.selected_slice_combo_box.addItem(new_text)
 
 
-# ============ Save data ============
-    def save_segmentation(self):
+# ============ Export data ============
+    def export_segmentation(self):
         """
-            Save the labelled data as a unique 3D image, or multiple 3D images (one by label)
+            Export the labelled data as a unique 3D image, or multiple 3D images (one by label)
 
         """
         files_types = "Image File (*.tif *.tiff *.nii.gz *.nii)"
 
         default_filepath = Path(self.image_dir).joinpath(self.file_name_label.text() + "_segmentation.tif")
-        file_path, _ = QFileDialog.getSaveFileName(self, "Save Segmentation", str(default_filepath), files_types)
+        file_path, _ = QFileDialog.getSaveFileName(self, "Export Segmentation", str(default_filepath), files_types)
 
         # If choose "Cancel"
         if file_path == "":
@@ -1020,7 +1027,7 @@ class ManualSegmentationWidget(QWidget):
 
                 saving_mode = display_save_message_box(
                     "Saving Mode",
-                    """How do you want to save the segmentation data ? \n\n _Unique_ : saved as a unique 3D image with corresponding label ids (can be re-open for correction in the application). \n\n _Several_ : saved as several binary 3D images (0 or 255), one for each label id.""",
+                    """How do you want to export the segmentation data ? \n\n _Unique_ : as a unique 3D image with corresponding label ids (can be re-open for correction in the application). \n\n _Several_ : as several binary 3D images (0 or 255), one for each label id.""",
                 )
 
                 segmentation_arr = self.viewer.layers['annotations'].data
@@ -1028,21 +1035,29 @@ class ManualSegmentationWidget(QWidget):
                 extensions = Path(file_path).suffixes
 
                 if saving_mode: # "Unique" choice
-                    if (extensions[-1] == ".tif") or (extensions[-1] == ".tiff"):
-                        tif.imsave(file_path, segmentation_arr)
-
-                    elif extensions[-1] == ".nii": 
-                        result_image_sitk = sitk.GetImageFromArray(segmentation_arr.astype(np.uint16))
+                    if extensions[-1] in [".tif", ".tiff"]:
+                        description = {"Hesperos_SelectedSlices" : json.dumps(self.selected_slice_list)}
+                        # tif.imsave(file_path, segmentation_arr, description=json.dumps(self.selected_slice_list))
+                        tif.imsave(file_path, segmentation_arr, description=json.dumps(description))
+                        
+                    elif (extensions[-1] == ".nii") or (extensions == [".nii", ".gz"]):
+                        result_image_sitk = sitk.GetImageFromArray(segmentation_arr.astype(np.uint8))
                         result_image_sitk.CopyInformation(self.image_sitk)
                         sitk.WriteImage(result_image_sitk, file_path)
 
-                    elif extensions[-1] == ".gz":
-                        if len(extensions) >= 2:
-                            if extensions[-2] == ".nii": 
-                                result_image_sitk = sitk.GetImageFromArray(segmentation_arr.astype(np.uint16))
-                                result_image_sitk.CopyInformation(self.image_sitk)
-                                sitk.WriteImage(result_image_sitk, file_path)
+                        # ====== Test Metadata writing with SimpleITK ======
+                        # result_image_sitk.SetMetaData(key="Hesperos_SelectedSlices", value=str(self.selected_slice_list))
+                        # result_image_sitk.GetMetaData("Hesperos_SelectedSlices")
+                        # for k in result_image_sitk.GetMetaDataKeys(): 
+                        #     v = result_image_sitk.GetMetaData(k)
+                        #     print("({0}) = = \"{1}\"".format(k,v))
 
+                        # writer = sitk.ImageFileWriter()
+                        # writer.KeepOriginalImageUIDOn()
+                        # writer.SetFileName(file_path)
+                        # writer.Execute(result_image_sitk)
+                        # ==================================================================
+                                                
                 else: # "Several" choice
                     structure_name = self.annotation_combo_box.currentText()
                     if structure_name == "Fetus":
@@ -1057,27 +1072,30 @@ class ManualSegmentationWidget(QWidget):
                         structure_list=[]
 
                     for idx, struc in enumerate(structure_list):
-                        label_struc = np.zeros(segmentation_arr.shape, dtype=np.uint16)
+                        label_struc = np.zeros(segmentation_arr.shape, dtype=np.uint8)
                         label_struc[segmentation_arr == (idx + 1)] = 255
 
-                        #save only if the labelled data is not empty
+                        #export only if the labelled data is not empty
                         if np.any(label_struc):
-                            if (extensions[-1] == ".tif") or (extensions[-1] == ".tiff"):
-                                file_name = Path(file_path).stem 
+                            if extensions[-1] in [".tif", ".tiff"]:
+                                file_name = Path(file_path).stem
                                 new_file_name = file_name + '_' + struc + extensions[0]
                                 new_file_path = Path(Path(file_path).parent).joinpath(new_file_name)
                                 tif.imsave(str(new_file_path), label_struc)
-                            elif extensions[-1] == ".gz":
-                                if len(extensions) >= 2:
-                                    if extensions[-2] == ".nii": 
-                                        file_name = Path(Path(file_path).stem).stem
-                                        new_file_name = file_name + '_' + struc + extensions[0] + extensions[1]
-                                        new_file_path = Path(Path(file_path).parent).joinpath(new_file_name)
-                                        result_image_sitk = sitk.GetImageFromArray(label_struc)
-                                        result_image_sitk.CopyInformation(self.image_sitk)
-                                        sitk.WriteImage(result_image_sitk, str(new_file_path))
-                                    else:
-                                        return 
+                                
+                            elif (extensions[-1] == ".nii") or (extensions == [".nii", ".gz"]):
+                                file_name = Path(Path(file_path).stem).stem
+                                try:
+                                    new_file_name = file_name + '_' + struc + extensions[0] + extensions[1]
+                                except:
+                                    new_file_name = file_name + '_' + struc + extensions[0]
+                                new_file_path = Path(Path(file_path).parent).joinpath(new_file_name)
+                                result_image_sitk = sitk.GetImageFromArray(label_struc)
+                                result_image_sitk.CopyInformation(self.image_sitk)
+                                sitk.WriteImage(result_image_sitk, str(new_file_path))
+                                
+                            else:
+                                return
 
                 self.remove_backup_segmentation_file()
                 self.status_label.setText("Ready")
@@ -1085,26 +1103,17 @@ class ManualSegmentationWidget(QWidget):
             else:
                 display_warning_box(self, "Error", "No segmentation data find")
                 return
-    
-    def save_backup_segmentation(self):
+
+    def export_backup_segmentation(self):
         """
-            Save a backup of the 3D segmentation data as a .tif file.
+            Export a backup of the 3D segmentation data as a .tif file.
 
         """
         if hasattr(self.viewer, 'layers'):
             if "annotations" in self.viewer.layers:
                 segmentation_arr = self.viewer.layers['annotations'].data
-
-                #TIF OPTION
                 temp_segmentation_data_file_path = Path(self.image_dir).joinpath("TEMP_" + self.file_name_label.text() + "_segmentation.tif")
-                tif.imsave(str(temp_segmentation_data_file_path), segmentation_arr)       
-
-                # NII GZ OPTION
-                # temp_segmentation_data_file_path = Path(self.image_dir).joinpath("TEMP_segmentation.nii.gz")
-                # result_image_sitk = sitk.GetImageFromArray(segmentation_arr.astype(np.uint16))
-                # # result_image_sitk = sitk.GetImageFromArray(segmentation_arr)
-                # result_image_sitk.CopyInformation(self.image_sitk)
-                # sitk.WriteImage(result_image_sitk, str(temp_segmentation_data_file_path))
+                tif.imsave(str(temp_segmentation_data_file_path), segmentation_arr)
 
     def export_custom_contrast(self):
         """
@@ -1116,7 +1125,7 @@ class ManualSegmentationWidget(QWidget):
             files_types = "JSON File (*.json)"
 
             default_filepath = Path(self.image_dir).joinpath(self.file_name_label.text() + "_custom_contrast.json")
-            file_path, _ = QFileDialog.getSaveFileName(self, "Save contrast limit parameters", str(default_filepath), files_types)
+            file_path, _ = QFileDialog.getSaveFileName(self, "Export contrast limit parameters", str(default_filepath), files_types)
 
             # If choose "Cancel"
             if file_path == "":
@@ -1124,29 +1133,132 @@ class ManualSegmentationWidget(QWidget):
 
             with open(file_path, 'w') as f:
                 json.dump(self.custom_contrast_limits, f)
-            
+
         else:
             display_warning_box(self, "Error", "No custom contrast limits saved. Click on + button to add one (it will take the value of the current contrast limits used).")
 
-    def activate_backup_segmentation(self):
+
+# ============ Set data ============
+    def set_image_with_path(self, file_type):
         """
-            Activate backup of the segmentation data when the image slice is changed.
+        Set image data by asking file path to the user.
+        Import image data, add it to napari, toggle panels, check if a corresponding segmentation data file exist (if so, import it and add it to napari).
+
+        Parameters
+        ----------
+        file_type : str
+            type of image loaded : "file" for .tiff, .tif, .nii and .nii.gz and "folder" for DICOM folder
 
         """
-        if self.backup_check_box.isChecked() == True:
-            choice = display_ok_cancel_question_box(
+        canRemove = self.can_remove_all()
+
+        if canRemove:
+            self.status_label.setText("Loading...")
+
+            if file_type == "file":
+                image_arr = self.import_image_file()
+            elif file_type == 'folder':
+                image_arr = self.import_dicom_folder()
+
+            if image_arr is None:
+                self.status_label.setText("Ready")
+                return
+
+            self.set_image_layer(image_arr)
+
+            self.reset_zoom_slider()
+            self.reset_lock_push_button()
+            self.go_to_selected_slice_push_button.setChecked(False)
+            self.backup_check_box.setChecked(False)
+            self.default_contrast_combo_box.setCurrentText("")
+
+            self.toggle_import_panel_widget(True, file_type)
+            self.toggle_panels(["annotation_panel", "reset_export_panel"], True)
+
+            hasCorrespondingSegmentation, segmentation_file_path = self.has_corresponding_segmentation_file()
+
+            if hasCorrespondingSegmentation:
+                choice = display_yes_no_question_box(
                 "Warning",
-                "Automatically saving the segmentation data when the image slice is changed can slow down the display. Do you want to continue ?",
-            )
-            if choice: #Ok
-                self.viewer.dims.events.emitters['current_step'].connect(self.save_backup_segmentation)
-            else: #Cancel
-                self.backup_check_box.setChecked(False)
-        else:
-            self.viewer.dims.events.emitters['current_step'].disconnect(self.save_backup_segmentation)
-  
+                "A corresponding segmentation file has been found. Do you want to open it ?",
+                )
 
-# ============ Update napari layers ============
+                if choice: #Yes
+                    self.set_segmentation_with_path(segmentation_file_path)
+                else:
+                    segmentation_arr = np.zeros(image_arr.shape, dtype=np.int8)
+                    self.set_segmentation_layer(segmentation_arr)
+                    self.reset_lock_push_button()
+                    self.go_to_selected_slice_push_button.setChecked(False)
+                    self.reset_selected_slice()
+
+            else:
+                segmentation_arr = np.zeros(image_arr.shape, dtype=np.int8)
+                self.set_segmentation_layer(segmentation_arr)
+                self.reset_lock_push_button()
+                self.go_to_selected_slice_push_button.setChecked(False)
+                self.reset_selected_slice()
+
+            self.annotation_combo_box.setCurrentText("Choose a structure")  
+            self.status_label.setText("Ready")
+
+        else:
+            return
+
+    def set_segmentation_with_path(self, segmentation_path=None):
+        """
+        Set segmentation data from a file path : import data and add it to napari.
+
+        Parameters
+        ----------
+        segmentation_path : str
+            path of the segmentation file
+
+        """
+
+        # not from a corresponding segmentation file found for the image
+        if segmentation_path is None:
+            canRemove = self.can_remove_segmentation_data()
+        # from a corresponding segmentation file found for the image (not ask for remove because all ready done)
+        else:
+            canRemove = True
+
+        if canRemove:
+            self.status_label.setText("Loading...")
+
+            segmentation_arr, segmentation_sitk = self.import_segmentation_file(segmentation_path)
+
+            if segmentation_arr is None:
+                self.status_label.setText("Ready")
+                return
+
+            if "image" in self.viewer.layers:
+                image_arr = self.viewer.layers['image'].data
+
+                if segmentation_arr.shape != image_arr.shape:
+                    image_arr_viewer = np.transpose(image_arr, self.viewer.dims.order)
+
+                    if segmentation_arr.shape == image_arr_viewer.shape:
+                        if self.viewer.dims.order == (2, 0, 1):
+                            segmentation_arr = np.transpose(segmentation_arr, (1, 2, 0))
+                        elif self.viewer.dims.order == (1, 2, 0):
+                            segmentation_arr = np.transpose(segmentation_arr, (2, 0, 1))
+
+                    else:
+                        display_warning_box(self, "Error", "Size of the segmentation file doesn't correspond to the size of the source image")
+                        self.status_label.setText("Ready")
+                        return
+
+                self.set_segmentation_layer(segmentation_arr)
+                self.reset_lock_push_button()
+                self.go_to_selected_slice_push_button.setChecked(False)
+                self.reset_selected_slice()
+                self.import_selected_slice(segmentation_sitk)
+
+                self.status_label.setText("Ready")
+
+
+# ============ Set Napari layers ============
     def set_image_layer(self, array):
         """
         Remove the image layer from Napari and add a new image layer (faster than changing the data of an existing layer)
@@ -1182,7 +1294,26 @@ class ManualSegmentationWidget(QWidget):
         self.remove_backup_segmentation_file()
 
         self.viewer.layers['annotations'].mouse_double_click_callbacks.append(self.automatic_fill)
- 
+
+
+# ============ Napari events callbacks ============
+    def activate_backup_segmentation(self):
+        """
+            Activate backup of the segmentation data when the image slice is changed.
+
+        """
+        if self.backup_check_box.isChecked() == True:
+            choice = display_ok_cancel_question_box(
+                "Warning",
+                "Automatically saving the segmentation data when the image slice is changed can slow down the display. Do you want to continue ?",
+            )
+            if choice: #Ok
+                self.viewer.dims.events.emitters['current_step'].connect(self.export_backup_segmentation)
+            else: #Cancel
+                self.backup_check_box.setChecked(False)
+        else:
+            self.viewer.dims.events.emitters['current_step'].disconnect(self.export_backup_segmentation)
+
     def automatic_fill(self, layer, event):
         """
         Quick switch between label modes (paint and fill) by double clicking.
@@ -1195,11 +1326,58 @@ class ManualSegmentationWidget(QWidget):
             layer.mode = "paint"
 
 
-# ============ Apply widget value ============
+# ============ Custom widget callbacks ============
+    def add_selected_slice(self):
+        """
+        Add the z index of the actual slice display in the selected_slice_combo_box
+
+        """
+        selected_slice_z = self.viewer.dims.current_step[0]
+        
+        if len(self.selected_slice_list) >= 10:
+            display_warning_box(self, "Error", "More than 10 selected slices are not allowed. Please remove some selected slice to add new.")
+            return
+
+        elif selected_slice_z in self.selected_slice_list:
+            return
+
+        else:
+            self.selected_slice_list.append(selected_slice_z)
+            self.selected_slice_list.sort()
+            
+            list_index = self.selected_slice_list.index(selected_slice_z)
+            self.selected_slice_combo_box.insertItem(list_index + 1, str(selected_slice_z))
+            self.selected_slice_combo_box.setCurrentText(str(selected_slice_z))
+
+    def go_to_selected_slice(self):
+        """
+        Change the currently displayed slice according to the slice index selected in the selected_slice_combo_box
+
+        """
+        if self.go_to_selected_slice_push_button.isChecked() == True:
+            if self.selected_slice_combo_box.currentText() != " ":
+                # json to tuple
+                # selected_slice = eval(self.selected_slice_combo_box.currentText())
+                selected_slice_z = int(self.selected_slice_combo_box.currentText())
+                _, y, x = self.viewer.layers['image'].data.shape
+                self.viewer.dims.current_step = (selected_slice_z, y, x)  
+            else:
+                self.go_to_selected_slice_push_button.setChecked(False) 
+                   
+        else:
+            if self.selected_slice_combo_box.currentText() != " ":  
+                current_slice_z = self.viewer.dims.current_step[0]
+                selected_slice_z = int(self.selected_slice_combo_box.currentText())
+                if current_slice_z != selected_slice_z:
+                    _, y, x = self.viewer.layers['image'].data.shape
+                    self.viewer.dims.current_step = (selected_slice_z, y, x)  
+                else:                      
+                    self.go_to_selected_slice_push_button.setChecked(True)
+            
     def lock_slide(self):
         """
-        Lock a slice of work. Clicking on the checked QPushButton put the viewer to the locked slice location. 
-        Allow user to explore data and return to a specific slice quickly. 
+        Lock a slice of work. Clicking on the checked QPushButton put the viewer to the locked slice location.
+        Allow user to explore data and return to a specific slice quickly.
 
         """
         if self.lock_push_button.isChecked() == True:
@@ -1241,7 +1419,7 @@ class ManualSegmentationWidget(QWidget):
                 # hu = pixel_value * slope + intercept
                 self.viewer.layers['image'].contrast_limits = self.hu_limits
                 # self.viewer.layers['image'].contrast_limits_range = (self.viewer.layers['image'].data.min(), self.viewer.layers['image'].data.max())
-           
+
             elif self.default_contrast_combo_box.currentText() == "CT Soft":
                 self.hu_limits = (-160, 240)
                 self.viewer.layers['image'].contrast_limits = self.hu_limits
@@ -1256,7 +1434,7 @@ class ManualSegmentationWidget(QWidget):
                 return
         else:
             self.default_contrast_combo_box.setCurrentText("Set a default contrast")
-    
+
     def undo_segmentation(self):
         """
             Undo last operation of annotation
@@ -1289,7 +1467,7 @@ class ManualSegmentationWidget(QWidget):
         elif structure_name == "Shoulder":
             radio_button_to_check = self.shoulder.group_radio_button.button(1)
             radio_button_to_check.setChecked(True)
-        
+
         elif structure_name == "Shoulder Bones":
             radio_button_to_check = self.shoulder_bones.group_radio_button.button(1)
             radio_button_to_check.setChecked(True)
@@ -1303,7 +1481,7 @@ class ManualSegmentationWidget(QWidget):
         Reset the selected structure to annotate.
 
         """
-        if "annotations" in self.viewer.layers:           
+        if "annotations" in self.viewer.layers:
             if self.annotation_combo_box.currentText() == "Choose a structure":
                 self.viewer.layers['annotations'].selected_label = 0
             else:
@@ -1331,7 +1509,7 @@ class ManualSegmentationWidget(QWidget):
         """
         self.locked_slice_index = None
         self.lock_push_button.setChecked(False)
-        
+
     def reset_zoom_slider(self):
         """
         Reset the zoom slider to 100 (no zoom)
@@ -1339,8 +1517,22 @@ class ManualSegmentationWidget(QWidget):
         """
         self.zoom_slider.setValue(int(self.viewer.camera.zoom * 100))
 
+    def reset_selected_slice(self):
+        """
+        Reset the selected slice list to empty, set the combo box to the default value " " and remove all other item of the combo box
+        
+        """
+        self.selected_slice_list = []
 
-# ============ Remove data ============
+        if self.selected_slice_combo_box.currentText() != " ":
+            self.selected_slice_combo_box.setCurrentText(" ")
+
+        while self.selected_slice_combo_box.count() != 1:
+            index = self.selected_slice_combo_box.count() - 1 
+            self.selected_slice_combo_box.removeItem(index)
+
+
+# ============ Remove or Reset data ============
     def remove_image_layer(self):
         """
             Remove image layer from napari viewer
@@ -1377,12 +1569,28 @@ class ManualSegmentationWidget(QWidget):
 
         if canRemoveSegmentation:
             if "image" in self.viewer.layers:
-                image_arr = self.viewer.layers['image'].data 
+                image_arr = self.viewer.layers['image'].data
                 segmentation_arr = np.zeros(image_arr.shape, dtype=np.int8)
                 self.set_segmentation_layer(segmentation_arr)
         else:
             return
 
+    def remove_selected_slice(self):
+        """
+        Remove the current z index displayed in the selected_slice_combo_box and set the combo box to the default value " "
+        
+        """
+        if len(self.selected_slice_list) == 0:
+            return
+        
+        current_slice_z = self.viewer.dims.current_step[0]
+
+        if current_slice_z in self.selected_slice_list:
+            list_index = self.selected_slice_list.index(current_slice_z) 
+            self.selected_slice_combo_box.removeItem(list_index + 1)   
+            self.selected_slice_list.remove(current_slice_z)
+            self.selected_slice_combo_box.setCurrentText(" ")
+            
 
 # ============ Display warning/question message box ============
     def can_remove_image_data(self):
@@ -1464,3 +1672,32 @@ class ManualSegmentationWidget(QWidget):
 
     #     pixmap = QPixmap(image_path)
     #     view_image_1.setPixmap(pixmap)
+    
+    
+
+    # def generate_help_layout(self):
+
+    #     self.help_layout = QGridLayout()
+    #     self.help_layout.setContentsMargins(10, 10, 10, 10)
+    #     # self.help_layout.setAlignment(QtCore.Qt.AlignTop)
+    #     self.help_layout.setSpacing(4)
+
+    #     self.add_view_panel(row=0, column=0)
+    #     self.add_atlas_panel(row=0, column=1)
+
+    #     self.help_container = QWidget()
+
+    #     self.help_container.setLayout(self.help_layout)
+
+    #     self.help_dock = self.viewer.window.add_dock_widget(widget=self.help_container, area='bottom')  
+    
+    
+    # def import_selected_slice_metadata_from_nifti(self, img_sitk):
+    #     """
+    #     TODO
+
+    #     """
+    #     try:
+    #         return img_sitk.GetMetaData("Hesperos_SelectedSlices")
+    #     except:
+    #         return []

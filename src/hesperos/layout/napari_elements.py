@@ -71,6 +71,8 @@ label_colors = {
     #when checked "selected color" with color mode "direct", the label used to display the non selected label is referenced by the id None (see napari.layers.labels.labels.py) 
 # (1/255, 128/255, 1/255, 1.0)
 # (255/255, 192/255, 203/255, 1)
+
+
 # ============ Function to custom napari viewer buttons ============
 def disable_napari_buttons(viewer):
     """
@@ -92,6 +94,16 @@ def disable_napari_buttons(viewer):
     viewer.window._qt_viewer.layerButtons.newLabelsButton.setVisible(False)
     viewer.window._qt_viewer.layerButtons.deleteButton.setVisible(False)
 
+def disable_napari_change_dim_button(viewer, isVisible):
+    """_summary_
+
+    Args:
+        viewer (_type_): _description_
+        isVisible (bool): _description_
+    """
+    viewer.window._qt_viewer.viewerButtons.rollDimsButton.setEnabled(isVisible)
+    # or rollDimsButton / transposeDimsButton
+    
 def disable_dock_widget_buttons(viewer):
     """_summary_
 

@@ -99,11 +99,11 @@ class OneShotWidget(QWidget):
         self.layout.setSpacing(5)
 
         # === Create and add panels to the layout ===
-        self.add_loading_panel(1)
+        self.add_import_panel(1)
         self.add_annotation_panel(2)
         self.add_sub_annotation_panel(3)
         self.add_segmentation_panel(4)
-        self.add_reset_save_panel(5)
+        self.add_reset_export_panel(5)
 
         # Display status (cannot display progressing bar because napari is freezing)
         self.status_label = add_label(
@@ -114,7 +114,7 @@ class OneShotWidget(QWidget):
             visibility=True
             )
 
-        self.toggle_panels(["annotation_panel", "segmentation_panel", "reset_save_panel"], False)
+        self.toggle_panels(["annotation_panel", "segmentation_panel", "reset_export_panel"], False)
 
         self.setLayout(self.layout)
 
@@ -136,9 +136,9 @@ class OneShotWidget(QWidget):
             dict_substructures=oneshot_data.DICT_SUB_STRUCTURES,
             dict_sub_substructures=[])
 
-    def add_loading_panel(self, row, column=0):
+    def add_import_panel(self, row, column=0):
         """
-        Create loading panel
+        Create import panel
 
         Parameters
         ----------
@@ -150,39 +150,39 @@ class OneShotWidget(QWidget):
         """
 
         # === Set panel parameters ===
-        self.loading_panel = QGroupBox("1. LOAD 3D IMAGE")
-        self.loading_panel.setStyleSheet("margin-top : 5px;")
+        self.import_panel = QGroupBox("1. IMPORT 3D IMAGE")
+        self.import_panel.setStyleSheet("margin-top : 5px;")
 
         # === Set panel layout parameters ===
-        self.loading_layout = QGridLayout()
-        self.loading_layout.setContentsMargins(10, 10, 10, 10)
-        self.loading_layout.setSpacing(5)
-        self.loading_layout.setAlignment(QtCore.Qt.AlignTop)
+        self.import_layout = QGridLayout()
+        self.import_layout.setContentsMargins(10, 10, 10, 10)
+        self.import_layout.setSpacing(5)
+        self.import_layout.setAlignment(QtCore.Qt.AlignTop)
 
         # === Add Qwidgets to the panel layout ===
-        self.load_dicom_image_push_button = add_push_button(
+        self.import_dicom_image_push_button = add_push_button(
             name="Open DICOM serie",
-            layout=self.loading_layout,
-            callback_function=lambda: self.update_image_with_path("folder"),
+            layout=self.import_layout,
+            callback_function=lambda: self.set_image_with_path("folder"),
             row=0,
             column=0,
             minimum_width=COLUMN_WIDTH,
-            tooltip_text="Load DICOM data from a folder containing one serie",
+            tooltip_text="Import DICOM data from a folder containing one serie",
         )
 
-        self.load_file_image_push_button = add_push_button(
+        self.import_file_image_push_button = add_push_button(
             name="Open image file",
-            layout=self.loading_layout,
-            callback_function=lambda: self.update_image_with_path("file"),
+            layout=self.import_layout,
+            callback_function=lambda: self.set_image_with_path("file"),
             row=0,
             column=1,
             minimum_width=COLUMN_WIDTH,
-            tooltip_text="Load image data from one file",
+            tooltip_text="Import image data from one file",
         )
 
         self.file_name_text = add_label(
             text='File/Folder name: ',
-            layout=self.loading_layout,
+            layout=self.import_layout,
             row=1,
             column=0,
             minimum_width=COLUMN_WIDTH,
@@ -190,14 +190,14 @@ class OneShotWidget(QWidget):
 
         self.file_name_label = add_label(
             text='',
-            layout=self.loading_layout,
+            layout=self.import_layout,
             row=1,
             column=1,
             minimum_width=COLUMN_WIDTH,
             )
 
         self.zoom_slider = add_slider(
-            layout=self.loading_layout,
+            layout=self.import_layout,
             bounds=[50, 500],
             callback_function=self.zoom,
             row=2,
@@ -213,12 +213,12 @@ class OneShotWidget(QWidget):
                 background: transparent;
                 }}""".format(get_relative_icon_path('zoom')))
 
-        # Loading tools are created in another layout
-        self.tool_loading_layout = QHBoxLayout()
+        # Import tools are created in another layout
+        self.tool_import_layout = QHBoxLayout()
 
         self.set_custom_contrast_push_button = add_icon_push_button(
             icon=QIcon(get_icon_path('plus')),
-            layout=self.tool_loading_layout,
+            layout=self.tool_import_layout,
             callback_function=self.set_custom_contrast,
             row=0,
             column=0,
@@ -230,7 +230,7 @@ class OneShotWidget(QWidget):
 
         self.import_custom_contrast_push_button = add_icon_push_button(
             icon=QIcon(get_icon_path('import')),
-            layout=self.tool_loading_layout,
+            layout=self.tool_import_layout,
             callback_function=self.import_custom_contrast,
             row=0,
             column=1,
@@ -240,7 +240,7 @@ class OneShotWidget(QWidget):
 
         self.export_custom_contrast_push_button = add_icon_push_button(
             icon=QIcon(get_icon_path('export')),
-            layout=self.tool_loading_layout,
+            layout=self.tool_import_layout,
             callback_function=self.export_custom_contrast,
             row=0,
             column=2,
@@ -250,7 +250,7 @@ class OneShotWidget(QWidget):
 
         self.default_contrast_combo_box = add_combo_box(
             list_items=["Set a default contrast", "CT Bone", "CT Soft", "Custom Contrast"],
-            layout=self.tool_loading_layout,
+            layout=self.tool_import_layout,
             callback_function=self.set_default_contrast,
             row=0,
             column=3,
@@ -259,19 +259,19 @@ class OneShotWidget(QWidget):
             isHBoxLayout=True,
         )
 
-        self.loading_layout.addLayout(self.tool_loading_layout, 3, 0, 1, 2)
+        self.import_layout.addLayout(self.tool_import_layout, 3, 0, 1, 2)
 
-        self.loading_panel.setLayout(self.loading_layout)
+        self.import_panel.setLayout(self.import_layout)
 
         # === Add panel to the main layout ===
-        self.layout.addWidget(self.loading_panel, row, column)
+        self.layout.addWidget(self.import_panel, row, column)
 
         # === Make widgets visible (after adding to the main layout to preventing them from briefly appearing in a separate window) ===
-        self.loading_panel.setVisible(True)
-        self.load_dicom_image_push_button.setVisible(True)
-        self.load_file_image_push_button.setVisible(True)
+        self.import_panel.setVisible(True)
+        self.import_dicom_image_push_button.setVisible(True)
+        self.import_file_image_push_button.setVisible(True)
         
-        self.toggle_loading_panel_widget(False)
+        self.toggle_import_panel_widget(False)
 
     def add_annotation_panel(self, row, column=0):
         """
@@ -297,10 +297,10 @@ class OneShotWidget(QWidget):
         self.annotation_layout.setAlignment(QtCore.Qt.AlignTop)
 
         # === Add Qwidgets to the panel layout ===
-        self.load_segmentation_push_button = add_push_button(
+        self.import_segmentation_push_button = add_push_button(
             name="Open segmentation file",
             layout=self.annotation_layout,
-            callback_function=lambda: self.update_segmentation_with_path(None),
+            callback_function=lambda: self.set_segmentation_with_path(None),
             row=0,
             column=1,
             column_span=2,
@@ -385,9 +385,9 @@ class OneShotWidget(QWidget):
         # === Add panel to the main layout ===
         self.layout.addWidget(self.segmentation_panel, row, column)       
 
-    def add_reset_save_panel(self, row, column=0):
+    def add_reset_export_panel(self, row, column=0):
         """
-        Create reset and save panel
+        Create reset and export panel
 
         Parameters
         ----------
@@ -399,37 +399,37 @@ class OneShotWidget(QWidget):
         """
 
         # === Set panel parameters ===
-        self.reset_save_panel = QGroupBox("4. SAVE ANNOTATION")
-        self.reset_save_panel.setStyleSheet("margin-top : 5px;")
+        self.reset_export_panel = QGroupBox("4. EXPORT ANNOTATION")
+        self.reset_export_panel.setStyleSheet("margin-top : 5px;")
 
         # === Set panel layout parameters ===
-        self.reset_save_layout = QGridLayout()
-        self.reset_save_layout.setSpacing(5)
+        self.reset_export_layout = QGridLayout()
+        self.reset_export_layout.setSpacing(5)
 
         # === Add Qwidgets to the panel layout ===
-        self.save_seg_push_button = add_push_button(
-            name="Save segmentation",
-            layout=self.reset_save_layout,
-            callback_function=self.save_segmentation,
+        self.export_seg_push_button = add_push_button(
+            name="Export segmentation",
+            layout=self.reset_export_layout,
+            callback_function=self.export_segmentation,
             row=0,
             column=0,
             minimum_width=COLUMN_WIDTH,
-            tooltip_text="Save only the segmented probability data",
+            tooltip_text="Export only the segmented probability data",
         )
 
-        self.save_proba_push_button = add_push_button(
-            name="Save probabilities",
-            layout=self.reset_save_layout,
-            callback_function=self.save_probabilities,
+        self.export_proba_push_button = add_push_button(
+            name="Export probabilities",
+            layout=self.reset_export_layout,
+            callback_function=self.export_probabilities,
             row=0,
             column=1,
             minimum_width=COLUMN_WIDTH,
-            tooltip_text="Save only the probability data",
+            tooltip_text="Export only the probability data",
         )
 
         self.reset_push_button = add_push_button(
             name="Delete all",
-            layout=self.reset_save_layout,
+            layout=self.reset_export_layout,
             callback_function=self.reset_segmentation,
             row=1,
             column=0,
@@ -438,10 +438,10 @@ class OneShotWidget(QWidget):
             tooltip_text="Delete all segmentation data",
         )
 
-        self.reset_save_panel.setLayout(self.reset_save_layout)
+        self.reset_export_panel.setLayout(self.reset_export_layout)
 
         # === Add panel to the main layout ===
-        self.layout.addWidget(self.reset_save_panel, row, column)
+        self.layout.addWidget(self.reset_export_panel, row, column)
 
 
 # ============ Toggle widgets and panel ============
@@ -460,7 +460,7 @@ class OneShotWidget(QWidget):
         for panel_name in list_panel_names:
             if panel_name == "annotation_panel":
                 self.annotation_panel.setVisible(isVisible)
-                self.load_segmentation_push_button.setVisible(isVisible)
+                self.import_segmentation_push_button.setVisible(isVisible)
                 self.undo_push_button.setVisible(isVisible)
             
             elif panel_name == "segmentation_panel":
@@ -469,11 +469,11 @@ class OneShotWidget(QWidget):
                 self.threshold_label.setVisible(isVisible)
                 self.threshold_slider.setVisible(isVisible)
 
-            elif panel_name == "reset_save_panel":
-                self.reset_save_panel.setVisible(isVisible)
-                self.save_seg_push_button.setVisible(isVisible)
+            elif panel_name == "reset_export_panel":
+                self.reset_export_panel.setVisible(isVisible)
+                self.export_seg_push_button.setVisible(isVisible)
                 self.reset_push_button.setVisible(isVisible)
-                self.save_proba_push_button.setVisible(isVisible)
+                self.export_proba_push_button.setVisible(isVisible)
 
     def toggle_annotation_sub_panel(self, isVisible):
         """
@@ -485,9 +485,9 @@ class OneShotWidget(QWidget):
         self.reset_annotation_radio_button_checked_id()
         self.reset_annotation_layer_selected_label()
 
-    def toggle_loading_panel_widget(self, isVisible, file_type=None):
+    def toggle_import_panel_widget(self, isVisible, file_type=None):
         """
-        Toggle widget or the loading panel (default contrast option only for DICOM image (use housfield value))
+        Toggle widget or the import panel (default contrast option only for DICOM image (use housfield value))
         
         Parameters
         ----------
@@ -520,15 +520,15 @@ class OneShotWidget(QWidget):
             self.default_contrast_combo_box.setVisible(isVisible)
 
 
-# ============ Load data ============
-    def load_dicom_folder(self):
+# ============ Import data ============
+    def import_dicom_folder(self):
         """
-        Load a complete DICOM serie from a folder
+        Import a complete DICOM serie from a folder
 
         Returns
         ----------
         image_arr : ndarray
-            3D image as a 3D array. None if loading failed.
+            3D image as a 3D array. None if importation failed.
 
         """
         dicom_path = QFileDialog.getExistingDirectory(self, 'Choose a DICOM serie directory')
@@ -570,14 +570,14 @@ class OneShotWidget(QWidget):
 
         return image_arr
 
-    def load_image_file(self):
+    def import_image_file(self):
         """
-        Load a 3D image file of type .tiff, .tif, .nii or .nii.gz
+        Import a 3D image file of type .tiff, .tif, .nii or .nii.gz
 
         Returns
         ----------
         image_arr : ndarray
-            3D image as a 3D array. None if loading failed.
+            3D image as a 3D array. None if importation failed.
 
         """
         files_types = "Image File (*.tif *.tiff *.nii.gz *.nii)"
@@ -617,19 +617,19 @@ class OneShotWidget(QWidget):
         
         return image_arr
 
-    def load_segmentation_file(self, default_file_path=None):
+    def import_segmentation_file(self, default_file_path=None):
         """
-        Load segmentation image file of type .tiff, .tif, .nii or .nii.gz
+        Import segmentation image file of type .tiff, .tif, .nii or .nii.gz
 
         Parameters
         ----------
         default_file_path : Pathlib.Path
-            path of the segmentation image to load. If None, a QFileDialog is open to aks a path.
+            path of the segmentation image to import. If None, a QFileDialog is open to aks a path.
 
         Returns
         ----------
         segmentation_arr : ndarray
-            segmentation image as a 3D array. None if loading failed.
+            segmentation image as a 3D array. None if importation failed.
 
         """
         if default_file_path is None:
@@ -694,8 +694,8 @@ class OneShotWidget(QWidget):
         with open(file_path) as f:
             self.import_contrast = json.load(f)
         
-        if (np.max(import_contrast) <= self.viewer.layers['image'].contrast_limits_range[1]) and (np.min(import_contrast) >= self.viewer.layers['image'].contrast_limits_range[0]):
-            self.custom_contrast_limits = import_contrast
+        if (np.max(self.import_contrast) <= self.viewer.layers['image'].contrast_limits_range[1]) and (np.min(self.import_contrast) >= self.viewer.layers['image'].contrast_limits_range[0]):
+            self.custom_contrast_limits = self.import_contrast
         else: 
             display_warning_box(self, "Error", "The imported contrast limit is outside of the image contrast range.")
             return
@@ -704,10 +704,10 @@ class OneShotWidget(QWidget):
 
 
 # ============ Update data ============
-    def update_image_with_path(self, file_type):
+    def set_image_with_path(self, file_type):
         """
         Update image data by asking file path to the user.
-        Load image data, add it to napari, toggle panels, check if a corresponding segmentation data file exist (if so, load it and add it to napari).
+        Import image data, add it to napari, toggle panels, check if a corresponding segmentation data file exist (if so, import it and add it to napari).
         
         Parameters
         ----------
@@ -721,9 +721,9 @@ class OneShotWidget(QWidget):
             self.status_label.setText("Loading...")
 
             if file_type == "file":
-                image_arr = self.load_image_file()
+                image_arr = self.import_image_file()
             elif file_type == 'folder':
-                image_arr = self.load_dicom_folder()
+                image_arr = self.import_dicom_folder()
 
             if image_arr is None:
                 self.status_label.setText("Ready")
@@ -735,8 +735,8 @@ class OneShotWidget(QWidget):
             self.reset_threshold_slider()
             self.default_contrast_combo_box.setCurrentText("Set a default contrast")
 
-            self.toggle_loading_panel_widget(True, file_type)
-            self.toggle_panels(["annotation_panel", "segmentation_panel", "reset_save_panel"], True)
+            self.toggle_import_panel_widget(True, file_type)
+            self.toggle_panels(["annotation_panel", "segmentation_panel", "reset_export_panel"], True)
 
             segmentation_arr = np.zeros(image_arr.shape, dtype=np.int8)
             self.set_segmentation_layer(segmentation_arr)
@@ -753,9 +753,9 @@ class OneShotWidget(QWidget):
         else:
             return
 
-    def update_segmentation_with_path(self, segmentation_path=None):
+    def set_segmentation_with_path(self, segmentation_path=None):
         """
-        Update segmentation data from a file path : load data and add it to napari.
+        Update segmentation data from a file path : import data and add it to napari.
         
         Parameters
         ----------
@@ -774,7 +774,7 @@ class OneShotWidget(QWidget):
         if canRemove:
             self.status_label.setText("Loading...")
 
-            segmentation_arr = self.load_segmentation_file(segmentation_path)
+            segmentation_arr = self.import_segmentation_file(segmentation_path)
 
             if segmentation_arr is None:
                 self.status_label.setText("Ready")
@@ -791,16 +791,16 @@ class OneShotWidget(QWidget):
                 self.status_label.setText("Ready")
 
 
-# ============ Save data ============
-    def save_segmentation(self):
+# ============ Export data ============
+    def export_segmentation(self):
         """
-            Save the labelled data as a unique 3D image, or multiple 3D images (one by label)
+            Export the labelled data as a unique 3D image, or multiple 3D images (one by label)
 
         """
         files_types = "Image File (*.tif *.tiff *.nii.gz *.nii)"
 
         default_filepath = Path(self.image_dir).joinpath(self.file_name_label.text() + "_segmented_probabilities.tif")
-        file_path, _ = QFileDialog.getSaveFileName(self, "Save Segmentation", str(default_filepath), files_types)
+        file_path, _ = QFileDialog.getSaveFileName(self, "Export Segmentation", str(default_filepath), files_types)
 
         # If choose "Cancel"
         if file_path == "":
@@ -832,15 +832,15 @@ class OneShotWidget(QWidget):
                 display_warning_box(self, "Error", "No segmentation data find")
                 return
 
-    def save_probabilities(self):
+    def export_probabilities(self):
         """
-            Save the labelled data as a unique 3D image, or multiple 3D images (one by label)
+            Export the labelled data as a unique 3D image, or multiple 3D images (one by label)
 
         """
         files_types = "Image File (*.tif *.tiff *.nii.gz *.nii)"
 
         default_filepath = Path(self.image_dir).joinpath(self.file_name_label.text() + "_probabilities.tif")
-        file_path, _ = QFileDialog.getSaveFileName(self, "Save Probabilities", str(default_filepath), files_types)
+        file_path, _ = QFileDialog.getSaveFileName(self, "Export Probabilities", str(default_filepath), files_types)
 
         # If choose "Cancel"
         if file_path == "":
@@ -886,7 +886,7 @@ class OneShotWidget(QWidget):
             files_types = "JSON File (*.json)"
 
             default_filepath = Path(self.image_dir).joinpath(self.file_name_label.text() + "_custom_contrast.json")
-            file_path, _ = QFileDialog.getSaveFileName(self, "Save contrast limit parameters", str(default_filepath), files_types)
+            file_path, _ = QFileDialog.getSaveFileName(self, "Export contrast limit parameters", str(default_filepath), files_types)
 
             # If choose "Cancel"
             if file_path == "":
@@ -933,7 +933,7 @@ class OneShotWidget(QWidget):
         files_types = "PICKLE (*.pckl)"
 
         default_filepath = Path(self.image_dir).joinpath(self.file_name_label.text() + "_model_rfc.pckl")
-        output_classifier_path, _ = QFileDialog.getSaveFileName(self, "Save Model File", str(default_filepath), files_types)
+        output_classifier_path, _ = QFileDialog.getSaveFileName(self, "Export Model File", str(default_filepath), files_types)
 
         output_proba = run_one_shot_learning(image_arr, segmentation_arr, str(output_classifier_path))
 
