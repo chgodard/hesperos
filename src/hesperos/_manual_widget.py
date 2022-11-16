@@ -854,10 +854,17 @@ class ManualSegmentationWidget(QWidget):
         #     self.file_name_label.setText(Path(file_path).stem)
         
         if (extensions[-1] in [".tif", ".tiff", ".nii"]) or (extensions == [".nii", ".gz"]):
-            self.image_sitk = sitk.ReadImage(file_path)
-            image_arr = sitk.GetArrayFromImage(self.image_sitk)
-            if len(image_arr.shape) == 2:
-                image_arr = np.expand_dims(image_arr, 0)
+            try:
+                self.image_sitk = sitk.ReadImage(file_path)
+                image_arr = sitk.GetArrayFromImage(self.image_sitk) 
+                if len(image_arr.shape) == 2:
+                    image_arr = np.expand_dims(image_arr, 0) 
+            # SimpleITK can not handle images with 64-bit samples
+            except:
+                image_arr = tif.imread(file_path)
+                if len(image_arr.shape) == 2:
+                    image_arr = np.expand_dims(image_arr, 0)
+                self.image_sitk = sitk.Image(image_arr.shape[2], image_arr.shape[1], image_arr.shape[0], sitk.sitkInt8)
             
             if len(extensions) == 2:
                 self.file_name_label.setText(Path(Path(file_path).stem).stem)
