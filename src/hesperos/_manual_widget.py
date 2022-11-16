@@ -859,12 +859,12 @@ class ManualSegmentationWidget(QWidget):
                 image_arr = sitk.GetArrayFromImage(self.image_sitk) 
                 if len(image_arr.shape) == 2:
                     image_arr = np.expand_dims(image_arr, 0) 
-            # SimpleITK can not handle images with 64-bit samples
+            # SimpleITK can not handle images with 64-bits images
             except:
                 image_arr = tif.imread(file_path)
                 if len(image_arr.shape) == 2:
                     image_arr = np.expand_dims(image_arr, 0)
-                self.image_sitk = sitk.Image(image_arr.shape[2], image_arr.shape[1], image_arr.shape[0], sitk.sitkInt8)
+                self.image_sitk = sitk.Image(image_arr.shape[2], image_arr.shape[1], image_arr.shape[0], sitk.sitkInt16)
             
             if len(extensions) == 2:
                 self.file_name_label.setText(Path(Path(file_path).stem).stem)
@@ -913,12 +913,20 @@ class ManualSegmentationWidget(QWidget):
         #     segmentation_arr = tif.imread(file_path)
         
         if (extensions[-1] in [".tif", ".tiff", ".nii"]) or (extensions == [".nii", ".gz"]):
-            segmentation_sitk = sitk.ReadImage(file_path)
-            segmentation_arr = sitk.GetArrayFromImage(segmentation_sitk)
-            segmentation_arr = segmentation_arr.astype(np.uint8)
-
-            if len(segmentation_arr.shape) == 2:
-                segmentation_arr = np.expand_dims(segmentation_arr, 0)
+            try:
+                segmentation_sitk = sitk.ReadImage(file_path)
+                segmentation_arr = sitk.GetArrayFromImage(segmentation_sitk)
+                segmentation_arr = segmentation_arr.astype(np.uint8)
+                if len(segmentation_arr.shape) == 2:
+                    segmentation_arr = np.expand_dims(segmentation_arr, 0)
+                    
+            # SimpleITK can not handle images with 64-bits images
+            except:
+                segmentation_arr = tif.imread(file_path)
+                segmentation_arr = segmentation_arr.astype(np.uint8)
+                if len(segmentation_arr.shape) == 2:
+                    segmentation_arr = np.expand_dims(segmentation_arr, 0)
+                segmentation_sitk = sitk.Image(segmentation_arr.shape[2], segmentation_arr.shape[1], segmentation_arr.shape[0], sitk.sitkInt8)
 
             if any(n < 0 for n in np.unique(segmentation_arr)):
                 display_warning_box(self, "Error", "Incorrect NIFTI format : negative value")
