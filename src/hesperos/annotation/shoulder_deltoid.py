@@ -2,13 +2,16 @@
 
 LIST_STRUCTURES = [
     "DELTOID",
-    "OTHER"
+    "OTHER",
 ]
 
 DICT_SUB_STRUCTURES = {
     "DELTOID":[
         'Anterior',
         'Lateral',
-        'Posterior'],
-    "OTHER":['Other']
+        'Posterior',],
+    
+    "OTHER":[
+        'Other',
+        ]
 }
