@@ -20,6 +20,7 @@ import hesperos.annotation.fetus as fetus_data
 import hesperos.annotation.shoulder as shoulder_data
 import hesperos.annotation.shoulder_bones as shoulder_bones_data
 import hesperos.annotation.shoulder_deltoid as shoulder_deltoid_data
+import hesperos.annotation.larva as larva_data
 import hesperos.annotation.feta as feta_data
 from hesperos.annotation.structuresubpanel import StructureSubPanel
 
@@ -165,6 +166,14 @@ class ManualSegmentationWidget(QWidget):
             column=0,
             list_structures=shoulder_deltoid_data.LIST_STRUCTURES,
             dict_substructures=shoulder_deltoid_data.DICT_SUB_STRUCTURES,
+            dict_sub_substructures=[])
+        
+        self.larva = StructureSubPanel(
+            parent=self,
+            row=row,
+            column=0,
+            list_structures=larva_data.LIST_STRUCTURES,
+            dict_substructures=larva_data.DICT_SUB_STRUCTURES,
             dict_sub_substructures=[])
         
 
@@ -368,7 +377,7 @@ class ManualSegmentationWidget(QWidget):
         self.annotation_layout.addLayout(self.tool_annotation_layout, 1, 0)
 
         self.annotation_combo_box = add_combo_box(
-            list_items=["Choose a structure", "Fetus", "Shoulder", "Shoulder Bones", "Shoulder Deltoid", "Feta Challenge"],
+            list_items=["Choose a structure", "Feta Challenge", "Fetus", "Larva", "Shoulder", "Shoulder Bones", "Shoulder Deltoid"],
             layout=self.annotation_layout,
             callback_function=self.toggle_annotation_sub_panel,
             row=1,
@@ -531,7 +540,7 @@ class ManualSegmentationWidget(QWidget):
 
     def add_slice_selection_panel(self, row, column=0):
         """
-        Create slice selection panel (for ShoulderBones and ShoulderDeltoid categories only)
+        Create slice selection panel (for ShoulderBones, ShoulderDeltoid and Larva categories only)
 
         Parameters
         ----------
@@ -659,7 +668,7 @@ class ManualSegmentationWidget(QWidget):
 
     def toggle_annotation_sub_panel(self):
         """
-            Toggle sub panel of the structure to annotate and toggle SliceSelection panel if "Shoulder Bones" or "Shoulder Deltoid" is visible
+            Toggle sub panel of the structure to annotate and toggle SliceSelection panel if "Shoulder Bones" or "Shoulder Deltoid" or "Feta" is visible
 
         """
         structure_name = self.annotation_combo_box.currentText()
@@ -668,6 +677,7 @@ class ManualSegmentationWidget(QWidget):
             toggle_feta = False
             toggle_fetus = True
             toggle_shoulder = False
+            toggle_larva = False
             toggle_shoulder_bones = False
             toggle_shoulder_deltoid = False
             toggle_slice_selection_panel = False
@@ -675,6 +685,7 @@ class ManualSegmentationWidget(QWidget):
         elif structure_name == "Shoulder":
             toggle_feta = False
             toggle_fetus = False
+            toggle_larva = False
             toggle_shoulder = True
             toggle_shoulder_bones = False
             toggle_shoulder_deltoid = False
@@ -683,6 +694,7 @@ class ManualSegmentationWidget(QWidget):
         elif structure_name == "Shoulder Bones":
             toggle_feta = False
             toggle_fetus = False
+            toggle_larva = False
             toggle_shoulder = False
             toggle_shoulder_bones = True
             toggle_shoulder_deltoid = False
@@ -691,6 +703,7 @@ class ManualSegmentationWidget(QWidget):
         elif structure_name == "Shoulder Deltoid":
             toggle_feta = False
             toggle_fetus = False
+            toggle_larva = False
             toggle_shoulder = False
             toggle_shoulder_bones = False
             toggle_shoulder_deltoid = True
@@ -699,14 +712,25 @@ class ManualSegmentationWidget(QWidget):
         elif structure_name == "Feta Challenge":
             toggle_feta = True
             toggle_fetus = False
+            toggle_larva = False
             toggle_shoulder = False
             toggle_shoulder_bones = False
             toggle_shoulder_deltoid = False
             toggle_slice_selection_panel = False
             
+        elif structure_name == "Larva":
+            toggle_feta = False
+            toggle_fetus = False
+            toggle_larva = True
+            toggle_shoulder = False
+            toggle_shoulder_bones = False
+            toggle_shoulder_deltoid = False
+            toggle_slice_selection_panel = True
+            
         else:
             toggle_feta = False
             toggle_fetus = False
+            toggle_larva = False
             toggle_shoulder = False
             toggle_shoulder_bones = False
             toggle_shoulder_deltoid = False
@@ -718,6 +742,7 @@ class ManualSegmentationWidget(QWidget):
         self.shoulder.toggle_sub_panel(toggle_shoulder)
         self.shoulder_bones.toggle_sub_panel(toggle_shoulder_bones)
         self.shoulder_deltoid.toggle_sub_panel(toggle_shoulder_deltoid)
+        self.larva.toggle_sub_panel(toggle_larva)
         self.toggle_panels(["slice_selection_panel"], toggle_slice_selection_panel)
         
         # == reset widgets ==
@@ -1033,8 +1058,8 @@ class ManualSegmentationWidget(QWidget):
         if loaded_selected_slice_list != []:
             self.selected_slice_list = loaded_selected_slice_list
 
-            if len(self.selected_slice_list) >= 10:
-                display_warning_box(self, "Error", "More than 10 selected slices are not allowed. Please remove some selected slices to add new ones.")
+            if len(self.selected_slice_list) >= 30:
+                display_warning_box(self, "Error", "More than 30 selected slices are not allowed. Please remove some selected slices to add new ones.")
                 return
         
             self.selected_slice_list.sort()
@@ -1109,6 +1134,8 @@ class ManualSegmentationWidget(QWidget):
                         structure_list = self.shoulder_deltoid.list_structure_name
                     elif structure_name == "Feta Challenge":
                         structure_list = self.feta.list_structure_name
+                    elif structure_name == "Larva":
+                        structure_list = self.larva.list_structure_name
                     else:
                         structure_list=[]
 
@@ -1375,8 +1402,8 @@ class ManualSegmentationWidget(QWidget):
         """
         selected_slice_z = self.viewer.dims.current_step[0]
         
-        if len(self.selected_slice_list) >= 10:
-            display_warning_box(self, "Error", "More than 10 selected slices are not allowed. Please remove some selected slices to add new ones.")
+        if len(self.selected_slice_list) >= 30:
+            display_warning_box(self, "Error", "More than 30 selected slices are not allowed. Please remove some selected slices to add new ones.")
             return
 
         elif selected_slice_z in self.selected_slice_list:
@@ -1519,6 +1546,10 @@ class ManualSegmentationWidget(QWidget):
 
         elif structure_name == "Feta Challenge":
             radio_button_to_check = self.feta.group_radio_button.button(1)
+            radio_button_to_check.setChecked(True)
+        
+        elif structure_name == "Larva":
+            radio_button_to_check = self.larva.group_radio_button.button(1)
             radio_button_to_check.setChecked(True)
 
     def reset_annotation_layer_selected_label(self):
