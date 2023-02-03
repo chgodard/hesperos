@@ -4,7 +4,7 @@ conda create -n hesperos_env python=3.9
 
 conda activate hesperos_env
 
-conda install -c conda-forge napari=0.4.14
+pip install napari==0.4.14
 
 conda install -c anaconda pyqt
 
