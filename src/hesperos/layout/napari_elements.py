@@ -30,6 +30,19 @@ image_layer_widget_list = [
     'isoThresholdSlider'
 ]
 
+points_layer_widget_list = [
+    'addition_button',
+    'blendComboBox',
+    'delete_button',
+    'edgeColorEdit',
+    'faceColorEdit',
+    'outOfSliceCheckBox',
+    'select_button',
+    'sizeSlider',
+    'symbolComboBox',
+    'textDispCheckBox'
+]
+
 label_colors = {
     0: 'transparent',
     1: (240/255, 52/255, 52/255, 1.0),
@@ -60,7 +73,7 @@ label_colors = {
     26: (223/255, 131/255, 226/255, 1.0),
     27: (55/255, 5/255, 68/255, 1.0),
     28: (56/255, 40/255, 5/255, 1.0),
-    29: (221/255, 108/255, 59/255, 1.0), 
+    29: (221/255, 108/255, 59/255, 1.0),
     30: (43/255, 13/255, 119/255, 1.0),
     31: (119/255, 3/255, 50/255, 1.0),
     32: (13/255, 140/255, 163/255, 1.0),
@@ -68,7 +81,7 @@ label_colors = {
     None: 'transparent',
 }
     # '_background_label': 'transparent',
-    #when checked "selected color" with color mode "direct", the label used to display the non selected label is referenced by the id None (see napari.layers.labels.labels.py) 
+    #when checked "selected color" with color mode "direct", the label used to display the non selected label is referenced by the id None (see napari.layers.labels.labels.py)
 # (1/255, 128/255, 1/255, 1.0)
 # (255/255, 192/255, 203/255, 1)
 
@@ -103,7 +116,7 @@ def disable_napari_change_dim_button(viewer, isVisible):
     """
     viewer.window._qt_viewer.viewerButtons.rollDimsButton.setEnabled(isVisible)
     # or rollDimsButton / transposeDimsButton
-    
+
 def disable_dock_widget_buttons(viewer):
     """_summary_
 
@@ -121,7 +134,7 @@ def increase_napari_buttons_size(viewer):
     ----------
     viewer : napari.Viewer
         active (unique) instance of the napari viewer
-    
+
     """
     viewer.window._qt_viewer.viewerButtons.rollDimsButton.setGeometry(100, 100, 2000, 2000)
     viewer.window._qt_viewer.viewerButtons.transposeDimsButton.setGeometry(100, 100, 2000, 2000)
@@ -159,7 +172,13 @@ def disable_layer_widgets(viewer, layer_name, layer_type):
         layer = viewer.layers[layer_name]
         list_widget_to_remove = label_layer_widget_list
         indx_while = 11
-        indx_item = 7      
+        indx_item = 7
+
+    elif layer_type == 'points':
+        layer = viewer.layers[layer_name]
+        list_widget_to_remove = points_layer_widget_list
+        indx_while = 4
+        indx_item = 3
 
     else:
         return
@@ -170,7 +189,7 @@ def disable_layer_widgets(viewer, layer_name, layer_type):
 
     glayout = qctrl.grid_layout
     glayout.setAlignment(QtCore.Qt.AlignTop)
-    
+
     while glayout.count() != indx_while:
         item = glayout.takeAt(indx_item)
         widget = item.widget()

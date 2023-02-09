@@ -77,6 +77,7 @@ class ManualSegmentationWidget(QWidget):
 
         disable_napari_buttons(self.viewer)
         self.viewer.dims.events.current_step.connect(self.update_go_to_selected_slice_push_button_check_status)
+        self.viewer.dims.events.current_step.connect(self.update_go_to_selected_VR_landmark_push_button_check_status)
 
         self.generate_main_layout()
 
@@ -100,21 +101,22 @@ class ManualSegmentationWidget(QWidget):
 
         # === Create and add panels to the layout ===
         self.add_import_panel(1)
-        self.add_annotation_panel(2)
-        self.add_sub_annotation_panel(3)
-        self.add_slice_selection_panel(4)
-        self.add_reset_export_panel(5)
+        self.add_import_VR_landmarks_panel(2)
+        self.add_annotation_panel(3)
+        self.add_sub_annotation_panel(4)
+        self.add_slice_selection_panel(5)
+        self.add_reset_export_panel(6)
 
         # Display status (cannot display progressing bar because napari is freezing)
         self.status_label = add_label(
             text='Ready',
             layout=self.layout,
-            row=6,
+            row=7,
             column=0,
             visibility=True
             )
 
-        self.toggle_panels(["annotation_panel", "slice_selection_panel", "reset_export_panel"], False)
+        self.toggle_panels(["import_VR_landmarks_panel", "annotation_panel", "slice_selection_panel", "reset_export_panel"], False)
 
         self.setLayout(self.layout)
 
@@ -135,7 +137,7 @@ class ManualSegmentationWidget(QWidget):
             list_structures=feta_data.LIST_STRUCTURES,
             dict_substructures=feta_data.DICT_SUB_STRUCTURES,
             dict_sub_substructures=[])
-    
+
         self.fetus = StructureSubPanel(
             parent=self,
             row=row,
@@ -159,7 +161,7 @@ class ManualSegmentationWidget(QWidget):
             list_structures=shoulder_bones_data.LIST_STRUCTURES,
             dict_substructures=shoulder_bones_data.DICT_SUB_STRUCTURES,
             dict_sub_substructures=[])
-        
+
         self.shoulder_deltoid = StructureSubPanel(
             parent=self,
             row=row,
@@ -167,7 +169,7 @@ class ManualSegmentationWidget(QWidget):
             list_structures=shoulder_deltoid_data.LIST_STRUCTURES,
             dict_substructures=shoulder_deltoid_data.DICT_SUB_STRUCTURES,
             dict_sub_substructures=[])
-        
+
         self.larva = StructureSubPanel(
             parent=self,
             row=row,
@@ -175,7 +177,6 @@ class ManualSegmentationWidget(QWidget):
             list_structures=larva_data.LIST_STRUCTURES,
             dict_substructures=larva_data.DICT_SUB_STRUCTURES,
             dict_sub_substructures=[])
-        
 
     def add_import_panel(self, row, column=0):
         """
@@ -191,7 +192,7 @@ class ManualSegmentationWidget(QWidget):
         """
 
         # === Set panel parameters ===
-        self.import_panel = QGroupBox("1. IMPORT 3D IMAGE")
+        self.import_panel = QGroupBox("1. IMPORT IMAGE")
         self.import_panel.setStyleSheet("margin-top : 5px;")
 
         # === Set panel layout parameters ===
@@ -315,6 +316,80 @@ class ManualSegmentationWidget(QWidget):
 
         self.toggle_import_panel_widget(False)
 
+    def add_import_VR_landmarks_panel(self, row, column=0):
+        """
+        Create import VR landmarks panel
+
+        Parameters
+        ----------
+        row : int
+            row position of the panel in the main QGridLayout
+        column : int
+            column position of the panel in the main QGridLayout
+
+        """
+
+        # === Set panel parameters ===
+        self.import_VR_landmarks_panel = QGroupBox("2. IMPORT VR LANDMARKS FROM DIVA")
+        self.import_VR_landmarks_panel.setStyleSheet("margin-top : 5px;")
+
+        # === Set panel layout parameters ===
+        self.import_VR_landmarks_layout = QGridLayout()
+        self.import_VR_landmarks_layout.setContentsMargins(10, 10, 10, 10)
+        self.import_VR_landmarks_layout.setSpacing(5)
+        self.import_VR_landmarks_layout.setAlignment(QtCore.Qt.AlignTop)
+
+        # === Add Qwidgets to the panel layout ===
+        self.import_VR_landmarks_push_button = add_push_button(
+            name="Open VR landmarks file",
+            layout=self.import_VR_landmarks_layout,
+            callback_function=self.set_oriented_landmarks_with_path,
+            row=0,
+            column=0,
+            column_span=3,
+            minimum_width=COLUMN_WIDTH,
+            tooltip_text="Import VR landmarks from the DIVA software",
+        )
+
+        # Import tools are created in another layout
+        self.tool_VR_landmarks_layout = QHBoxLayout()
+
+        self.go_to_selected_VR_landmark_push_button = add_icon_push_button(
+            icon=QIcon(get_icon_path('map')),
+            layout=self.tool_VR_landmarks_layout,
+            callback_function=self.go_to_VR_landmark,
+            row=0,
+            column=0,
+            tooltip_text="TODO",
+            isHBoxLayout=True,
+        )
+        self.go_to_selected_VR_landmark_push_button.setCheckable(True)
+
+        self.landmark_ID_text = add_label(
+            text='Landmark ID: ',
+            layout=self.tool_VR_landmarks_layout,
+            row=0,
+            column=1,
+            isHBoxLayout=True,
+        )
+
+        self.import_VR_landmarks_layout.addLayout(self.tool_VR_landmarks_layout, 1 , 0)
+
+        self.selected_VR_landmark_combo_box = add_combo_box(
+            list_items=[" "],
+            layout=self.import_VR_landmarks_layout,
+            callback_function=self.go_to_VR_landmark,
+            row=1,
+            column=1,
+            column_span=2,
+            tooltip_text="TODO",
+        )
+
+        self.import_VR_landmarks_panel.setLayout(self.import_VR_landmarks_layout)
+
+        # === Add panel to the main layout ===
+        self.layout.addWidget(self.import_VR_landmarks_panel, row, column)
+
     def add_annotation_panel(self, row, column=0):
         """
         Create annotation panel
@@ -329,7 +404,7 @@ class ManualSegmentationWidget(QWidget):
         """
 
         # === Set panel parameters ===
-        self.annotation_panel = QGroupBox("2. ANNOTATE")
+        self.annotation_panel = QGroupBox("3. ANNOTATE")
         self.annotation_panel.setStyleSheet("margin-top : 5px;")
 
         # === Set panel layout parameters ===
@@ -405,7 +480,7 @@ class ManualSegmentationWidget(QWidget):
         """
 
         # === Set panel parameters ===
-        self.reset_export_panel = QGroupBox("3. EXPORT ANNOTATION")
+        self.reset_export_panel = QGroupBox("4. EXPORT ANNOTATION")
         self.reset_export_panel.setStyleSheet("margin-top : 5px;")
 
         # === Set panel layout parameters ===
@@ -550,9 +625,9 @@ class ManualSegmentationWidget(QWidget):
             column position of the panel in the main QGridLayout
 
         """
-        
+
         # === Set panel parameters ===
-        self.slice_selection_panel = QGroupBox("3. SELECT SLICES OF INTEREST")
+        self.slice_selection_panel = QGroupBox("4. SELECT SLICES OF INTEREST")
         self.slice_selection_panel.setStyleSheet("margin-top : 5px;")
 
         # === Set panel layout parameters ===
@@ -585,7 +660,7 @@ class ManualSegmentationWidget(QWidget):
             tooltip_text="Remove the currently displayed z-index in the drop-down menu.",
             isHBoxLayout=True,
         )
-        
+
         self.go_to_selected_slice_push_button = add_icon_push_button(
             icon=QIcon(get_icon_path('map')),
             layout=self.tool_slice_selection_layout,
@@ -596,7 +671,7 @@ class ManualSegmentationWidget(QWidget):
             isHBoxLayout=True,
         )
         self.go_to_selected_slice_push_button.setCheckable(True)
-        
+
         self.slice_selection_text = add_label(
             text='Slice: ',
             layout=self.tool_slice_selection_layout,
@@ -606,7 +681,7 @@ class ManualSegmentationWidget(QWidget):
             )
 
         self.slice_selection_layout.addLayout(self.tool_slice_selection_layout, 0, 0)
-        
+
         self.selected_slice_combo_box = add_combo_box(
             list_items=[" "],
             layout=self.slice_selection_layout,
@@ -620,7 +695,7 @@ class ManualSegmentationWidget(QWidget):
 
         # === Add panel to the main layout ===
         self.layout.addWidget(self.slice_selection_panel, row, column)
-        
+
 
 # ============ Toggle widgets and panel ============
     def toggle_panels(self, list_panel_names, isVisible):
@@ -636,13 +711,20 @@ class ManualSegmentationWidget(QWidget):
 
         """
         for panel_name in list_panel_names:
+            if panel_name == "import_VR_landmarks_panel":
+                self.import_VR_landmarks_panel.setVisible(isVisible)
+                self.selected_VR_landmark_combo_box.setVisible(isVisible)
+                self.go_to_selected_VR_landmark_push_button.setVisible(isVisible)
+                self.landmark_ID_text.setVisible(isVisible)
+                self.import_VR_landmarks_push_button.setVisible(isVisible)
+
             if panel_name == "annotation_panel":
                 self.annotation_panel.setVisible(isVisible)
                 self.annotation_combo_box.setVisible(isVisible)
                 self.import_segmentation_push_button.setVisible(isVisible)
                 self.undo_push_button.setVisible(isVisible)
                 self.lock_push_button.setVisible(isVisible)
-            
+
             elif panel_name == "slice_selection_panel":
                 self.slice_selection_panel.setVisible(isVisible)
                 self.add_selected_slice_push_button.setVisible(isVisible)
@@ -699,7 +781,7 @@ class ManualSegmentationWidget(QWidget):
             toggle_shoulder_bones = True
             toggle_shoulder_deltoid = False
             toggle_slice_selection_panel = True
-        
+
         elif structure_name == "Shoulder Deltoid":
             toggle_feta = False
             toggle_fetus = False
@@ -717,7 +799,7 @@ class ManualSegmentationWidget(QWidget):
             toggle_shoulder_bones = False
             toggle_shoulder_deltoid = False
             toggle_slice_selection_panel = False
-            
+
         elif structure_name == "Larva":
             toggle_feta = False
             toggle_fetus = False
@@ -726,7 +808,7 @@ class ManualSegmentationWidget(QWidget):
             toggle_shoulder_bones = False
             toggle_shoulder_deltoid = False
             toggle_slice_selection_panel = True
-            
+
         else:
             toggle_feta = False
             toggle_fetus = False
@@ -735,7 +817,7 @@ class ManualSegmentationWidget(QWidget):
             toggle_shoulder_bones = False
             toggle_shoulder_deltoid = False
             toggle_slice_selection_panel = False
-            
+
         # == toggle sub panels ==
         self.feta.toggle_sub_panel(toggle_feta)
         self.fetus.toggle_sub_panel(toggle_fetus)
@@ -744,13 +826,14 @@ class ManualSegmentationWidget(QWidget):
         self.shoulder_deltoid.toggle_sub_panel(toggle_shoulder_deltoid)
         self.larva.toggle_sub_panel(toggle_larva)
         self.toggle_panels(["slice_selection_panel"], toggle_slice_selection_panel)
-        
+
         # == reset widgets ==
         self.reset_annotation_radio_button_checked_id()
         self.reset_annotation_layer_selected_label()
-        
+
         # == Update dimension button and panel name ==
-        self.update_reset_export_panel_title(toggle_slice_selection_panel)
+        # self.update_reset_export_panel_title(toggle_slice_selection_panel)
+        self.update_panel_titles()
         disable_napari_change_dim_button(self.viewer, not toggle_slice_selection_panel)
 
     def toggle_import_panel_widget(self, isVisible, file_type=None):
@@ -792,42 +875,91 @@ class ManualSegmentationWidget(QWidget):
     def update_reset_export_panel_title(self, isSelectionSlicePanelVisible):
         """
         Update the number in the ResetExport panel title to match the actual number of panels displayed (based on the SelectionSlice panel display)
-        
+
         Parameters
         ----------
         isSelectionSlicePanelVisible : bool
             visible status of the SelectionSlice panel
-            
+
         """
         if isSelectionSlicePanelVisible:
-            self.reset_export_panel.setTitle("4. EXPORT ANNOTATION")
+            self.reset_export_panel.setTitle("5. EXPORT ANNOTATION")
         else:
+            self.reset_export_panel.setTitle("4. EXPORT ANNOTATION")
+
+    def update_panel_titles(self):
+        """
+        Update the number in the panel title to match the actual number of panels displayed (based on the VRLandmarks and SelectionSlice panels display status)
+
+        """
+        isVRLandmarksPanelVisible = self.import_VR_landmarks_panel.isVisible()
+        isSelectionSlicePanelVisible = self.slice_selection_panel.isVisible()
+
+        if isVRLandmarksPanelVisible and isSelectionSlicePanelVisible:
+            self.annotation_panel.setTitle("3. ANNOTATE")
+            self.slice_selection_panel.setTitle("4. SELECT SLICES OF INTEREST")
+            self.reset_export_panel.setTitle("5. EXPORT ANNOTATION")
+
+        elif isVRLandmarksPanelVisible and (not isSelectionSlicePanelVisible):
+            self.annotation_panel.setTitle("3. ANNOTATE")
+            self.reset_export_panel.setTitle("4. EXPORT ANNOTATION")
+
+        elif (not isVRLandmarksPanelVisible) and isSelectionSlicePanelVisible:
+            self.annotation_panel.setTitle("2. ANNOTATE")
+            self.slice_selection_panel.setTitle("3. SELECT SLICES OF INTEREST")
+            self.reset_export_panel.setTitle("4. EXPORT ANNOTATION")
+
+        elif (not isVRLandmarksPanelVisible) and (not isSelectionSlicePanelVisible):
+            self.annotation_panel.setTitle("2. ANNOTATE")
             self.reset_export_panel.setTitle("3. EXPORT ANNOTATION")
-                
+
     def update_go_to_selected_slice_push_button_check_status(self, event):
         """
         Update the checked status of the go_to_selected_slice push button according to the currently selected slice and the currently displayed slice
-        
+
         Parameters
         ----------
         event : event
-            event with the index of the current slice displayed in value as (x, y, z)      
-        
-        """       
+            event with the index of the current slice displayed in value as (x, y, z)
+
+        """
         if len(event.value) == 3:
             if (self.go_to_selected_slice_push_button.isChecked() == True) and (self.selected_slice_combo_box.currentText() != " "):
                 current_slice_z = self.viewer.dims.current_step[0]
                 selected_slice_z = int(self.selected_slice_combo_box.currentText())
                 if current_slice_z != selected_slice_z:
                     self.go_to_selected_slice_push_button.setChecked(False)
-                    
+
             elif (self.go_to_selected_slice_push_button.isChecked() == False) and (self.selected_slice_combo_box.currentText() != " "):
                 current_slice_z = self.viewer.dims.current_step[0]
                 selected_slice_z = int(self.selected_slice_combo_box.currentText())
                 if current_slice_z == selected_slice_z:
                     self.go_to_selected_slice_push_button.setChecked(True)
-                
-        
+
+    def update_go_to_selected_VR_landmark_push_button_check_status(self, event):
+        """
+        Update the checked status of the go_to_selected_VR_landmark push button according to the currently selected slice and the currently displayed slice
+
+        Parameters
+        ----------
+        event : event
+            event with the index of the current slice displayed in value as (x, y, z)
+
+        """
+        if len(event.value) == 3:
+            if (self.go_to_selected_VR_landmark_push_button.isChecked() == True) and (self.selected_VR_landmark_combo_box.currentText() != " "):
+                current_slice_z = self.viewer.dims.current_step[0]
+                landmark_slice_z, _, _ = self.VR_landmarks_positions_array[int(self.selected_VR_landmark_combo_box.currentText()) - 1]
+                if current_slice_z != landmark_slice_z:
+                    self.go_to_selected_VR_landmark_push_button.setChecked(False)
+
+            elif (self.go_to_selected_VR_landmark_push_button.isChecked() == False) and (self.selected_VR_landmark_combo_box.currentText() != " "):
+                current_slice_z = self.viewer.dims.current_step[0]
+                landmark_slice_z, _, _ = self.VR_landmarks_positions_array[int(self.selected_VR_landmark_combo_box.currentText()) - 1]
+                if current_slice_z == landmark_slice_z:
+                    self.go_to_selected_VR_landmark_push_button.setChecked(True)
+
+
 # ============ Import image data ============
     def import_dicom_folder(self):
         """
@@ -901,25 +1033,25 @@ class ManualSegmentationWidget(QWidget):
         #     image_arr = tif.imread(file_path)
         #     self.image_sitk = sitk.Image(image_arr.shape[2], image_arr.shape[1], image_arr.shape[0], sitk.sitkInt16)
         #     self.file_name_label.setText(Path(file_path).stem)
-        
+
         if (extensions[-1] in [".tif", ".tiff", ".nii"]) or (extensions == [".nii", ".gz"]):
             try:
                 self.image_sitk = sitk.ReadImage(file_path)
-                image_arr = sitk.GetArrayFromImage(self.image_sitk) 
+                image_arr = sitk.GetArrayFromImage(self.image_sitk)
                 if len(image_arr.shape) == 2:
-                    image_arr = np.expand_dims(image_arr, 0) 
+                    image_arr = np.expand_dims(image_arr, 0)
             # SimpleITK can not handle images with 64-bits images
             except:
                 image_arr = tif.imread(file_path)
                 if len(image_arr.shape) == 2:
                     image_arr = np.expand_dims(image_arr, 0)
                 self.image_sitk = sitk.Image(image_arr.shape[2], image_arr.shape[1], image_arr.shape[0], sitk.sitkInt16)
-            
+
             if len(extensions) == 2:
                 self.file_name_label.setText(Path(Path(file_path).stem).stem)
             else:
                 self.file_name_label.setText(Path(file_path).stem)
-            
+
         else:
             return None
 
@@ -960,7 +1092,7 @@ class ManualSegmentationWidget(QWidget):
 
         # if (extensions[-1] == ".tif") or (extensions[-1] == ".tiff"):
         #     segmentation_arr = tif.imread(file_path)
-        
+
         if (extensions[-1] in [".tif", ".tiff", ".nii"]) or (extensions == [".nii", ".gz"]):
             try:
                 segmentation_sitk = sitk.ReadImage(file_path)
@@ -968,7 +1100,7 @@ class ManualSegmentationWidget(QWidget):
                 segmentation_arr = segmentation_arr.astype(np.uint8)
                 if len(segmentation_arr.shape) == 2:
                     segmentation_arr = np.expand_dims(segmentation_arr, 0)
-                    
+
             # SimpleITK can not handle images with 64-bits images
             except:
                 segmentation_arr = tif.imread(file_path)
@@ -980,10 +1112,10 @@ class ManualSegmentationWidget(QWidget):
             if any(n < 0 for n in np.unique(segmentation_arr)):
                 display_warning_box(self, "Error", "Incorrect NIFTI format : negative value")
                 return
-            
+
         else:
             return None
-            
+
         if len(segmentation_arr.shape) != 3:
             display_warning_box(self, "Error", "Incorrect file size. Need to be a 3D image")
             return None
@@ -997,7 +1129,7 @@ class ManualSegmentationWidget(QWidget):
         """
         Check is there exist a segmentation file (.tiff, .tif, .nii, .nii.gz) matching the name of the open image file.
         The segmentation file name has to be : image_file_name + "_segmentation".
-        
+
         Returns
         ----------
         hasCorrespondingSegmentation : bool
@@ -1041,14 +1173,14 @@ class ManualSegmentationWidget(QWidget):
 
     def import_selected_slice(self, segmentation_sitk=None):
         """
-        Import metadata containing in the 'ImageDescription'/'Hesperos_SelectedSlices' as a list. (works only for tiff file TOIMPROVE)   
-        
+        Import metadata containing in the 'ImageDescription'/'Hesperos_SelectedSlices' as a list. (works only for tiff file TOIMPROVE)
+
         Parameters
         ----------
         segmentation_sitk : SimpleITK image
             segmentation data in sitk format
-        
-        """        
+
+        """
         try:
             description = json.loads(segmentation_sitk.GetMetaData('ImageDescription'))
             loaded_selected_slice_list = json.loads(description['Hesperos_SelectedSlices'])
@@ -1061,12 +1193,51 @@ class ManualSegmentationWidget(QWidget):
             if len(self.selected_slice_list) >= 30:
                 display_warning_box(self, "Error", "More than 30 selected slices are not allowed. Please remove some selected slices to add new ones.")
                 return
-        
+
             self.selected_slice_list.sort()
 
             for slice_index in self.selected_slice_list:
                 new_text = str(slice_index)
                 self.selected_slice_combo_box.addItem(new_text)
+
+
+# ============ Import data from DIVA ============
+    def import_VR_landmarks(self):
+        """
+        Import landmarks position and orientation (added in DIVA using Virtual Reality) from a .json file
+
+        """
+        files_types = "JSON File (*.json)"
+        file_path, _ = QFileDialog.getOpenFileName(self, "Choose a VR landmarks file from DIVA", "" , files_types)
+
+        if file_path == "":
+            return None
+
+        with open(file_path) as f:
+            VR_landmarks_dict = json.load(f)
+
+        positions = VR_landmarks_dict["_oriented_landmarks_parameters"]["_volume_positions"]
+        orientations = VR_landmarks_dict["_oriented_landmarks_parameters"]["_local_rotations"]
+
+        VR_landmarks_positions_array = [[] * len(positions[0]) for i in range(len(positions))]
+        VR_landmarks_orientations_array = [[] * len(orientations[0]) for i in range(len(orientations))]
+
+        # DIVA volume is ordered as (x, y, z) and z axis is inverted
+        # Numpy array is ordered as (z, y, x)
+        shape = self.viewer.layers['image'].data.shape #(x, y, z)
+        for i in range(len(positions)):
+            diva_x, diva_y, diva_z = round(positions[i]['x']), round(positions[i]['y']), round(positions[i]['z'])
+            VR_landmarks_positions_array[i] = [shape[0] - diva_z, diva_y, diva_x]
+            VR_landmarks_orientations_array[i] = [orientations[i]['x'], orientations[i]['y'], orientations[i]['z'], orientations[i]['w']]
+
+        # Check if landmark position is valid
+        for i in range(len(positions)):
+            if (VR_landmarks_positions_array[i][0] > shape[0]) or (VR_landmarks_positions_array[i][1] > shape[1]) or (VR_landmarks_positions_array[i][2] > shape[2]):
+                display_warning_box(self, "Error", "The imported landmark positions are outside of the image size.")
+                return
+
+        self.VR_landmarks_positions_array = np.array(VR_landmarks_positions_array)
+        self.VR_landmarks_orientations_array = np.array(VR_landmarks_orientations_array)
 
 
 # ============ Export data ============
@@ -1103,7 +1274,7 @@ class ManualSegmentationWidget(QWidget):
                         description = {"Hesperos_SelectedSlices" : json.dumps(self.selected_slice_list)}
                         # tif.imsave(file_path, segmentation_arr, description=json.dumps(self.selected_slice_list))
                         tif.imsave(file_path, segmentation_arr, description=json.dumps(description))
-                        
+
                     elif (extensions[-1] == ".nii") or (extensions == [".nii", ".gz"]):
                         result_image_sitk = sitk.GetImageFromArray(segmentation_arr.astype(np.uint8))
                         result_image_sitk.CopyInformation(self.image_sitk)
@@ -1112,7 +1283,7 @@ class ManualSegmentationWidget(QWidget):
                         # ====== Test Metadata writing with SimpleITK ======
                         # result_image_sitk.SetMetaData(key="Hesperos_SelectedSlices", value=str(self.selected_slice_list))
                         # result_image_sitk.GetMetaData("Hesperos_SelectedSlices")
-                        # for k in result_image_sitk.GetMetaDataKeys(): 
+                        # for k in result_image_sitk.GetMetaDataKeys():
                         #     v = result_image_sitk.GetMetaData(k)
                         #     print("({0}) = = \"{1}\"".format(k,v))
 
@@ -1121,7 +1292,7 @@ class ManualSegmentationWidget(QWidget):
                         # writer.SetFileName(file_path)
                         # writer.Execute(result_image_sitk)
                         # ==================================================================
-                                                
+
                 else: # "Several" choice
                     structure_name = self.annotation_combo_box.currentText()
                     if structure_name == "Fetus":
@@ -1150,7 +1321,7 @@ class ManualSegmentationWidget(QWidget):
                                 new_file_name = file_name + '_' + struc + extensions[0]
                                 new_file_path = Path(Path(file_path).parent).joinpath(new_file_name)
                                 tif.imsave(str(new_file_path), label_struc)
-                                
+
                             elif (extensions[-1] == ".nii") or (extensions == [".nii", ".gz"]):
                                 file_name = Path(Path(file_path).stem).stem
                                 try:
@@ -1161,7 +1332,7 @@ class ManualSegmentationWidget(QWidget):
                                 result_image_sitk = sitk.GetImageFromArray(label_struc)
                                 result_image_sitk.CopyInformation(self.image_sitk)
                                 sitk.WriteImage(result_image_sitk, str(new_file_path))
-                                
+
                             else:
                                 return
 
@@ -1237,11 +1408,17 @@ class ManualSegmentationWidget(QWidget):
             self.reset_zoom_slider()
             self.reset_lock_push_button()
             self.go_to_selected_slice_push_button.setChecked(False)
+            self.go_to_selected_VR_landmark_push_button.setChecked(False)
             self.backup_check_box.setChecked(False)
             self.default_contrast_combo_box.setCurrentText("")
 
             self.toggle_import_panel_widget(True, file_type)
             self.toggle_panels(["annotation_panel", "reset_export_panel"], True)
+            if image_arr.shape[0] > 1:
+                self.toggle_panels(["import_VR_landmarks_panel"], True)
+            else :
+                self.toggle_panels(["import_VR_landmarks_panel"], False)
+            self.update_panel_titles()
 
             hasCorrespondingSegmentation, segmentation_file_path = self.has_corresponding_segmentation_file()
 
@@ -1259,6 +1436,8 @@ class ManualSegmentationWidget(QWidget):
                     self.reset_lock_push_button()
                     self.go_to_selected_slice_push_button.setChecked(False)
                     self.reset_selected_slice()
+                    self.go_to_selected_VR_landmark_push_button.setChecked(False)
+                    self.reset_VR_landmarks()
 
             else:
                 segmentation_arr = np.zeros(image_arr.shape, dtype=np.int8)
@@ -1266,8 +1445,11 @@ class ManualSegmentationWidget(QWidget):
                 self.reset_lock_push_button()
                 self.go_to_selected_slice_push_button.setChecked(False)
                 self.reset_selected_slice()
+                self.go_to_selected_VR_landmark_push_button.setChecked(False)
+                self.reset_VR_landmarks()
 
-            self.annotation_combo_box.setCurrentText("Choose a structure")  
+            self.update_panel_titles()
+            self.annotation_combo_box.setCurrentText("Choose a structure")
             self.status_label.setText("Ready")
 
         else:
@@ -1322,8 +1504,32 @@ class ManualSegmentationWidget(QWidget):
                 self.go_to_selected_slice_push_button.setChecked(False)
                 self.reset_selected_slice()
                 self.import_selected_slice(segmentation_sitk)
+                self.go_to_selected_VR_landmark_push_button.setChecked(False)
+                self.reset_VR_landmarks()
 
                 self.status_label.setText("Ready")
+
+    def set_oriented_landmarks_with_path(self):
+        """
+        Set oriented landmarks data by asking file path to the user.
+        Import data, add it to napari, toggle panels.
+
+        """
+        canRemove = self.can_remove_oriented_landmarks_data()
+
+        if canRemove:
+            self.status_label.setText("Loading...")
+
+        self.import_VR_landmarks()
+
+        # add item to the combo_box
+        for landmark_index in range(len(self.VR_landmarks_positions_array)):
+            new_text = str(landmark_index + 1)
+            self.selected_VR_landmark_combo_box.addItem(new_text)
+
+        self.set_oriented_landmark_layer(self.VR_landmarks_positions_array)
+
+        self.status_label.setText("Ready")
 
 
 # ============ Set Napari layers ============
@@ -1363,6 +1569,31 @@ class ManualSegmentationWidget(QWidget):
 
         self.viewer.layers['annotations'].mouse_double_click_callbacks.append(self.automatic_fill)
 
+    def set_oriented_landmark_layer(self, array):
+        """
+        Remove the points layer from Napari and add a new points layer (faster than changing the data of an existing layer)
+        New layer can be empty for initialisation.
+
+        Parameters
+        ----------
+        array : ndarray
+            TODOOOOO
+
+        """
+        self.remove_oriented_landmarks_layer()
+
+        self.viewer.add_points(
+            array,
+            name="oriented landmarks",
+            size=30,
+            symbol='disc',
+            edge_color="white",
+            face_color="white",
+            opacity=0.7)
+
+        disable_layer_widgets(self.viewer, layer_name='oriented landmarks', layer_type='points')
+
+        self.status_label.setText("Ready")
 
 # ============ Napari events callbacks ============
     def activate_backup_segmentation(self):
@@ -1401,7 +1632,7 @@ class ManualSegmentationWidget(QWidget):
 
         """
         selected_slice_z = self.viewer.dims.current_step[0]
-        
+
         if len(self.selected_slice_list) >= 30:
             display_warning_box(self, "Error", "More than 30 selected slices are not allowed. Please remove some selected slices to add new ones.")
             return
@@ -1412,7 +1643,7 @@ class ManualSegmentationWidget(QWidget):
         else:
             self.selected_slice_list.append(selected_slice_z)
             self.selected_slice_list.sort()
-            
+
             list_index = self.selected_slice_list.index(selected_slice_z)
             self.selected_slice_combo_box.insertItem(list_index + 1, str(selected_slice_z))
             self.selected_slice_combo_box.setCurrentText(str(selected_slice_z))
@@ -1428,20 +1659,43 @@ class ManualSegmentationWidget(QWidget):
                 # selected_slice = eval(self.selected_slice_combo_box.currentText())
                 selected_slice_z = int(self.selected_slice_combo_box.currentText())
                 _, y, x = self.viewer.layers['image'].data.shape
-                self.viewer.dims.current_step = (selected_slice_z, y, x)  
+                self.viewer.dims.current_step = (selected_slice_z, y, x)
             else:
-                self.go_to_selected_slice_push_button.setChecked(False) 
-                   
+                self.go_to_selected_slice_push_button.setChecked(False)
+
         else:
-            if self.selected_slice_combo_box.currentText() != " ":  
+            if self.selected_slice_combo_box.currentText() != " ":
                 current_slice_z = self.viewer.dims.current_step[0]
                 selected_slice_z = int(self.selected_slice_combo_box.currentText())
                 if current_slice_z != selected_slice_z:
                     _, y, x = self.viewer.layers['image'].data.shape
-                    self.viewer.dims.current_step = (selected_slice_z, y, x)  
-                else:                      
+                    self.viewer.dims.current_step = (selected_slice_z, y, x)
+                else:
                     self.go_to_selected_slice_push_button.setChecked(True)
-            
+
+    def go_to_VR_landmark(self):
+        """
+        Change the currently displayed slice according to the landmark selected in the selected_VR_landmark_combo_box
+
+        """
+        if self.go_to_selected_VR_landmark_push_button.isChecked() == True:
+            if self.selected_VR_landmark_combo_box.currentText() != " ":
+                landmark_slice_z, _, _ = self.VR_landmarks_positions_array[int(self.selected_VR_landmark_combo_box.currentText()) - 1]
+                _, y, x = self.viewer.layers['image'].data.shape
+                self.viewer.dims.current_step = (landmark_slice_z, y, x)
+            else:
+                self.go_to_selected_VR_landmark_push_button.setChecked(False)
+
+        else:
+            if self.selected_VR_landmark_combo_box.currentText() != " ":
+                current_slice_z = self.viewer.dims.current_step[0]
+                landmark_slice_z, _, _ = self.VR_landmarks_positions_array[int(self.selected_VR_landmark_combo_box.currentText()) - 1]
+                if current_slice_z != landmark_slice_z:
+                    _, y, x = self.viewer.layers['image'].data.shape
+                    self.viewer.dims.current_step = (landmark_slice_z, y, x)
+                else:
+                    self.go_to_selected_VR_landmark_push_button.setChecked(True)
+
     def lock_slide(self):
         """
         Lock a slice of work. Clicking on the checked QPushButton put the viewer to the locked slice location.
@@ -1539,7 +1793,7 @@ class ManualSegmentationWidget(QWidget):
         elif structure_name == "Shoulder Bones":
             radio_button_to_check = self.shoulder_bones.group_radio_button.button(1)
             radio_button_to_check.setChecked(True)
-            
+
         elif structure_name == "Shoulder Deltoid":
             radio_button_to_check = self.shoulder_deltoid.group_radio_button.button(1)
             radio_button_to_check.setChecked(True)
@@ -1547,7 +1801,7 @@ class ManualSegmentationWidget(QWidget):
         elif structure_name == "Feta Challenge":
             radio_button_to_check = self.feta.group_radio_button.button(1)
             radio_button_to_check.setChecked(True)
-        
+
         elif structure_name == "Larva":
             radio_button_to_check = self.larva.group_radio_button.button(1)
             radio_button_to_check.setChecked(True)
@@ -1596,7 +1850,7 @@ class ManualSegmentationWidget(QWidget):
     def reset_selected_slice(self):
         """
         Reset the selected slice list to empty, set the combo box to the default value " " and remove all other item of the combo box
-        
+
         """
         self.selected_slice_list = []
 
@@ -1604,8 +1858,23 @@ class ManualSegmentationWidget(QWidget):
             self.selected_slice_combo_box.setCurrentText(" ")
 
         while self.selected_slice_combo_box.count() != 1:
-            index = self.selected_slice_combo_box.count() - 1 
+            index = self.selected_slice_combo_box.count() - 1
             self.selected_slice_combo_box.removeItem(index)
+
+    def reset_VR_landmarks(self):
+        """
+        Reset the VR landmarks arrays to empty, set the combo box to the default value " " and remove all other item of the combo box
+
+        """
+        self.VR_landmarks_positions_array = []
+        self.VR_landmarks_orientations_array = []
+
+        if self.selected_VR_landmark_combo_box.currentText() != " ":
+            self.selected_VR_landmark_combo_box.setCurrentText(" ")
+
+        while self.selected_VR_landmark_combo_box.count() != 1:
+            index = self.selected_VR_landmark_combo_box.count() - 1
+            self.selected_VR_landmark_combo_box.removeItem(index)
 
 
 # ============ Remove or Reset data ============
@@ -1624,6 +1893,14 @@ class ManualSegmentationWidget(QWidget):
         """
         if "annotations" in self.viewer.layers:
             self.viewer.layers.remove('annotations')
+
+    def remove_oriented_landmarks_layer(self):
+        """
+            Remove points layer from napari viewer
+
+        """
+        if "oriented landmarks" in self.viewer.layers:
+            self.viewer.layers.remove('oriented landmarks')
 
     def remove_backup_segmentation_file(self):
         """
@@ -1654,19 +1931,19 @@ class ManualSegmentationWidget(QWidget):
     def remove_selected_slice(self):
         """
         Remove the current z index displayed in the selected_slice_combo_box and set the combo box to the default value " "
-        
+
         """
         if len(self.selected_slice_list) == 0:
             return
-        
+
         current_slice_z = self.viewer.dims.current_step[0]
 
         if current_slice_z in self.selected_slice_list:
-            list_index = self.selected_slice_list.index(current_slice_z) 
-            self.selected_slice_combo_box.removeItem(list_index + 1)   
+            list_index = self.selected_slice_list.index(current_slice_z)
+            self.selected_slice_combo_box.removeItem(list_index + 1)
             self.selected_slice_list.remove(current_slice_z)
             self.selected_slice_combo_box.setCurrentText(" ")
-            
+
 
 # ============ Display warning/question message box ============
     def can_remove_image_data(self):
@@ -1709,6 +1986,26 @@ class ManualSegmentationWidget(QWidget):
 
         return choice
 
+    def can_remove_oriented_landmarks_data(self):
+        """
+        Display a question box to remove oriented landmarks data (from DIVA)
+
+        Returns
+        ----------
+        choice : bool
+            answer to the question : True if Ok, False if Cancel (default=True)
+
+        """
+        if "oriented landmarks" in self.viewer.layers:
+            choice = display_ok_cancel_question_box(
+                "Warning",
+                "This will delete oriented landmarks data. Do you want to continue ?",
+            )
+        else:
+            choice = True
+
+        return choice
+
     def can_remove_all(self):
         """
         Display a question box to remove all data
@@ -1719,7 +2016,7 @@ class ManualSegmentationWidget(QWidget):
             answer to the question : True if Ok, False if Cancel (default=True)
 
         """
-        if "image" in self.viewer.layers or "annotations" in self.viewer.layers:
+        if "image" in self.viewer.layers or "annotations" in self.viewer.layers or "oriented landmarks" in self.viewer.layers:
             choice = display_ok_cancel_question_box(
                 "Warning",
                 "This will delete all data. Do you want to continue ?",
@@ -1748,8 +2045,8 @@ class ManualSegmentationWidget(QWidget):
 
     #     pixmap = QPixmap(image_path)
     #     view_image_1.setPixmap(pixmap)
-    
-    
+
+
 
     # def generate_help_layout(self):
 
@@ -1765,9 +2062,9 @@ class ManualSegmentationWidget(QWidget):
 
     #     self.help_container.setLayout(self.help_layout)
 
-    #     self.help_dock = self.viewer.window.add_dock_widget(widget=self.help_container, area='bottom')  
-    
-    
+    #     self.help_dock = self.viewer.window.add_dock_widget(widget=self.help_container, area='bottom')
+
+
     # def import_selected_slice_metadata_from_nifti(self, img_sitk):
     #     """
     #     TODO
