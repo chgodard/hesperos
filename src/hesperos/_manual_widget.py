@@ -19,6 +19,7 @@ from hesperos.resources._icons import get_icon_path, get_relative_icon_path
 import hesperos.annotation.fetus as fetus_data
 import hesperos.annotation.shoulder as shoulder_data
 import hesperos.annotation.shoulder_bones as shoulder_bones_data
+import hesperos.annotation.shoulder_bone_border as shoulder_bone_border_data
 import hesperos.annotation.shoulder_deltoid as shoulder_deltoid_data
 import hesperos.annotation.larva as larva_data
 import hesperos.annotation.feta as feta_data
@@ -158,6 +159,14 @@ class ManualSegmentationWidget(QWidget):
             column=0,
             list_structures=shoulder_bones_data.LIST_STRUCTURES,
             dict_substructures=shoulder_bones_data.DICT_SUB_STRUCTURES,
+            dict_sub_substructures=[])
+        
+        self.shoulder_bone_borders = StructureSubPanel(
+            parent=self,
+            row=row,
+            column=0,
+            list_structures=shoulder_bone_border_data.LIST_STRUCTURES,
+            dict_substructures=shoulder_bone_border_data.DICT_SUB_STRUCTURES,
             dict_sub_substructures=[])
         
         self.shoulder_deltoid = StructureSubPanel(
@@ -377,7 +386,7 @@ class ManualSegmentationWidget(QWidget):
         self.annotation_layout.addLayout(self.tool_annotation_layout, 1, 0)
 
         self.annotation_combo_box = add_combo_box(
-            list_items=["Choose a structure", "Feta Challenge", "Fetus", "Larva", "Shoulder", "Shoulder Bones", "Shoulder Deltoid"],
+            list_items=["Choose a structure", "Feta Challenge", "Fetus", "Larva", "Shoulder", "Shoulder Bones", "Shoulder Bone Borders", "Shoulder Deltoid"],
             layout=self.annotation_layout,
             callback_function=self.toggle_annotation_sub_panel,
             row=1,
@@ -680,7 +689,9 @@ class ManualSegmentationWidget(QWidget):
             toggle_larva = False
             toggle_shoulder_bones = False
             toggle_shoulder_deltoid = False
+            toggle_shoulder_bone_borders = False
             toggle_slice_selection_panel = False
+            toggle_napari_dim_button = True
 
         elif structure_name == "Shoulder":
             toggle_feta = False
@@ -689,7 +700,9 @@ class ManualSegmentationWidget(QWidget):
             toggle_shoulder = True
             toggle_shoulder_bones = False
             toggle_shoulder_deltoid = False
+            toggle_shoulder_bone_borders = False
             toggle_slice_selection_panel = False
+            toggle_napari_dim_button = True
 
         elif structure_name == "Shoulder Bones":
             toggle_feta = False
@@ -698,7 +711,20 @@ class ManualSegmentationWidget(QWidget):
             toggle_shoulder = False
             toggle_shoulder_bones = True
             toggle_shoulder_deltoid = False
+            toggle_shoulder_bone_borders = False
             toggle_slice_selection_panel = True
+            toggle_napari_dim_button = False
+        
+        elif structure_name == "Shoulder Bone Borders":
+            toggle_feta = False
+            toggle_fetus = False
+            toggle_larva = False
+            toggle_shoulder = False
+            toggle_shoulder_bones = False
+            toggle_shoulder_deltoid = False
+            toggle_shoulder_bone_borders = True
+            toggle_slice_selection_panel = True
+            toggle_napari_dim_button = False
         
         elif structure_name == "Shoulder Deltoid":
             toggle_feta = False
@@ -707,7 +733,9 @@ class ManualSegmentationWidget(QWidget):
             toggle_shoulder = False
             toggle_shoulder_bones = False
             toggle_shoulder_deltoid = True
+            toggle_shoulder_bone_borders = False
             toggle_slice_selection_panel = True
+            toggle_napari_dim_button = False
 
         elif structure_name == "Feta Challenge":
             toggle_feta = True
@@ -716,7 +744,9 @@ class ManualSegmentationWidget(QWidget):
             toggle_shoulder = False
             toggle_shoulder_bones = False
             toggle_shoulder_deltoid = False
+            toggle_shoulder_bone_borders = False
             toggle_slice_selection_panel = False
+            toggle_napari_dim_button = True
             
         elif structure_name == "Larva":
             toggle_feta = False
@@ -725,7 +755,9 @@ class ManualSegmentationWidget(QWidget):
             toggle_shoulder = False
             toggle_shoulder_bones = False
             toggle_shoulder_deltoid = False
+            toggle_shoulder_bone_borders = False
             toggle_slice_selection_panel = True
+            toggle_napari_dim_button = True
             
         else:
             toggle_feta = False
@@ -734,13 +766,16 @@ class ManualSegmentationWidget(QWidget):
             toggle_shoulder = False
             toggle_shoulder_bones = False
             toggle_shoulder_deltoid = False
+            toggle_shoulder_bone_borders = False
             toggle_slice_selection_panel = False
+            toggle_napari_dim_button = False
             
         # == toggle sub panels ==
         self.feta.toggle_sub_panel(toggle_feta)
         self.fetus.toggle_sub_panel(toggle_fetus)
         self.shoulder.toggle_sub_panel(toggle_shoulder)
         self.shoulder_bones.toggle_sub_panel(toggle_shoulder_bones)
+        self.shoulder_bone_borders.toggle_sub_panel(toggle_shoulder_bone_borders)
         self.shoulder_deltoid.toggle_sub_panel(toggle_shoulder_deltoid)
         self.larva.toggle_sub_panel(toggle_larva)
         self.toggle_panels(["slice_selection_panel"], toggle_slice_selection_panel)
@@ -751,7 +786,7 @@ class ManualSegmentationWidget(QWidget):
         
         # == Update dimension button and panel name ==
         self.update_reset_export_panel_title(toggle_slice_selection_panel)
-        disable_napari_change_dim_button(self.viewer, not toggle_slice_selection_panel)
+        disable_napari_change_dim_button(self.viewer, toggle_napari_dim_button)
 
     def toggle_import_panel_widget(self, isVisible, file_type=None):
         """
@@ -1058,9 +1093,9 @@ class ManualSegmentationWidget(QWidget):
         if loaded_selected_slice_list != []:
             self.selected_slice_list = loaded_selected_slice_list
 
-            if len(self.selected_slice_list) >= 30:
-                display_warning_box(self, "Error", "More than 30 selected slices are not allowed. Please remove some selected slices to add new ones.")
-                return
+            # if len(self.selected_slice_list) >= 30:
+            #     display_warning_box(self, "Error", "More than 30 selected slices are not allowed. Please remove some selected slices to add new ones.")
+            #     return
         
             self.selected_slice_list.sort()
 
@@ -1130,6 +1165,8 @@ class ManualSegmentationWidget(QWidget):
                         structure_list = self.shoulder.list_structure_name
                     elif structure_name == "Shoulder Bones":
                         structure_list = self.shoulder_bones.list_structure_name
+                    elif structure_name == "Shoulder Bone Borders":
+                        structure_list = self.shoulder_bone_borders.list_structure_name
                     elif structure_name == "Shoulder Deltoid":
                         structure_list = self.shoulder_deltoid.list_structure_name
                     elif structure_name == "Feta Challenge":
@@ -1402,11 +1439,11 @@ class ManualSegmentationWidget(QWidget):
         """
         selected_slice_z = self.viewer.dims.current_step[0]
         
-        if len(self.selected_slice_list) >= 30:
-            display_warning_box(self, "Error", "More than 30 selected slices are not allowed. Please remove some selected slices to add new ones.")
-            return
+        # if len(self.selected_slice_list) >= 30:
+        #     display_warning_box(self, "Error", "More than 30 selected slices are not allowed. Please remove some selected slices to add new ones.")
+        #     return
 
-        elif selected_slice_z in self.selected_slice_list:
+        if selected_slice_z in self.selected_slice_list:
             return
 
         else:
@@ -1538,6 +1575,10 @@ class ManualSegmentationWidget(QWidget):
 
         elif structure_name == "Shoulder Bones":
             radio_button_to_check = self.shoulder_bones.group_radio_button.button(1)
+            radio_button_to_check.setChecked(True)
+    
+        elif structure_name == "Shoulder Bone Borders":
+            radio_button_to_check = self.shoulder_bone_borders.group_radio_button.button(1)
             radio_button_to_check.setChecked(True)
             
         elif structure_name == "Shoulder Deltoid":
