@@ -1,4 +1,4 @@
-__version__ = "0.1.40"
+__version__ = "0.1.41"
 
 from ._manual_widget import ManualSegmentationWidget
 from ._oneshot_widget import OneShotWidget

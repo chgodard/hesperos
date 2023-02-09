@@ -99,7 +99,7 @@ def disable_napari_buttons(viewer):
     """
     viewer.window._qt_viewer.viewerButtons.consoleButton.setVisible(False)
     viewer.window._qt_viewer.viewerButtons.gridViewButton.setVisible(False)
-    viewer.window._qt_viewer.viewerButtons.ndisplayButton.setVisible(False)
+    # viewer.window._qt_viewer.viewerButtons.ndisplayButton.setVisible(False)
     viewer.window._qt_viewer.viewerButtons.resetViewButton.setVisible(False)
 
     viewer.window._qt_viewer.layerButtons.newShapesButton.setVisible(False)
