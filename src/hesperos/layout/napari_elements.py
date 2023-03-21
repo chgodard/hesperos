@@ -80,6 +80,16 @@ label_colors = {
     33: (30/255, 10/255, 200/255, 1.0),
     None: 'transparent',
 }
+
+oriented_landmarks_colors = {
+    0: 'transparent',
+    1: (255/255, 160/255, 122/255, 1.0), #light salmon
+    2: (255/255, 127/255, 80/255, 1.0), # coral
+    3: (255/255, 248/255, 220/255, 1.0), # corn silk
+    4: (245/255, 222/255, 179/255, 1.0), # wheat
+    5: (222/255, 184/255, 135/255, 1.0), # burly whood
+    None: 'transparent',
+}
     # '_background_label': 'transparent',
     #when checked "selected color" with color mode "direct", the label used to display the non selected label is referenced by the id None (see napari.layers.labels.labels.py)
 # (1/255, 128/255, 1/255, 1.0)

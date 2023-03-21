@@ -13,7 +13,8 @@ from qtpy.QtWidgets import (
     QSlider,
     QGroupBox,
     QGridLayout,
-    QTextEdit
+    QTextEdit,
+    QSpinBox
 )
 from qtpy.QtGui import QPixmap, QFont
 from pathlib import Path, PurePath
@@ -241,7 +242,7 @@ def add_image_widget(name, layout, image_path, row, column, column_span=1, visib
 
     return label
 
-def add_label(text, layout, row, column, column_span=1, visibility=False, minimum_width=0, isHBoxLayout=False):
+def add_label(text, layout, row, column, column_span=1, visibility=False, minimum_width=0, isHBoxLayout=False, isResizingWithTextSize=False):
     """
     Create a QLabel and add it to the corresponding layout
 
@@ -263,6 +264,8 @@ def add_label(text, layout, row, column, column_span=1, visibility=False, minimu
         minimum width of the widget
     isHBoxLayout : bool
         status of the layout : true if the layout is a QGridLayout, false if not
+    isResizingWithTextSize : bool
+        resizing according to the text size if true
 
     Returns
     ----------
@@ -273,6 +276,9 @@ def add_label(text, layout, row, column, column_span=1, visibility=False, minimu
     label.setVisible(visibility)
     label.setMinimumWidth(minimum_width)
     
+    if isResizingWithTextSize:
+        label.setFixedWidth(label.sizeHint().width() + 5)
+        
     if isHBoxLayout:
         layout.addWidget(label)
     else:
@@ -400,6 +406,49 @@ def add_slider(layout, bounds , callback_function, row, column, column_span=1, v
     slider.valueChanged[int].connect(callback_function)
 
     return slider
+
+def add_spin_box(layout, row, column, column_span=1, visibility=False, minimum_width=0, tooltip_text="", isHBoxLayout=False):
+    """
+    Create a QSpinBox and add it to the corresponding layout
+
+    Parameters
+    ----------
+    layout : QGridLayout or QHBoxLayout
+        layout containing the widget
+    row : int
+        row of the widget (used if the layout is a QGridLayout)
+    column : int
+        column of the widget in the layout
+    column_span : int
+        column span of the widget (used if the layout is a QGridLayout)
+    visibility : bool
+        visibility status of the widget
+    minimum_width : int
+        minimum width of the widget
+    isHBoxLayout : bool
+        status of the layout : true if the layout is a QHBoxLayout, false if not
+
+    Returns
+    ----------
+    out : QSpinBox
+
+    """ 
+    spin_box = QSpinBox()
+    spin_box.setToolTip(tooltip_text)
+    
+    spin_box.setMinimum(1)
+    spin_box.setValue(1)
+    spin_box.setDisplayIntegerBase(10)
+
+    spin_box.setMinimumWidth(minimum_width)
+    spin_box.setAlignment(QtCore.Qt.AlignCenter)
+
+    if isHBoxLayout:
+        layout.addWidget(spin_box)
+    else:
+        layout.addWidget(spin_box, row, column, 1, column_span)
+
+    return spin_box
 
 
 # ============ Functions to add custom radio buttons subgroups ============

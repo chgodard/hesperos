@@ -8,12 +8,20 @@ from hesperos.layout.gui_elements import (
     add_label,
     add_push_button,
     add_slider,
+    add_spin_box,
     display_warning_box,
     display_save_message_box,
     display_ok_cancel_question_box,
     display_yes_no_question_box
 )
-from hesperos.layout.napari_elements import disable_napari_buttons, disable_layer_widgets, reset_dock_widget, disable_dock_widget_buttons, label_colors, disable_napari_change_dim_button
+from hesperos.layout.napari_elements import (
+    disable_napari_buttons, 
+    disable_layer_widgets, 
+    reset_dock_widget, 
+    disable_dock_widget_buttons, 
+    label_colors, 
+    oriented_landmarks_colors,
+    disable_napari_change_dim_button)
 from hesperos.resources._icons import get_icon_path, get_relative_icon_path
 
 import hesperos.annotation.fetus as fetus_data
@@ -34,6 +42,7 @@ import numpy as np
 import tifffile as tif
 import SimpleITK as sitk
 from pathlib import Path
+import raster_geometry as rg
 from napari._vispy import VispyCanvas
 
 from qtpy import QtCore
@@ -355,7 +364,7 @@ class ManualSegmentationWidget(QWidget):
             callback_function=self.set_oriented_landmarks_with_path,
             row=0,
             column=0,
-            column_span=3,
+            column_span=2,
             minimum_width=COLUMN_WIDTH,
             tooltip_text="Import VR landmarks from the DIVA software",
         )
@@ -375,11 +384,12 @@ class ManualSegmentationWidget(QWidget):
         self.go_to_selected_VR_landmark_push_button.setCheckable(True)
 
         self.landmark_ID_text = add_label(
-            text='Landmark ID: ',
+            text="Landmark ID: ",
             layout=self.tool_VR_landmarks_layout,
             row=0,
             column=1,
             isHBoxLayout=True,
+            isResizingWithTextSize=True,
         )
 
         self.import_VR_landmarks_layout.addLayout(self.tool_VR_landmarks_layout, 1 , 0)
@@ -390,7 +400,7 @@ class ManualSegmentationWidget(QWidget):
             callback_function=self.go_to_VR_landmark,
             row=1,
             column=1,
-            column_span=2,
+            minimum_width=COLUMN_WIDTH,
             tooltip_text="TODO",
         )
 
@@ -489,7 +499,7 @@ class ManualSegmentationWidget(QWidget):
         """
 
         # === Set panel parameters ===
-        self.reset_export_panel = QGroupBox("4. EXPORT ANNOTATION")
+        self.reset_export_panel = QGroupBox("5. EXPORT ANNOTATION")
         self.reset_export_panel.setStyleSheet("margin-top : 5px;")
 
         # === Set panel layout parameters ===
@@ -682,13 +692,14 @@ class ManualSegmentationWidget(QWidget):
         self.go_to_selected_slice_push_button.setCheckable(True)
 
         self.slice_selection_text = add_label(
-            text='Slice: ',
+            text='Slice ID: ',
             layout=self.tool_slice_selection_layout,
             row=0,
-            column=2,
+            column=3,
             isHBoxLayout=True,
+            isResizingWithTextSize=True
             )
-
+    
         self.slice_selection_layout.addLayout(self.tool_slice_selection_layout, 0, 0)
 
         self.selected_slice_combo_box = add_combo_box(
@@ -697,8 +708,51 @@ class ManualSegmentationWidget(QWidget):
             callback_function=self.go_to_selected_slice,
             row=0,
             column=1,
+            minimum_width=COLUMN_WIDTH,
             tooltip_text="Select a z-index from the list to work with it more easily.",
         )
+
+    # Slice selection tools are created in another layout
+        self.step_range_text = add_label(
+            text='Step slices range: ',
+            layout=self.slice_selection_layout,
+            row=1,
+            column=0,
+            isResizingWithTextSize=True
+        )
+        
+        self.tool2_slice_selection_layout = QHBoxLayout()
+
+        self.go_left_push_button = add_icon_push_button(
+            icon=QIcon(get_icon_path('back')),
+            layout=self.tool2_slice_selection_layout,
+            callback_function=self.go_left_step_slices,
+            row=0,
+            column=0,
+            tooltip_text="Move backward in the z axe acording to the step range.",
+            isHBoxLayout=True,
+        )
+        
+        self.step_range_spin_box = add_spin_box(
+            layout=self.tool2_slice_selection_layout,
+            row=0,
+            column=1,
+            minimum_width=COLUMN_WIDTH,
+            tooltip_text="Define the step range.",
+            isHBoxLayout=True,
+        )
+
+        self.go_right_push_button = add_icon_push_button(
+            icon=QIcon(get_icon_path('next')),
+            layout=self.tool2_slice_selection_layout,
+            callback_function=self.go_right_step_slices,
+            row=0,
+            column=2,
+            tooltip_text="Move forward in the z axe acording to the step range.",
+            isHBoxLayout=True,
+        )
+
+        self.slice_selection_layout.addLayout(self.tool2_slice_selection_layout, 1, 1)
 
         self.slice_selection_panel.setLayout(self.slice_selection_layout)
 
@@ -741,6 +795,10 @@ class ManualSegmentationWidget(QWidget):
                 self.go_to_selected_slice_push_button.setVisible(isVisible)
                 self.slice_selection_text.setVisible(isVisible)
                 self.selected_slice_combo_box.setVisible(isVisible)
+                self.step_range_spin_box.setVisible(isVisible)
+                self.go_right_push_button.setVisible(isVisible)
+                self.go_left_push_button.setVisible(isVisible)
+                self.step_range_text.setVisible(isVisible)
 
             elif panel_name == "reset_export_panel":
                 self.reset_export_panel.setVisible(isVisible)
@@ -772,7 +830,6 @@ class ManualSegmentationWidget(QWidget):
             toggle_shoulder_bones = False
             toggle_shoulder_deltoid = False
             toggle_shoulder_bone_borders = False
-            toggle_slice_selection_panel = False
             toggle_napari_dim_button = True
 
         elif structure_name == "Shoulder":
@@ -783,7 +840,6 @@ class ManualSegmentationWidget(QWidget):
             toggle_shoulder_bones = False
             toggle_shoulder_deltoid = False
             toggle_shoulder_bone_borders = False
-            toggle_slice_selection_panel = False
             toggle_napari_dim_button = True
 
         elif structure_name == "Shoulder Bones":
@@ -794,7 +850,6 @@ class ManualSegmentationWidget(QWidget):
             toggle_shoulder_bones = True
             toggle_shoulder_deltoid = False
             toggle_shoulder_bone_borders = False
-            toggle_slice_selection_panel = True
             toggle_napari_dim_button = False
         
         elif structure_name == "Shoulder Bone Borders":
@@ -805,7 +860,6 @@ class ManualSegmentationWidget(QWidget):
             toggle_shoulder_bones = False
             toggle_shoulder_deltoid = False
             toggle_shoulder_bone_borders = True
-            toggle_slice_selection_panel = True
             toggle_napari_dim_button = False
         
         elif structure_name == "Shoulder Deltoid":
@@ -816,7 +870,6 @@ class ManualSegmentationWidget(QWidget):
             toggle_shoulder_bones = False
             toggle_shoulder_deltoid = True
             toggle_shoulder_bone_borders = False
-            toggle_slice_selection_panel = True
             toggle_napari_dim_button = False
 
         elif structure_name == "Feta Challenge":
@@ -838,7 +891,6 @@ class ManualSegmentationWidget(QWidget):
             toggle_shoulder_bones = False
             toggle_shoulder_deltoid = False
             toggle_shoulder_bone_borders = False
-            toggle_slice_selection_panel = True
             toggle_napari_dim_button = True
             
         else:
@@ -849,7 +901,6 @@ class ManualSegmentationWidget(QWidget):
             toggle_shoulder_bones = False
             toggle_shoulder_deltoid = False
             toggle_shoulder_bone_borders = False
-            toggle_slice_selection_panel = False
             toggle_napari_dim_button = False
             
         # == toggle sub panels ==
@@ -860,14 +911,12 @@ class ManualSegmentationWidget(QWidget):
         self.shoulder_bone_borders.toggle_sub_panel(toggle_shoulder_bone_borders)
         self.shoulder_deltoid.toggle_sub_panel(toggle_shoulder_deltoid)
         self.larva.toggle_sub_panel(toggle_larva)
-        self.toggle_panels(["slice_selection_panel"], toggle_slice_selection_panel)
 
         # == reset widgets ==
         self.reset_annotation_radio_button_checked_id()
         self.reset_annotation_layer_selected_label()
 
         # == Update dimension button and panel name ==
-        self.update_reset_export_panel_title(toggle_slice_selection_panel)
         disable_napari_change_dim_button(self.viewer, toggle_napari_dim_button)
 
     def toggle_import_panel_widget(self, isVisible, file_type=None):
@@ -1272,8 +1321,128 @@ class ManualSegmentationWidget(QWidget):
 
         self.VR_landmarks_positions_array = np.array(VR_landmarks_positions_array)
         self.VR_landmarks_orientations_array = np.array(VR_landmarks_orientations_array)
+        
+        self.VR_landmarks_array = self.create_oriented_landmarks_array()
 
+    # def create_oriented_landmarks_array(self):
+    #     """
+    #     TODO
+    #     """
+    #     if "image" in self.viewer.layers:
+    #         image_arr = self.viewer.layers['image'].data
+    #         oriented_landmarks_array = np.zeros(image_arr.shape, dtype=np.int8)
+    #         local_radius = 0.015 * image_arr.shape[1]
+            
+    #         for i in range (self.VR_landmarks_positions_array.shape[0]):
+    #             # create sphere
+    #             sphere =  np.zeros(image_arr.shape, dtype=np.int8)
+    #             sphere_center = self.VR_landmarks_positions_array[i]
+    #             sphere_position = np.array(sphere_center).reshape((-1,) + (1,) * len(sphere_center))
+    #             sphere_mask = np.linalg.norm(np.indices(oriented_landmarks_array.shape) - sphere_position, axis=0)
+    #             sphere_mask = (sphere_mask <= local_radius)
+            
+    #             # create capsule
+                
+                
+    #             # add label 
+    #             sphere[sphere_mask] = i + 1
+            
+            
+    #             oriented_landmarks_array = oriented_landmarks_array + sphere_mask
+        
+        
+    #     return oriented_landmarks_array
+            
+    
+    def create_oriented_landmarks_array(self):
+        """
+        TODO
 
+        Returns
+        ----------
+        segmentation_arr : ndarray
+            TODO
+
+        """
+        if "image" in self.viewer.layers:
+            image_arr = self.viewer.layers['image'].data
+            oriented_landmarks_array = np.zeros(image_arr.shape, dtype=np.int8)
+            sphere_local_radius = 0.015 * image_arr.shape[1]
+            
+            for i in range (self.VR_landmarks_positions_array.shape[0]):
+                # create sphere
+                sphere_center_local_position = self.volume_to_local_position(self.VR_landmarks_positions_array[i])
+                sphere = rg.sphere(image_arr.shape, sphere_local_radius, sphere_center_local_position, smoothing=True).astype(np.int16)
+
+                # create capsule
+                capsule_center_local_position = sphere_center_local_position
+                capsule_center_local_position[0] = sphere_center_local_position[0] + 0.001
+                capsule_local_height = sphere_local_radius * 3
+                capsule_local_radius = sphere_local_radius * 0.75
+                capsule = rg.cylinder(image_arr.shape, capsule_local_height, capsule_local_radius, axis=1, position=capsule_center_local_position, smoothing=True).astype(np.int16)
+                
+                # rotate capsule
+                
+                
+                # add label           
+                oriented_landmarks_array[capsule > 0] = 5         
+                oriented_landmarks_array[sphere > 0] = 3
+                
+        return oriented_landmarks_array
+    
+    def local_to_volume_position(self, local_position):
+        """
+        Convert local position to volume position according to the volume open in the "image" layer.
+
+        Parameters
+        ----------
+        local_position : array
+            local position in the volume (z, y, x) : between 0-1.
+
+        Returns
+        ----------
+        volume_position : array
+            world position in the volume (z, y, x) : in pixels.
+
+        """
+        if "image" in self.viewer.layers:
+            image_arr = self.viewer.layers['image'].data
+            
+            volume_position = np.array(local_position.shape)
+            volume_position[0] = (local_position[0]) * (float)(image_arr.shape[0])
+            volume_position[1] = (local_position[1]) * (float)(image_arr.shape[1])
+            if len(image_arr.shape) == 3:
+                volume_position[2] = (local_position[2]) * (float)(image_arr.shape[2])
+
+            return volume_position
+    
+    def volume_to_local_position(self, volume_position):
+        """
+        Convert volume position to local position according to the volume open in the "image" layer.
+
+        Parameters
+        ----------
+        volume_position : array
+            world position in the volume (z, y, x) : in pixels.
+
+        Returns
+        ----------
+        local_position : array
+            local position in the volume (z, y, x) : between 0-1.
+
+        """
+        if "image" in self.viewer.layers:
+            image_arr = self.viewer.layers['image'].data
+            
+            local_position = np.zeros(len(volume_position), dtype=np.float32)
+            local_position[0] = volume_position[0] / (float)(image_arr.shape[0])
+            local_position[1] = volume_position[1] / (float)(image_arr.shape[1])
+            if len(image_arr.shape) == 3:
+                local_position[2] = volume_position[2] / (float)(image_arr.shape[2])
+            
+            return local_position
+        
+            
 # ============ Export data ============
     def export_segmentation(self):
         """
@@ -1449,12 +1618,14 @@ class ManualSegmentationWidget(QWidget):
             self.default_contrast_combo_box.setCurrentText("")
 
             self.toggle_import_panel_widget(True, file_type)
-            self.toggle_panels(["annotation_panel", "reset_export_panel"], True)
+            self.toggle_panels(["annotation_panel", "slice_selection_panel", "reset_export_panel"], True)
             if image_arr.shape[0] > 1:
                 self.toggle_panels(["import_VR_landmarks_panel"], True)
             else :
                 self.toggle_panels(["import_VR_landmarks_panel"], False)
             self.update_panel_titles()
+            
+            self.step_range_spin_box.setMaximum(image_arr.shape[0])
 
             hasCorrespondingSegmentation, segmentation_file_path = self.has_corresponding_segmentation_file()
 
@@ -1563,7 +1734,8 @@ class ManualSegmentationWidget(QWidget):
             new_text = str(landmark_index + 1)
             self.selected_VR_landmark_combo_box.addItem(new_text)
 
-        self.set_oriented_landmark_layer(self.VR_landmarks_positions_array)
+        # self.set_oriented_landmark_layer(self.VR_landmarks_positions_array)
+        self.set_oriented_landmark_layer(self.VR_landmarks_array)
 
         self.status_label.setText("Ready")
 
@@ -1607,7 +1779,7 @@ class ManualSegmentationWidget(QWidget):
 
     def set_oriented_landmark_layer(self, array):
         """
-        Remove the points layer from Napari and add a new points layer (faster than changing the data of an existing layer)
+        Remove the label layer from Napari and add a new label layer (faster than changing the data of an existing layer)
         New layer can be empty for initialisation.
 
         Parameters
@@ -1617,19 +1789,36 @@ class ManualSegmentationWidget(QWidget):
 
         """
         self.remove_oriented_landmarks_layer()
+        self.viewer.add_labels(array, name='oriented landmarks', color=oriented_landmarks_colors, opacity=1)
+        disable_layer_widgets(self.viewer, layer_name='oriented landmarks', layer_type='label')
+        self.status_label.setText("Ready")    
+    
+    # def set_oriented_landmark_layer(self, array):
+    #     """
+    #     Remove the points layer from Napari and add a new points layer (faster than changing the data of an existing layer)
+    #     New layer can be empty for initialisation.
 
-        self.viewer.add_points(
-            array,
-            name="oriented landmarks",
-            size=30,
-            symbol='disc',
-            edge_color="white",
-            face_color="white",
-            opacity=0.7)
+    #     Parameters
+    #     ----------
+    #     array : ndarray
+    #         TODOOOOO
 
-        disable_layer_widgets(self.viewer, layer_name='oriented landmarks', layer_type='points')
+    #     """
+    #     self.remove_oriented_landmarks_layer()
 
-        self.status_label.setText("Ready")
+    #     self.viewer.add_points(
+    #         array,
+    #         name="oriented landmarks",
+    #         size=30,
+    #         symbol='disc',
+    #         edge_color="white",
+    #         face_color="white",
+    #         opacity=0.7)
+
+    #     disable_layer_widgets(self.viewer, layer_name='oriented landmarks', layer_type='points')
+
+    #     self.status_label.setText("Ready")
+
 
 # ============ Napari events callbacks ============
     def activate_backup_segmentation(self):
@@ -1731,6 +1920,32 @@ class ManualSegmentationWidget(QWidget):
                     self.viewer.dims.current_step = (landmark_slice_z, y, x)
                 else:
                     self.go_to_selected_VR_landmark_push_button.setChecked(True)
+
+    def go_left_step_slices(self):
+        """
+        Change the currently displayed slice according to the slice index selected in the step_range_spin_box
+
+        """
+        current_step =  self.viewer.dims.current_step
+        _, y, x = self.viewer.layers['image'].data.shape
+        new_z_index = current_step[0] - self.step_range_spin_box.value()
+        if new_z_index >= 0 :
+            self.viewer.dims.current_step = (new_z_index, y, x)
+        else:
+            self.viewer.dims.current_step = (0, y, x)        
+    
+    def go_right_step_slices(self):
+        """
+        Change the currently displayed slice according to the slice index selected in the step_range_spin_box
+
+        """
+        current_step =  self.viewer.dims.current_step
+        z, y, x = self.viewer.layers['image'].data.shape
+        new_z_index = current_step[0] + self.step_range_spin_box.value()
+        if new_z_index <= z :
+            self.viewer.dims.current_step = (new_z_index, y, x)
+        else:
+            self.viewer.dims.current_step = (z - 1, y, x)   
 
     def lock_slide(self):
         """
