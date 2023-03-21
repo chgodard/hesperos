@@ -29,6 +29,7 @@ import hesperos.annotation.shoulder as shoulder_data
 import hesperos.annotation.shoulder_bones as shoulder_bones_data
 import hesperos.annotation.shoulder_bone_border as shoulder_bone_border_data
 import hesperos.annotation.shoulder_deltoid as shoulder_deltoid_data
+import hesperos.annotation.mouse_embryon as mouse_embryon_data
 import hesperos.annotation.larva as larva_data
 import hesperos.annotation.feta as feta_data
 from hesperos.annotation.structuresubpanel import StructureSubPanel
@@ -195,6 +196,15 @@ class ManualSegmentationWidget(QWidget):
             list_structures=larva_data.LIST_STRUCTURES,
             dict_substructures=larva_data.DICT_SUB_STRUCTURES,
             dict_sub_substructures=[])
+        
+        self.mouse_embryon = StructureSubPanel(
+            parent=self,
+            row=row,
+            column=0,
+            list_structures=mouse_embryon_data.LIST_STRUCTURES,
+            dict_substructures=mouse_embryon_data.DICT_SUB_STRUCTURES,
+            dict_sub_substructures=[])
+        
 
     def add_import_panel(self, row, column=0):
         """
@@ -471,7 +481,7 @@ class ManualSegmentationWidget(QWidget):
         self.annotation_layout.addLayout(self.tool_annotation_layout, 1, 0)
 
         self.annotation_combo_box = add_combo_box(
-            list_items=["Choose a structure", "Feta Challenge", "Fetus", "Larva", "Shoulder", "Shoulder Bones", "Shoulder Bone Borders", "Shoulder Deltoid"],
+            list_items=["Choose a structure", "Feta Challenge", "Fetus", "Larva", "Mouse Embryon", "Shoulder", "Shoulder Bones", "Shoulder Bone Borders", "Shoulder Deltoid"],
             layout=self.annotation_layout,
             callback_function=self.toggle_annotation_sub_panel,
             row=1,
@@ -831,6 +841,7 @@ class ManualSegmentationWidget(QWidget):
             toggle_shoulder_deltoid = False
             toggle_shoulder_bone_borders = False
             toggle_napari_dim_button = True
+            toggle_mouse_embryon = False
 
         elif structure_name == "Shoulder":
             toggle_feta = False
@@ -841,6 +852,7 @@ class ManualSegmentationWidget(QWidget):
             toggle_shoulder_deltoid = False
             toggle_shoulder_bone_borders = False
             toggle_napari_dim_button = True
+            toggle_mouse_embryon = False
 
         elif structure_name == "Shoulder Bones":
             toggle_feta = False
@@ -851,6 +863,7 @@ class ManualSegmentationWidget(QWidget):
             toggle_shoulder_deltoid = False
             toggle_shoulder_bone_borders = False
             toggle_napari_dim_button = False
+            toggle_mouse_embryon = False
         
         elif structure_name == "Shoulder Bone Borders":
             toggle_feta = False
@@ -861,6 +874,7 @@ class ManualSegmentationWidget(QWidget):
             toggle_shoulder_deltoid = False
             toggle_shoulder_bone_borders = True
             toggle_napari_dim_button = False
+            toggle_mouse_embryon = False
         
         elif structure_name == "Shoulder Deltoid":
             toggle_feta = False
@@ -871,6 +885,7 @@ class ManualSegmentationWidget(QWidget):
             toggle_shoulder_deltoid = True
             toggle_shoulder_bone_borders = False
             toggle_napari_dim_button = False
+            toggle_mouse_embryon = False
 
         elif structure_name == "Feta Challenge":
             toggle_feta = True
@@ -882,6 +897,7 @@ class ManualSegmentationWidget(QWidget):
             toggle_shoulder_bone_borders = False
             toggle_slice_selection_panel = False
             toggle_napari_dim_button = True
+            toggle_mouse_embryon = False
             
         elif structure_name == "Larva":
             toggle_feta = False
@@ -892,6 +908,19 @@ class ManualSegmentationWidget(QWidget):
             toggle_shoulder_deltoid = False
             toggle_shoulder_bone_borders = False
             toggle_napari_dim_button = True
+            toggle_mouse_embryon = False
+        
+        elif structure_name == "Mouse Embryon":
+            toggle_feta = False
+            toggle_fetus = False
+            toggle_larva = False
+            toggle_shoulder = False
+            toggle_shoulder_bones = False
+            toggle_shoulder_deltoid = False
+            toggle_shoulder_bone_borders = False
+            toggle_slice_selection_panel = True
+            toggle_napari_dim_button = True
+            toggle_mouse_embryon = True
             
         else:
             toggle_feta = False
@@ -902,6 +931,7 @@ class ManualSegmentationWidget(QWidget):
             toggle_shoulder_deltoid = False
             toggle_shoulder_bone_borders = False
             toggle_napari_dim_button = False
+            toggle_mouse_embryon = False
             
         # == toggle sub panels ==
         self.feta.toggle_sub_panel(toggle_feta)
@@ -910,6 +940,7 @@ class ManualSegmentationWidget(QWidget):
         self.shoulder_bones.toggle_sub_panel(toggle_shoulder_bones)
         self.shoulder_bone_borders.toggle_sub_panel(toggle_shoulder_bone_borders)
         self.shoulder_deltoid.toggle_sub_panel(toggle_shoulder_deltoid)
+        self.mouse_embryon.toggle_sub_panel(toggle_mouse_embryon)
         self.larva.toggle_sub_panel(toggle_larva)
 
         # == reset widgets ==
@@ -1512,6 +1543,8 @@ class ManualSegmentationWidget(QWidget):
                         structure_list = self.feta.list_structure_name
                     elif structure_name == "Larva":
                         structure_list = self.larva.list_structure_name
+                    elif structure_name == "Mouse Embryon":
+                        structure_list = self.mouse_embryon.list_structure_name
                     else:
                         structure_list=[]
 
@@ -2059,6 +2092,10 @@ class ManualSegmentationWidget(QWidget):
 
         elif structure_name == "Larva":
             radio_button_to_check = self.larva.group_radio_button.button(1)
+            radio_button_to_check.setChecked(True)
+        
+        elif structure_name == "Mouse Embryon":
+            radio_button_to_check = self.mouse_embryon.group_radio_button.button(1)
             radio_button_to_check.setChecked(True)
 
     def reset_annotation_layer_selected_label(self):
