@@ -57,7 +57,7 @@ def add_combo_box(list_items, layout, callback_function, row, column, column_spa
     combo_box = QComboBox()
     combo_box.setToolTip(tooltip_text)
 
-    # combo_box.setVisible(visibility)
+    combo_box.setVisible(visibility)
     combo_box.addItems(list_items)
     combo_box.setCurrentIndex(0)
 
@@ -434,6 +434,7 @@ def add_spin_box(layout, row, column, column_span=1, visibility=False, minimum_w
 
     """ 
     spin_box = QSpinBox()
+    spin_box.setVisible(visibility)
     spin_box.setToolTip(tooltip_text)
     
     spin_box.setMinimum(1)
@@ -579,6 +580,7 @@ def add_sub_subgroup_radio_button(list_items, layout, callback_function, row=0, 
 
                     for sub_subindex, sub_subitem in enumerate(dict_sub_subgroups[subitem]):
                         button = QRadioButton(sub_subitem)
+                        button.setVisible(visibility)
                         button.setMinimumWidth(minimum_width)
                         button.setToolTip(tooltip_text)
 

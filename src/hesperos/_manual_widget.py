@@ -15,24 +15,23 @@ from hesperos.layout.gui_elements import (
     display_yes_no_question_box
 )
 from hesperos.layout.napari_elements import (
-    disable_napari_buttons, 
-    disable_layer_widgets, 
-    reset_dock_widget, 
-    disable_dock_widget_buttons, 
-    label_colors, 
-    oriented_landmarks_colors,
+    disable_napari_buttons,
+    disable_layer_widgets,
+    reset_dock_widget,
+    disable_dock_widget_buttons,
+    label_colors,
     disable_napari_change_dim_button)
+from hesperos.annotation.structuresubpanel import StructureSubPanel
 from hesperos.resources._icons import get_icon_path, get_relative_icon_path
 
+import hesperos.annotation.feta as feta_data
+import hesperos.annotation.larva as larva_data
 import hesperos.annotation.fetus as fetus_data
 import hesperos.annotation.shoulder as shoulder_data
-import hesperos.annotation.shoulder_bones as shoulder_bones_data
-import hesperos.annotation.shoulder_bone_border as shoulder_bone_border_data
-import hesperos.annotation.shoulder_deltoid as shoulder_deltoid_data
 import hesperos.annotation.mouse_embryon as mouse_embryon_data
-import hesperos.annotation.larva as larva_data
-import hesperos.annotation.feta as feta_data
-from hesperos.annotation.structuresubpanel import StructureSubPanel
+import hesperos.annotation.shoulder_bones as shoulder_bones_data
+import hesperos.annotation.shoulder_deltoid as shoulder_deltoid_data
+import hesperos.annotation.shoulder_bone_border as shoulder_bone_border_data
 
 
 # ============ Import python packages ============
@@ -40,11 +39,10 @@ import json
 import napari
 import functools
 import numpy as np
+import pandas as pd
 import tifffile as tif
 import SimpleITK as sitk
 from pathlib import Path
-import raster_geometry as rg
-from napari._vispy import VispyCanvas
 
 from qtpy import QtCore
 from qtpy.QtGui import QIcon
@@ -79,7 +77,7 @@ class ManualSegmentationWidget(QWidget):
             active (unique) instance of the napari viewer
 
         """
-        # reset_dock_widget(napari_viewer)
+        reset_dock_widget(napari_viewer)
 
         super().__init__()
 
@@ -87,14 +85,16 @@ class ManualSegmentationWidget(QWidget):
         self.viewer = napari_viewer
 
         disable_napari_buttons(self.viewer)
-        self.viewer.dims.events.current_step.connect(self.update_go_to_selected_slice_push_button_check_status)
-        self.viewer.dims.events.current_step.connect(self.update_go_to_selected_VR_landmark_push_button_check_status)
 
         self.generate_main_layout()
 
+        self.viewer.dims.events.current_step.connect(self.update_go_to_selected_slice_push_button_check_status)
+        self.viewer.dims.events.current_step.connect(self.update_go_to_selected_oriented_landmark_push_button_check_status)
+        self.viewer.dims.events.order.connect(self.update_slice_positon_after_dims_roll)
+        self.viewer.dims.events.ndisplay.connect(self.set_button_interactivity)
+
         napari.DOCK_WIDGETS.append(self)
-        disable_dock_widget_buttons(self.viewer)
-        # self.generate_help_layout()
+        # disable_dock_widget_buttons(self.viewer)
 
 
 # ============ Define Layout ============
@@ -112,7 +112,7 @@ class ManualSegmentationWidget(QWidget):
 
         # === Create and add panels to the layout ===
         self.add_import_panel(1)
-        self.add_import_VR_landmarks_panel(2)
+        self.add_manage_oriented_landmarks_panel(2)
         self.add_annotation_panel(3)
         self.add_sub_annotation_panel(4)
         self.add_slice_selection_panel(5)
@@ -127,7 +127,7 @@ class ManualSegmentationWidget(QWidget):
             visibility=True
             )
 
-        self.toggle_panels(["import_VR_landmarks_panel", "annotation_panel", "slice_selection_panel", "reset_export_panel"], False)
+        self.toggle_panels(["manage_oriented_landmarks_panel", "annotation_panel", "slice_selection_panel", "reset_export_panel"], False)
 
         self.setLayout(self.layout)
 
@@ -172,7 +172,7 @@ class ManualSegmentationWidget(QWidget):
             list_structures=shoulder_bones_data.LIST_STRUCTURES,
             dict_substructures=shoulder_bones_data.DICT_SUB_STRUCTURES,
             dict_sub_substructures=[])
-        
+
         self.shoulder_bone_borders = StructureSubPanel(
             parent=self,
             row=row,
@@ -180,7 +180,7 @@ class ManualSegmentationWidget(QWidget):
             list_structures=shoulder_bone_border_data.LIST_STRUCTURES,
             dict_substructures=shoulder_bone_border_data.DICT_SUB_STRUCTURES,
             dict_sub_substructures=[])
-        
+
         self.shoulder_deltoid = StructureSubPanel(
             parent=self,
             row=row,
@@ -196,7 +196,7 @@ class ManualSegmentationWidget(QWidget):
             list_structures=larva_data.LIST_STRUCTURES,
             dict_substructures=larva_data.DICT_SUB_STRUCTURES,
             dict_sub_substructures=[])
-        
+
         self.mouse_embryon = StructureSubPanel(
             parent=self,
             row=row,
@@ -204,7 +204,6 @@ class ManualSegmentationWidget(QWidget):
             list_structures=mouse_embryon_data.LIST_STRUCTURES,
             dict_substructures=mouse_embryon_data.DICT_SUB_STRUCTURES,
             dict_sub_substructures=[])
-        
 
     def add_import_panel(self, row, column=0):
         """
@@ -218,7 +217,6 @@ class ManualSegmentationWidget(QWidget):
             column position of the panel in the main QGridLayout
 
         """
-
         # === Set panel parameters ===
         self.import_panel = QGroupBox("1. IMPORT IMAGE")
         self.import_panel.setStyleSheet("margin-top : 5px;")
@@ -237,7 +235,7 @@ class ManualSegmentationWidget(QWidget):
             row=0,
             column=0,
             minimum_width=COLUMN_WIDTH,
-            tooltip_text="Import DICOM data from a folder containing one serie",
+            tooltip_text="Import DICOM data from a folder containing one serie.",
         )
 
         self.import_file_image_push_button = add_push_button(
@@ -247,7 +245,7 @@ class ManualSegmentationWidget(QWidget):
             row=0,
             column=1,
             minimum_width=COLUMN_WIDTH,
-            tooltip_text="Import image data from one file",
+            tooltip_text="Import image data from one file.",
         )
 
         self.file_name_text = add_label(
@@ -274,7 +272,7 @@ class ManualSegmentationWidget(QWidget):
             column=0,
             column_span=2,
             minimum_width=COLUMN_WIDTH,
-            tooltip_text="Zoom the main camera",
+            tooltip_text="Zoom the main camera.",
         )
         self.zoom_slider.setStyleSheet("""
             QSlider::handle:horizontal {{
@@ -326,7 +324,7 @@ class ManualSegmentationWidget(QWidget):
             row=0,
             column=3,
             minimum_width=COLUMN_WIDTH,
-            tooltip_text="Use a predefined HU contrast",
+            tooltip_text="Use a predefined HU contrast.",
             isHBoxLayout=True,
         )
 
@@ -344,9 +342,9 @@ class ManualSegmentationWidget(QWidget):
 
         self.toggle_import_panel_widget(False)
 
-    def add_import_VR_landmarks_panel(self, row, column=0):
+    def add_manage_oriented_landmarks_panel(self, row, column=0):
         """
-        Create import VR landmarks panel
+        Create manage oriented landmarks panel
 
         Parameters
         ----------
@@ -356,68 +354,108 @@ class ManualSegmentationWidget(QWidget):
             column position of the panel in the main QGridLayout
 
         """
-
         # === Set panel parameters ===
-        self.import_VR_landmarks_panel = QGroupBox("2. IMPORT VR LANDMARKS FROM DIVA")
-        self.import_VR_landmarks_panel.setStyleSheet("margin-top : 5px;")
+        self.manage_oriented_landmarks_panel = QGroupBox("2. MANAGE ORIENTED LANDMARKS FOR DIVA")
+        self.manage_oriented_landmarks_panel.setStyleSheet("margin-top : 5px;")
 
         # === Set panel layout parameters ===
-        self.import_VR_landmarks_layout = QGridLayout()
-        self.import_VR_landmarks_layout.setContentsMargins(10, 10, 10, 10)
-        self.import_VR_landmarks_layout.setSpacing(5)
-        self.import_VR_landmarks_layout.setAlignment(QtCore.Qt.AlignTop)
+        self.manage_oriented_landmarks_layout = QGridLayout()
+        self.manage_oriented_landmarks_layout.setContentsMargins(10, 10, 10, 10)
+        self.manage_oriented_landmarks_layout.setSpacing(5)
+        self.manage_oriented_landmarks_layout.setAlignment(QtCore.Qt.AlignTop)
 
         # === Add Qwidgets to the panel layout ===
-        self.import_VR_landmarks_push_button = add_push_button(
-            name="Open VR landmarks file",
-            layout=self.import_VR_landmarks_layout,
+        self.import_oriented_landmarks_push_button = add_push_button(
+            name="Open landmarks file",
+            layout=self.manage_oriented_landmarks_layout,
             callback_function=self.set_oriented_landmarks_with_path,
             row=0,
             column=0,
             column_span=2,
             minimum_width=COLUMN_WIDTH,
-            tooltip_text="Import VR landmarks from the DIVA software",
+            tooltip_text="Import the oriented landmarks from the DIVA software.",
         )
 
-        # Import tools are created in another layout
-        self.tool_VR_landmarks_layout = QHBoxLayout()
+        # Oriented landmarks tools are created in another layout
+        self.tool_oriented_landmarks_layout = QHBoxLayout()
 
-        self.go_to_selected_VR_landmark_push_button = add_icon_push_button(
-            icon=QIcon(get_icon_path('map')),
-            layout=self.tool_VR_landmarks_layout,
-            callback_function=self.go_to_VR_landmark,
+        self.add_oriented_landmark_push_button = add_icon_push_button(
+            icon=QIcon(get_icon_path('plus')),
+            layout=self.tool_oriented_landmarks_layout,
+            callback_function=self.update_landmarks_layer_mode,
             row=0,
             column=0,
-            tooltip_text="TODO",
+            tooltip_text="When checked, click on the image to add a landmark, uncheck it to disable.",
             isHBoxLayout=True,
         )
-        self.go_to_selected_VR_landmark_push_button.setCheckable(True)
+        self.add_oriented_landmark_push_button.setCheckable(True)
 
-        self.landmark_ID_text = add_label(
-            text="Landmark ID: ",
-            layout=self.tool_VR_landmarks_layout,
+        self.remove_oriented_landmark_push_button = add_icon_push_button(
+            icon=QIcon(get_icon_path('minus')),
+            layout=self.tool_oriented_landmarks_layout,
+            callback_function=self.remove_oriented_landmark,
             row=0,
             column=1,
+            tooltip_text="Remove the currently selected landmark in the drop-down menu.",
+            isHBoxLayout=True,
+        )
+
+        self.go_to_selected_oriented_landmark_push_button = add_icon_push_button(
+            icon=QIcon(get_icon_path('map')),
+            layout=self.tool_oriented_landmarks_layout,
+            callback_function=self.go_to_oriented_landmark,
+            row=0,
+            column=2,
+            tooltip_text="Go to the landmark position selected in the drop-down menu.",
+            isHBoxLayout=True,
+        )
+        self.go_to_selected_oriented_landmark_push_button.setCheckable(True)
+
+        self.landmark_ID_text = add_label(
+            text='Landmark ID: ',
+            layout=self.tool_oriented_landmarks_layout,
+            row=0,
+            column=3,
             isHBoxLayout=True,
             isResizingWithTextSize=True,
         )
 
-        self.import_VR_landmarks_layout.addLayout(self.tool_VR_landmarks_layout, 1 , 0)
+        self.manage_oriented_landmarks_layout.addLayout(self.tool_oriented_landmarks_layout, 1 , 0)
 
-        self.selected_VR_landmark_combo_box = add_combo_box(
+        self.selected_oriented_landmark_combo_box = add_combo_box(
             list_items=[" "],
-            layout=self.import_VR_landmarks_layout,
-            callback_function=self.go_to_VR_landmark,
+            layout=self.manage_oriented_landmarks_layout,
+            callback_function=self.go_to_oriented_landmark,
             row=1,
             column=1,
             minimum_width=COLUMN_WIDTH,
-            tooltip_text="TODO",
+            tooltip_text="Select a landmark index from the list to visualize it more easily.",
+        )
+        
+        self.export_oriented_landmarks_push_button = add_push_button(
+            name="Export landmarks file",
+            layout=self.manage_oriented_landmarks_layout,
+            callback_function=self.export_oriented_landmarks,
+            row=2,
+            column=0,
+            minimum_width=COLUMN_WIDTH,
+            tooltip_text="Export the oriented landmarks to be opened in the DIVA sofware.",
+        )
+        
+        self.reset_oriented_landmarks_push_button = add_push_button(
+            name="Delete landmarks",
+            layout=self.manage_oriented_landmarks_layout,
+            callback_function=self.reset_oriented_landmark,
+            row=2,
+            column=1,
+            minimum_width=COLUMN_WIDTH,
+            tooltip_text="Delete all landmarks.",
         )
 
-        self.import_VR_landmarks_panel.setLayout(self.import_VR_landmarks_layout)
+        self.manage_oriented_landmarks_panel.setLayout(self.manage_oriented_landmarks_layout)
 
         # === Add panel to the main layout ===
-        self.layout.addWidget(self.import_VR_landmarks_panel, row, column)
+        self.layout.addWidget(self.manage_oriented_landmarks_panel, row, column)
 
     def add_annotation_panel(self, row, column=0):
         """
@@ -431,7 +469,6 @@ class ManualSegmentationWidget(QWidget):
             column position of the panel in the main QGridLayout
 
         """
-
         # === Set panel parameters ===
         self.annotation_panel = QGroupBox("3. ANNOTATE")
         self.annotation_panel.setStyleSheet("margin-top : 5px;")
@@ -451,7 +488,7 @@ class ManualSegmentationWidget(QWidget):
             column=0,
             column_span=2,
             minimum_width=COLUMN_WIDTH,
-            tooltip_text="Open a segmentation file with the same size of the original image",
+            tooltip_text="Open a segmentation file with the same size of the original image.",
         )
 
         # Annotations tools are created in another layout
@@ -463,7 +500,7 @@ class ManualSegmentationWidget(QWidget):
             callback_function=self.undo_segmentation,
             row=0,
             column=0,
-            tooltip_text="Undo the last painting action",
+            tooltip_text="Undo the last painting action.",
             isHBoxLayout=True,
         )
 
@@ -487,7 +524,7 @@ class ManualSegmentationWidget(QWidget):
             row=1,
             column=1,
             minimum_width=COLUMN_WIDTH,
-            tooltip_text="Select the pre-defined structure to annotate",
+            tooltip_text="Select the pre-defined structure to annotate.",
         )
 
         self.annotation_panel.setLayout(self.annotation_layout)
@@ -507,7 +544,6 @@ class ManualSegmentationWidget(QWidget):
             column position of the panel in the main QGridLayout
 
         """
-
         # === Set panel parameters ===
         self.reset_export_panel = QGroupBox("5. EXPORT ANNOTATION")
         self.reset_export_panel.setStyleSheet("margin-top : 5px;")
@@ -524,7 +560,7 @@ class ManualSegmentationWidget(QWidget):
             row=0,
             column=0,
             minimum_width=COLUMN_WIDTH,
-            tooltip_text="Export only the segmented data",
+            tooltip_text="Export only the segmented data.",
         )
 
         self.reset_push_button = add_push_button(
@@ -534,7 +570,7 @@ class ManualSegmentationWidget(QWidget):
             row=0,
             column=1,
             minimum_width=COLUMN_WIDTH,
-            tooltip_text="Delete all segmentation data",
+            tooltip_text="Delete all segmentation data.",
         )
 
         self.backup_check_box = add_check_box(
@@ -545,7 +581,7 @@ class ManualSegmentationWidget(QWidget):
             column=0,
             column_span=2,
             minimum_width=COLUMN_WIDTH,
-            tooltip_text="Activate the automatic backup of the segmentation data when the slice inex is changed",
+            tooltip_text="Activate the automatic backup of the segmentation data when the slice inex is changed.",
         )
         self.backup_check_box.setChecked(False)
 
@@ -553,94 +589,6 @@ class ManualSegmentationWidget(QWidget):
 
         # === Add panel to the main layout ===
         self.layout.addWidget(self.reset_export_panel, row, column)
-
-    def add_view_panel(self, row, column):
-        """
-        Create view panel
-
-        Parameters
-        ----------
-        row : int
-            row position of the panel in the help QGridLayout
-        column : int
-            column position of the panel in the help QGridLayout
-
-        """
-
-        # === Set panel parameters ===
-        self.view_panel = QGroupBox("3D VIEW AXIS")
-        self.view_panel.setStyleSheet("margin-top : 5px;")
-
-        # === Set panel layout parameters ===
-        self.view_layout = QGridLayout()
-        self.view_layout.setSpacing(5)
-        self.view_layout.setContentsMargins(10, 10, 10, 10)
-
-        # === Add Qwidgets to the panel layout ===
-        self.view_image_1 = add_image_widget(
-            name="view1",
-            layout=self.view_layout,
-            image_path='',
-            row=0,
-            column=0,
-            visibility=False,
-            minimum_width=0
-            )
-
-        self.view_image_2 = add_image_widget(
-            name="view2",
-            layout=self.view_layout,
-            image_path='',
-            row=0,
-            column=1,
-            visibility=False,
-            minimum_width=0
-            )
-
-        self.view_panel.setLayout(self.view_layout)
-
-        # === Add panel to the help layout ===
-        self.help_layout.addWidget(self.view_panel, row, column)
-
-    def add_atlas_panel(self, row, column):
-        """
-        Create atlas panel
-
-        Parameters
-        ----------
-        row : int
-            row position of the panel in the help QGridLayout
-        column : int
-            column position of the panel in the help QGridLayout
-
-        """
-
-        # === Set panel parameters ===
-        self.atlas_panel = QGroupBox("ATLAS")
-        self.atlas_panel.setStyleSheet("margin-top : 5px;")
-
-        # === Set panel layout parameters ===
-        self.atlas_layout = QGridLayout()
-        self.atlas_layout.setSpacing(5)
-        self.atlas_layout.setContentsMargins(10, 10, 10, 10)
-
-        # === Add Qwidgets to the panel layout ===
-        self.atlas_label = add_label(
-            text='',
-            layout=self.atlas_layout,
-            row=0,
-            column=0)
-
-        self.canvas_ax1 = VispyCanvas(
-            keys=None,
-            vsync=True,
-            parent=self.atlas_label,
-        )
-
-        self.atlas_panel.setLayout(self.atlas_layout)
-
-        # === Add panel to the help layout ===
-        self.help_layout.addWidget(self.atlas_panel, row, column)
 
     def add_slice_selection_panel(self, row, column=0):
         """
@@ -654,7 +602,6 @@ class ManualSegmentationWidget(QWidget):
             column position of the panel in the main QGridLayout
 
         """
-
         # === Set panel parameters ===
         self.slice_selection_panel = QGroupBox("4. SELECT SLICES OF INTEREST")
         self.slice_selection_panel.setStyleSheet("margin-top : 5px;")
@@ -676,7 +623,7 @@ class ManualSegmentationWidget(QWidget):
             callback_function=self.add_selected_slice,
             row=0,
             column=0,
-            tooltip_text="Add the currently displayed z-index in the drop-down menu. Click on the map button to go to the selected slice.",
+            tooltip_text="Add the currently displayed slice index in the drop-down menu. Click on the map button to go to the selected slice.",
             isHBoxLayout=True,
         )
 
@@ -686,7 +633,7 @@ class ManualSegmentationWidget(QWidget):
             callback_function=self.remove_selected_slice,
             row=0,
             column=1,
-            tooltip_text="Remove the currently displayed z-index in the drop-down menu.",
+            tooltip_text="Remove the currently displayed slice index in the drop-down menu.",
             isHBoxLayout=True,
         )
 
@@ -696,7 +643,7 @@ class ManualSegmentationWidget(QWidget):
             callback_function=self.go_to_selected_slice,
             row=0,
             column=2,
-            tooltip_text="Go to the z-index selected in the drop-down menu.",
+            tooltip_text="Go to the slice index selected in the drop-down menu.",
             isHBoxLayout=True,
         )
         self.go_to_selected_slice_push_button.setCheckable(True)
@@ -707,9 +654,9 @@ class ManualSegmentationWidget(QWidget):
             row=0,
             column=3,
             isHBoxLayout=True,
-            isResizingWithTextSize=True
+            isResizingWithTextSize=True,
             )
-    
+
         self.slice_selection_layout.addLayout(self.tool_slice_selection_layout, 0, 0)
 
         self.selected_slice_combo_box = add_combo_box(
@@ -719,18 +666,18 @@ class ManualSegmentationWidget(QWidget):
             row=0,
             column=1,
             minimum_width=COLUMN_WIDTH,
-            tooltip_text="Select a z-index from the list to work with it more easily.",
+            tooltip_text="Select a slice index from the list to work with it more easily.",
         )
 
-    # Slice selection tools are created in another layout
+        # Slice selection tools are created in another layout
         self.step_range_text = add_label(
             text='Step slices range: ',
             layout=self.slice_selection_layout,
             row=1,
             column=0,
-            isResizingWithTextSize=True
+            isResizingWithTextSize=True,
         )
-        
+
         self.tool2_slice_selection_layout = QHBoxLayout()
 
         self.go_left_push_button = add_icon_push_button(
@@ -739,10 +686,10 @@ class ManualSegmentationWidget(QWidget):
             callback_function=self.go_left_step_slices,
             row=0,
             column=0,
-            tooltip_text="Move backward in the z axe acording to the step range.",
+            tooltip_text="Move backward in the displayed axe acording to the step range.",
             isHBoxLayout=True,
         )
-        
+
         self.step_range_spin_box = add_spin_box(
             layout=self.tool2_slice_selection_layout,
             row=0,
@@ -758,7 +705,7 @@ class ManualSegmentationWidget(QWidget):
             callback_function=self.go_right_step_slices,
             row=0,
             column=2,
-            tooltip_text="Move forward in the z axe acording to the step range.",
+            tooltip_text="Move forward in the displayed axe acording to the step range.",
             isHBoxLayout=True,
         )
 
@@ -771,60 +718,6 @@ class ManualSegmentationWidget(QWidget):
 
 
 # ============ Toggle widgets and panel ============
-    def toggle_panels(self, list_panel_names, isVisible):
-        """
-        Make visible panels
-
-        Parameters
-        ----------
-        list_panel_names : List[str]
-            list of the name of the panels to enable
-        isVisible : bool
-            visible status of the panels
-
-        """
-        for panel_name in list_panel_names:
-            if panel_name == "import_VR_landmarks_panel":
-                self.import_VR_landmarks_panel.setVisible(isVisible)
-                self.selected_VR_landmark_combo_box.setVisible(isVisible)
-                self.go_to_selected_VR_landmark_push_button.setVisible(isVisible)
-                self.landmark_ID_text.setVisible(isVisible)
-                self.import_VR_landmarks_push_button.setVisible(isVisible)
-
-            if panel_name == "annotation_panel":
-                self.annotation_panel.setVisible(isVisible)
-                self.annotation_combo_box.setVisible(isVisible)
-                self.import_segmentation_push_button.setVisible(isVisible)
-                self.undo_push_button.setVisible(isVisible)
-                self.lock_push_button.setVisible(isVisible)
-
-            elif panel_name == "slice_selection_panel":
-                self.slice_selection_panel.setVisible(isVisible)
-                self.add_selected_slice_push_button.setVisible(isVisible)
-                self.remove_selected_slice_push_button.setVisible(isVisible)
-                self.go_to_selected_slice_push_button.setVisible(isVisible)
-                self.slice_selection_text.setVisible(isVisible)
-                self.selected_slice_combo_box.setVisible(isVisible)
-                self.step_range_spin_box.setVisible(isVisible)
-                self.go_right_push_button.setVisible(isVisible)
-                self.go_left_push_button.setVisible(isVisible)
-                self.step_range_text.setVisible(isVisible)
-
-            elif panel_name == "reset_export_panel":
-                self.reset_export_panel.setVisible(isVisible)
-                self.backup_check_box.setVisible(isVisible)
-                self.reset_push_button.setVisible(isVisible)
-                self.export_push_button.setVisible(isVisible)
-
-            elif panel_name == "view_panel":
-                self.view_panel.setVisible(isVisible)
-                self.view_image_1.setVisible(isVisible)
-                self.view_image_2.setVisible(isVisible)
-
-            elif panel_name == "atlas_panel":
-                self.atlas_panel.setVisible(isVisible)
-                self.atlas_label.setVisible(isVisible)
-
     def toggle_annotation_sub_panel(self):
         """
             Toggle sub panel of the structure to annotate and toggle SliceSelection panel if "Shoulder Bones" or "Shoulder Deltoid" or "Feta" is visible
@@ -840,7 +733,6 @@ class ManualSegmentationWidget(QWidget):
             toggle_shoulder_bones = False
             toggle_shoulder_deltoid = False
             toggle_shoulder_bone_borders = False
-            toggle_napari_dim_button = True
             toggle_mouse_embryon = False
 
         elif structure_name == "Shoulder":
@@ -851,7 +743,6 @@ class ManualSegmentationWidget(QWidget):
             toggle_shoulder_bones = False
             toggle_shoulder_deltoid = False
             toggle_shoulder_bone_borders = False
-            toggle_napari_dim_button = True
             toggle_mouse_embryon = False
 
         elif structure_name == "Shoulder Bones":
@@ -862,9 +753,8 @@ class ManualSegmentationWidget(QWidget):
             toggle_shoulder_bones = True
             toggle_shoulder_deltoid = False
             toggle_shoulder_bone_borders = False
-            toggle_napari_dim_button = False
             toggle_mouse_embryon = False
-        
+
         elif structure_name == "Shoulder Bone Borders":
             toggle_feta = False
             toggle_fetus = False
@@ -873,9 +763,8 @@ class ManualSegmentationWidget(QWidget):
             toggle_shoulder_bones = False
             toggle_shoulder_deltoid = False
             toggle_shoulder_bone_borders = True
-            toggle_napari_dim_button = False
             toggle_mouse_embryon = False
-        
+
         elif structure_name == "Shoulder Deltoid":
             toggle_feta = False
             toggle_fetus = False
@@ -884,7 +773,6 @@ class ManualSegmentationWidget(QWidget):
             toggle_shoulder_bones = False
             toggle_shoulder_deltoid = True
             toggle_shoulder_bone_borders = False
-            toggle_napari_dim_button = False
             toggle_mouse_embryon = False
 
         elif structure_name == "Feta Challenge":
@@ -895,10 +783,8 @@ class ManualSegmentationWidget(QWidget):
             toggle_shoulder_bones = False
             toggle_shoulder_deltoid = False
             toggle_shoulder_bone_borders = False
-            toggle_slice_selection_panel = False
-            toggle_napari_dim_button = True
             toggle_mouse_embryon = False
-            
+
         elif structure_name == "Larva":
             toggle_feta = False
             toggle_fetus = False
@@ -907,9 +793,8 @@ class ManualSegmentationWidget(QWidget):
             toggle_shoulder_bones = False
             toggle_shoulder_deltoid = False
             toggle_shoulder_bone_borders = False
-            toggle_napari_dim_button = True
             toggle_mouse_embryon = False
-        
+
         elif structure_name == "Mouse Embryon":
             toggle_feta = False
             toggle_fetus = False
@@ -918,10 +803,8 @@ class ManualSegmentationWidget(QWidget):
             toggle_shoulder_bones = False
             toggle_shoulder_deltoid = False
             toggle_shoulder_bone_borders = False
-            toggle_slice_selection_panel = True
-            toggle_napari_dim_button = True
             toggle_mouse_embryon = True
-            
+
         else:
             toggle_feta = False
             toggle_fetus = False
@@ -930,25 +813,21 @@ class ManualSegmentationWidget(QWidget):
             toggle_shoulder_bones = False
             toggle_shoulder_deltoid = False
             toggle_shoulder_bone_borders = False
-            toggle_napari_dim_button = False
             toggle_mouse_embryon = False
-            
-        # == toggle sub panels ==
+
+        # === Toggle sub panels ===
         self.feta.toggle_sub_panel(toggle_feta)
+        self.larva.toggle_sub_panel(toggle_larva)
         self.fetus.toggle_sub_panel(toggle_fetus)
         self.shoulder.toggle_sub_panel(toggle_shoulder)
-        self.shoulder_bones.toggle_sub_panel(toggle_shoulder_bones)
-        self.shoulder_bone_borders.toggle_sub_panel(toggle_shoulder_bone_borders)
-        self.shoulder_deltoid.toggle_sub_panel(toggle_shoulder_deltoid)
         self.mouse_embryon.toggle_sub_panel(toggle_mouse_embryon)
-        self.larva.toggle_sub_panel(toggle_larva)
+        self.shoulder_bones.toggle_sub_panel(toggle_shoulder_bones)
+        self.shoulder_deltoid.toggle_sub_panel(toggle_shoulder_deltoid)
+        self.shoulder_bone_borders.toggle_sub_panel(toggle_shoulder_bone_borders)
 
-        # == reset widgets ==
+        # === Reset widgets ===
         self.reset_annotation_radio_button_checked_id()
         self.reset_annotation_layer_selected_label()
-
-        # == Update dimension button and panel name ==
-        disable_napari_change_dim_button(self.viewer, toggle_napari_dim_button)
 
     def toggle_import_panel_widget(self, isVisible, file_type=None):
         """
@@ -984,8 +863,165 @@ class ManualSegmentationWidget(QWidget):
             self.export_custom_contrast_push_button.setVisible(isVisible)
             self.default_contrast_combo_box.setVisible(isVisible)
 
+    def toggle_panels(self, list_panel_names, isVisible):
+        """
+        Make visible panels
+
+        Parameters
+        ----------
+        list_panel_names : List[str]
+            list of the name of the panels to enable
+        isVisible : bool
+            visible status of the panels
+
+        """
+        for panel_name in list_panel_names:
+            if panel_name == "annotation_panel":
+                self.annotation_panel.setVisible(isVisible)
+                self.import_segmentation_push_button.setVisible(isVisible)
+                self.undo_push_button.setVisible(isVisible)
+                self.lock_push_button.setVisible(isVisible)
+                self.annotation_combo_box.setVisible(isVisible)
+
+            elif panel_name == "manage_oriented_landmarks_panel":
+                self.manage_oriented_landmarks_panel.setVisible(isVisible)
+                self.import_oriented_landmarks_push_button.setVisible(isVisible)
+                self.add_oriented_landmark_push_button.setVisible(isVisible)
+                self.remove_oriented_landmark_push_button.setVisible(isVisible)
+                self.go_to_selected_oriented_landmark_push_button.setVisible(isVisible)
+                self.landmark_ID_text.setVisible(isVisible)
+                self.selected_oriented_landmark_combo_box.setVisible(isVisible)
+                self.export_oriented_landmarks_push_button.setVisible(isVisible)
+                self.reset_oriented_landmarks_push_button.setVisible(isVisible)
+
+            elif panel_name == "slice_selection_panel":
+                self.slice_selection_panel.setVisible(isVisible)
+                self.add_selected_slice_push_button.setVisible(isVisible)
+                self.remove_selected_slice_push_button.setVisible(isVisible)
+                self.go_to_selected_slice_push_button.setVisible(isVisible)
+                self.slice_selection_text.setVisible(isVisible)
+                self.selected_slice_combo_box.setVisible(isVisible)
+                self.step_range_text.setVisible(isVisible)
+                self.go_left_push_button.setVisible(isVisible)
+                self.step_range_spin_box.setVisible(isVisible)
+                self.go_right_push_button.setVisible(isVisible)
+
+            elif panel_name == "reset_export_panel":
+                self.reset_export_panel.setVisible(isVisible)
+                self.reset_push_button.setVisible(isVisible)
+                self.export_push_button.setVisible(isVisible)
+                self.backup_check_box.setVisible(isVisible)
+
+    def enable_widgets(self, isEnable):
+        """
+        Enable widgets which interact with the 2D view
+
+        Parameters
+        ----------
+         isEnable : bool
+            enable status of the widgets
+
+        """
+        self.import_oriented_landmarks_push_button.setEnabled(isEnable)
+        self.add_oriented_landmark_push_button.setEnabled(isEnable)
+        self.remove_oriented_landmark_push_button.setEnabled(isEnable)
+        self.go_to_selected_oriented_landmark_push_button.setEnabled(isEnable)
+        self.selected_oriented_landmark_combo_box.setEnabled(isEnable)
+
+        self.add_selected_slice_push_button.setEnabled(isEnable)
+        self.remove_selected_slice_push_button.setEnabled(isEnable)
+        self.go_to_selected_slice_push_button.setEnabled(isEnable)
+        self.selected_slice_combo_box.setEnabled(isEnable)
+        self.go_left_push_button.setEnabled(isEnable)
+        self.step_range_spin_box.setEnabled(isEnable)
+        self.go_right_push_button.setEnabled(isEnable)
+
 
 # ============ Update widget status or panel title ============
+    def update_go_to_selected_slice_push_button_check_status(self, event):
+        """
+        Update the checked status of the go_to_selected_slice push button according to the currently selected slice and the currently displayed slice
+
+        Parameters
+        ----------
+        event : event
+            event with the index of the current slice displayed in value as (x, y, z)
+
+        """
+        if len(event.value) == 3:
+            axis_order = ['z', 'y', 'x']
+
+            if (self.go_to_selected_slice_push_button.isChecked() == True) and (self.selected_slice_combo_box.currentText() != " "):
+                current_axis_index = self.viewer.dims.not_displayed[0]
+                current_slice = self.viewer.dims.current_step[current_axis_index]
+                selected_slice = int(self.selected_slice_combo_box.currentText()[:-1])
+                selected_axis_index = axis_order.index(self.selected_slice_combo_box.currentText()[-1])
+
+                if (current_slice != selected_slice) or (current_axis_index != selected_axis_index):
+                    self.go_to_selected_slice_push_button.setChecked(False)
+
+            elif (self.go_to_selected_slice_push_button.isChecked() == False) and (self.selected_slice_combo_box.currentText() != " "):
+                current_axis_index = self.viewer.dims.not_displayed[0]
+                current_slice = self.viewer.dims.current_step[current_axis_index]
+                selected_slice = int(self.selected_slice_combo_box.currentText()[:-1])
+                selected_axis_index = axis_order.index(self.selected_slice_combo_box.currentText()[-1])
+
+                if (current_slice == selected_slice) and (current_axis_index == selected_axis_index):
+                    self.go_to_selected_slice_push_button.setChecked(True)
+
+    def update_go_to_selected_oriented_landmark_push_button_check_status(self, event):
+        """
+        Update the checked status of the go_to_selected_oriented_landmark push button according to the currently selected slice and the currently displayed slice
+
+        Parameters
+        ----------
+        event : event
+            event with the index of the current slice displayed in value as (x, y, z)
+
+        """
+        if len(event.value) == 3:
+            current_axis_index = self.viewer.dims.not_displayed[0]
+
+            if (self.go_to_selected_oriented_landmark_push_button.isChecked() == True) and (self.selected_oriented_landmark_combo_box.currentText() != " "):
+                current_slice = self.viewer.dims.current_step[current_axis_index]
+                landmark_slice = self.oriented_landmarks_positions_array[int(self.selected_oriented_landmark_combo_box.currentText()) - 1][current_axis_index]
+
+                if current_slice != landmark_slice:
+                    self.go_to_selected_oriented_landmark_push_button.setChecked(False)
+
+            elif (self.go_to_selected_oriented_landmark_push_button.isChecked() == False) and (self.selected_oriented_landmark_combo_box.currentText() != " "):
+                current_slice = self.viewer.dims.current_step[current_axis_index]
+                landmark_slice = self.oriented_landmarks_positions_array[int(self.selected_oriented_landmark_combo_box.currentText()) - 1][current_axis_index]
+
+                if current_slice == landmark_slice:
+                    self.go_to_selected_oriented_landmark_push_button.setChecked(True)
+
+    def update_panel_titles(self):
+        """
+        Update the number in the panel title to match the actual number of panels displayed (based on the OrientedLandmarks and SelectionSlice panels display status)
+
+        """
+        isOrientedLandmarksPanelVisible = self.manage_oriented_landmarks_panel.isVisible()
+        isSelectionSlicePanelVisible = self.slice_selection_panel.isVisible()
+
+        if isOrientedLandmarksPanelVisible and isSelectionSlicePanelVisible:
+            self.annotation_panel.setTitle("3. ANNOTATE")
+            self.slice_selection_panel.setTitle("4. SELECT SLICES OF INTEREST")
+            self.reset_export_panel.setTitle("5. EXPORT ANNOTATION")
+
+        elif isOrientedLandmarksPanelVisible and (not isSelectionSlicePanelVisible):
+            self.annotation_panel.setTitle("3. ANNOTATE")
+            self.reset_export_panel.setTitle("4. EXPORT ANNOTATION")
+
+        elif (not isOrientedLandmarksPanelVisible) and isSelectionSlicePanelVisible:
+            self.annotation_panel.setTitle("2. ANNOTATE")
+            self.slice_selection_panel.setTitle("3. SELECT SLICES OF INTEREST")
+            self.reset_export_panel.setTitle("4. EXPORT ANNOTATION")
+
+        elif (not isOrientedLandmarksPanelVisible) and (not isSelectionSlicePanelVisible):
+            self.annotation_panel.setTitle("2. ANNOTATE")
+            self.reset_export_panel.setTitle("3. EXPORT ANNOTATION")
+
     def update_reset_export_panel_title(self, isSelectionSlicePanelVisible):
         """
         Update the number in the ResetExport panel title to match the actual number of panels displayed (based on the SelectionSlice panel display)
@@ -1001,77 +1037,29 @@ class ManualSegmentationWidget(QWidget):
         else:
             self.reset_export_panel.setTitle("4. EXPORT ANNOTATION")
 
-    def update_panel_titles(self):
+    def update_selected_oriented_landmark_combo_box(self):
         """
-        Update the number in the panel title to match the actual number of panels displayed (based on the VRLandmarks and SelectionSlice panels display status)
-
-        """
-        isVRLandmarksPanelVisible = self.import_VR_landmarks_panel.isVisible()
-        isSelectionSlicePanelVisible = self.slice_selection_panel.isVisible()
-
-        if isVRLandmarksPanelVisible and isSelectionSlicePanelVisible:
-            self.annotation_panel.setTitle("3. ANNOTATE")
-            self.slice_selection_panel.setTitle("4. SELECT SLICES OF INTEREST")
-            self.reset_export_panel.setTitle("5. EXPORT ANNOTATION")
-
-        elif isVRLandmarksPanelVisible and (not isSelectionSlicePanelVisible):
-            self.annotation_panel.setTitle("3. ANNOTATE")
-            self.reset_export_panel.setTitle("4. EXPORT ANNOTATION")
-
-        elif (not isVRLandmarksPanelVisible) and isSelectionSlicePanelVisible:
-            self.annotation_panel.setTitle("2. ANNOTATE")
-            self.slice_selection_panel.setTitle("3. SELECT SLICES OF INTEREST")
-            self.reset_export_panel.setTitle("4. EXPORT ANNOTATION")
-
-        elif (not isVRLandmarksPanelVisible) and (not isSelectionSlicePanelVisible):
-            self.annotation_panel.setTitle("2. ANNOTATE")
-            self.reset_export_panel.setTitle("3. EXPORT ANNOTATION")
-
-    def update_go_to_selected_slice_push_button_check_status(self, event):
-        """
-        Update the checked status of the go_to_selected_slice push button according to the currently selected slice and the currently displayed slice
-
-        Parameters
-        ----------
-        event : event
-            event with the index of the current slice displayed in value as (x, y, z)
+        Fill the selected_oriented_landmark Combo Box with the oriented landmark indexes.
 
         """
-        if len(event.value) == 3:
-            if (self.go_to_selected_slice_push_button.isChecked() == True) and (self.selected_slice_combo_box.currentText() != " "):
-                current_slice_z = self.viewer.dims.current_step[0]
-                selected_slice_z = int(self.selected_slice_combo_box.currentText())
-                if current_slice_z != selected_slice_z:
-                    self.go_to_selected_slice_push_button.setChecked(False)
+        self.reset_oriented_landmark_combo_box()
 
-            elif (self.go_to_selected_slice_push_button.isChecked() == False) and (self.selected_slice_combo_box.currentText() != " "):
-                current_slice_z = self.viewer.dims.current_step[0]
-                selected_slice_z = int(self.selected_slice_combo_box.currentText())
-                if current_slice_z == selected_slice_z:
-                    self.go_to_selected_slice_push_button.setChecked(True)
+        for landmark_index in range(len(self.oriented_landmarks_positions_array)):
+            new_text = str(landmark_index + 1)
+            self.selected_oriented_landmark_combo_box.addItem(new_text)
 
-    def update_go_to_selected_VR_landmark_push_button_check_status(self, event):
+    def set_button_interactivity(self, event):
         """
-        Update the checked status of the go_to_selected_VR_landmark push button according to the currently selected slice and the currently displayed slice
-
-        Parameters
-        ----------
-        event : event
-            event with the index of the current slice displayed in value as (x, y, z)
-
+        Change interactivity of some buttons according to the mode of display (2D or 3D view)
+        
         """
-        if len(event.value) == 3:
-            if (self.go_to_selected_VR_landmark_push_button.isChecked() == True) and (self.selected_VR_landmark_combo_box.currentText() != " "):
-                current_slice_z = self.viewer.dims.current_step[0]
-                landmark_slice_z, _, _ = self.VR_landmarks_positions_array[int(self.selected_VR_landmark_combo_box.currentText()) - 1]
-                if current_slice_z != landmark_slice_z:
-                    self.go_to_selected_VR_landmark_push_button.setChecked(False)
-
-            elif (self.go_to_selected_VR_landmark_push_button.isChecked() == False) and (self.selected_VR_landmark_combo_box.currentText() != " "):
-                current_slice_z = self.viewer.dims.current_step[0]
-                landmark_slice_z, _, _ = self.VR_landmarks_positions_array[int(self.selected_VR_landmark_combo_box.currentText()) - 1]
-                if current_slice_z == landmark_slice_z:
-                    self.go_to_selected_VR_landmark_push_button.setChecked(True)
+        if event.value == 3:
+            # to prevent bug with 3D visualisation of the "orientations" and "landmarks" layers (i.e. point and vector layers)
+            while self.viewer.dims.displayed != (0, 1, 2):
+                self.viewer.dims._roll()
+            self.enable_widgets(False)
+        else:
+            self.enable_widgets(True)
 
 
 # ============ Import image data ============
@@ -1117,7 +1105,7 @@ class ManualSegmentationWidget(QWidget):
         # While in numpy, an array is indexed in the opposite order (z,y,x).
 
         if len(image_arr.shape) != 3:
-            display_warning_box(self, "Error", "Incorrect file size. Need to be a 3D image")
+            display_warning_box(self, "Error", "Incorrect file size. Need to be a 3D image.")
             return None
 
         self.file_name_label.setText(file_name)
@@ -1143,11 +1131,6 @@ class ManualSegmentationWidget(QWidget):
         extensions = Path(file_path).suffixes
         self.image_dir = Path(file_path).parents[0]
 
-        # if (extensions[-1] == ".tif") or (extensions[-1] == ".tiff"):
-        #     image_arr = tif.imread(file_path)
-        #     self.image_sitk = sitk.Image(image_arr.shape[2], image_arr.shape[1], image_arr.shape[0], sitk.sitkInt16)
-        #     self.file_name_label.setText(Path(file_path).stem)
-
         if (extensions[-1] in [".tif", ".tiff", ".nii"]) or (extensions == [".nii", ".gz"]):
             try:
                 self.image_sitk = sitk.ReadImage(file_path)
@@ -1170,7 +1153,7 @@ class ManualSegmentationWidget(QWidget):
             return None
 
         if len(image_arr.shape) != 3:
-            display_warning_box(self, "Error", "Incorrect file size. Need to be a 3D image")
+            
             return None
 
         return image_arr
@@ -1195,18 +1178,12 @@ class ManualSegmentationWidget(QWidget):
         if default_file_path is None:
             files_types = "Image File (*.tif *.tiff *.nii.gz *.nii)"
             file_path, _ = QFileDialog.getOpenFileName(self, "Choose a segmentation file", "" , files_types)
-
             if file_path == "":
-                return None
-
+                return None, None
         else:
             file_path = str(default_file_path)
 
         extensions = Path(file_path).suffixes
-
-        # if (extensions[-1] == ".tif") or (extensions[-1] == ".tiff"):
-        #     segmentation_arr = tif.imread(file_path)
-
         if (extensions[-1] in [".tif", ".tiff", ".nii"]) or (extensions == [".nii", ".gz"]):
             try:
                 segmentation_sitk = sitk.ReadImage(file_path)
@@ -1224,15 +1201,15 @@ class ManualSegmentationWidget(QWidget):
                 segmentation_sitk = sitk.Image(segmentation_arr.shape[2], segmentation_arr.shape[1], segmentation_arr.shape[0], sitk.sitkInt8)
 
             if any(n < 0 for n in np.unique(segmentation_arr)):
-                display_warning_box(self, "Error", "Incorrect NIFTI format : negative value")
-                return
+                display_warning_box(self, "Error", "Incorrect NIFTI format : negative value.")
+                return None, None
 
         else:
-            return None
+            return None, None
 
         if len(segmentation_arr.shape) != 3:
-            display_warning_box(self, "Error", "Incorrect file size. Need to be a 3D image")
-            return None
+            display_warning_box(self, "Error", "Incorrect file size. Need to be a 3D image.")
+            return None, None
 
         if not isinstance(segmentation_arr.flat[0], np.integer):
             segmentation_arr = segmentation_arr.astype(np.int)
@@ -1287,7 +1264,7 @@ class ManualSegmentationWidget(QWidget):
 
     def import_selected_slice(self, segmentation_sitk=None):
         """
-        Import metadata containing in the 'ImageDescription'/'Hesperos_SelectedSlices' as a list. (works only for tiff file TOIMPROVE)
+        Import metadata containing in the 'ImageDescription'/'Hesperos_SelectedSlices' as a list. (works only for tiff file TODO TOIMPROVE)
 
         Parameters
         ----------
@@ -1297,130 +1274,151 @@ class ManualSegmentationWidget(QWidget):
         """
         try:
             description = json.loads(segmentation_sitk.GetMetaData('ImageDescription'))
-            loaded_selected_slice_list = json.loads(description['Hesperos_SelectedSlices'])
+            loaded_selected_slice_list = description['Hesperos_SelectedSlices']
+            # loaded_selected_slice_list = json.load(description['Hesperos_SelectedSlices'])
         except:
             return
-
         if loaded_selected_slice_list != []:
-            self.selected_slice_list = loaded_selected_slice_list
+            if loaded_selected_slice_list != "[]":
+                self.selected_slice_list = loaded_selected_slice_list
+                self.selected_slice_list.sort(key=lambda text: int(text[:-1]))
 
-            # if len(self.selected_slice_list) >= 30:
-            #     display_warning_box(self, "Error", "More than 30 selected slices are not allowed. Please remove some selected slices to add new ones.")
-            #     return
-        
-            self.selected_slice_list.sort()
-
-            for slice_index in self.selected_slice_list:
-                new_text = str(slice_index)
-                self.selected_slice_combo_box.addItem(new_text)
+                for slice_index in self.selected_slice_list:
+                    new_text = str(slice_index)
+                    self.selected_slice_combo_box.addItem(new_text)
 
 
 # ============ Import data from DIVA ============
-    def import_VR_landmarks(self):
+    def import_oriented_landmarks_json(self):
         """
-        Import landmarks position and orientation (added in DIVA using Virtual Reality) from a .json file
-
-        """
-        files_types = "JSON File (*.json)"
-        file_path, _ = QFileDialog.getOpenFileName(self, "Choose a VR landmarks file from DIVA", "" , files_types)
-
-        if file_path == "":
-            return None
-
-        with open(file_path) as f:
-            VR_landmarks_dict = json.load(f)
-
-        positions = VR_landmarks_dict["_oriented_landmarks_parameters"]["_volume_positions"]
-        orientations = VR_landmarks_dict["_oriented_landmarks_parameters"]["_local_rotations"]
-
-        VR_landmarks_positions_array = [[] * len(positions[0]) for i in range(len(positions))]
-        VR_landmarks_orientations_array = [[] * len(orientations[0]) for i in range(len(orientations))]
-
-        # DIVA volume is ordered as (x, y, z) and z axis is inverted
-        # Numpy array is ordered as (z, y, x)
-        shape = self.viewer.layers['image'].data.shape #(x, y, z)
-        for i in range(len(positions)):
-            diva_x, diva_y, diva_z = round(positions[i]['x']), round(positions[i]['y']), round(positions[i]['z'])
-            VR_landmarks_positions_array[i] = [shape[0] - diva_z, diva_y, diva_x]
-            VR_landmarks_orientations_array[i] = [orientations[i]['x'], orientations[i]['y'], orientations[i]['z'], orientations[i]['w']]
-
-        # Check if landmark position is valid
-        for i in range(len(positions)):
-            if (VR_landmarks_positions_array[i][0] > shape[0]) or (VR_landmarks_positions_array[i][1] > shape[1]) or (VR_landmarks_positions_array[i][2] > shape[2]):
-                display_warning_box(self, "Error", "The imported landmark positions are outside of the image size.")
-                return
-
-        self.VR_landmarks_positions_array = np.array(VR_landmarks_positions_array)
-        self.VR_landmarks_orientations_array = np.array(VR_landmarks_orientations_array)
-        
-        self.VR_landmarks_array = self.create_oriented_landmarks_array()
-
-    # def create_oriented_landmarks_array(self):
-    #     """
-    #     TODO
-    #     """
-    #     if "image" in self.viewer.layers:
-    #         image_arr = self.viewer.layers['image'].data
-    #         oriented_landmarks_array = np.zeros(image_arr.shape, dtype=np.int8)
-    #         local_radius = 0.015 * image_arr.shape[1]
-            
-    #         for i in range (self.VR_landmarks_positions_array.shape[0]):
-    #             # create sphere
-    #             sphere =  np.zeros(image_arr.shape, dtype=np.int8)
-    #             sphere_center = self.VR_landmarks_positions_array[i]
-    #             sphere_position = np.array(sphere_center).reshape((-1,) + (1,) * len(sphere_center))
-    #             sphere_mask = np.linalg.norm(np.indices(oriented_landmarks_array.shape) - sphere_position, axis=0)
-    #             sphere_mask = (sphere_mask <= local_radius)
-            
-    #             # create capsule
-                
-                
-    #             # add label 
-    #             sphere[sphere_mask] = i + 1
-            
-            
-    #             oriented_landmarks_array = oriented_landmarks_array + sphere_mask
-        
-        
-    #     return oriented_landmarks_array
-            
-    
-    def create_oriented_landmarks_array(self):
-        """
-        TODO
+        Import landmarks positions and orientations (added in DIVA using Virtual Reality) from a .json file.
 
         Returns
         ----------
-        segmentation_arr : ndarray
-            TODO
+        status : bool
+            True if the importation succeed, False if not
 
-        """
-        if "image" in self.viewer.layers:
-            image_arr = self.viewer.layers['image'].data
-            oriented_landmarks_array = np.zeros(image_arr.shape, dtype=np.int8)
-            sphere_local_radius = 0.015 * image_arr.shape[1]
+        """        
+        files_types = "JSON File (*.json)"
+        file_path, _ = QFileDialog.getOpenFileName(self, "Choose a oriented landmarks file from DIVA", "" , files_types)
+
+        if file_path == "":
+            return False
+        
+
+        with open(file_path, 'r') as f:
+            oriented_landmarks_data = json.loads(f.read())
+        oriented_landmarks_positions_df = pd.json_normalize(oriented_landmarks_data['_oriented_landmarks_parameters'], record_path=['_volume_positions'])
+        oriented_landmarks_orientations_df = pd.json_normalize(oriented_landmarks_data['_oriented_landmarks_parameters'], record_path=['_local_rotations'])        
+        
+        nbr_landmarks = len(oriented_landmarks_positions_df)
+        # if nbr_landmarks > 10:
+        #     display_warning_box(self, "Error", "More than 10 oriented landmarks are not allowed. Please remove some landmarks in your file.")
+        #     return False
+
+        # DIVA volume is ordered as (x, y, z) and z axis is inverted
+        # Numpy array is ordered as (z, y, x)
+        shape = self.viewer.layers['image'].data.shape # as (x, y, z)
+
+        oriented_landmarks_positions_array = [[] * len(shape) for i in range(nbr_landmarks)]
+        oriented_landmarks_orientations_array = [[] * len(shape) for i in range(nbr_landmarks)]
+        oriented_landmarks_quaternions_array = [[] * 4 for i in range(nbr_landmarks)]
+
+        if ("x" and "y" and "z" and "w") in oriented_landmarks_orientations_df.columns.values.tolist():
+            for i in range(nbr_landmarks):
+                diva_x, diva_y, diva_z = round(oriented_landmarks_positions_df['x'][i]), round(oriented_landmarks_positions_df['y'][i]), round(oriented_landmarks_positions_df['z'][i])
+                oriented_landmarks_positions_array[i] = [shape[0] - diva_z, diva_y, diva_x]
+                oriented_landmarks_quaternions_array[i] = [oriented_landmarks_orientations_df['x'][i], oriented_landmarks_orientations_df['y'][i], oriented_landmarks_orientations_df['z'][i], oriented_landmarks_orientations_df['w'][i]]
+                special_variable_list = [[0.0, 1.0, 0.0, 0.0], [0.0, 1.0, 1.0, 0.0], [0.0, 1.0, 0.0, 1.0]]
+                if oriented_landmarks_quaternions_array[i] in special_variable_list:
+                    # landmark in z
+                    if oriented_landmarks_quaternions_array[i] == [0.0, 1.0, 0.0, 0.0]:
+                        oriented_landmarks_orientations_array[i] = [0.0, 0.0, 1.0]
+                    # landmark in y
+                    elif oriented_landmarks_quaternions_array[i] == [0.0, 1.0, 1.0, 0.0]:
+                        oriented_landmarks_orientations_array[i] = [0.0, 1.0, 0.0]
+                    # landmark in x
+                    elif oriented_landmarks_quaternions_array[i] == [0.0, 1.0, 0.0, 1.0]:
+                        oriented_landmarks_orientations_array[i] = [1.0, 0.0, 0.0]
+                        
+                else:
+                    forward = np.array([0.0, 0.0, 1.0])
+                    oriented_landmarks_orientations_array[i] = self.quaternion_multiply_old(oriented_landmarks_quaternions_array[i], forward)
+                    oriented_landmarks_orientations_array[i][-1] = - oriented_landmarks_orientations_array[i][-1]
+        else:
+            display_warning_box(self, "Error", "Incorrect orientations format: need to have quaternions as x, y, z and w in the file.")
+            return False
+
+        # Check if landmark position is valid
+        for i in range(nbr_landmarks):
+            if (oriented_landmarks_positions_array[i][0] > shape[0]) or (oriented_landmarks_positions_array[i][1] > shape[1]) or (oriented_landmarks_positions_array[i][2] > shape[2]) or any(x < 0 for x in oriented_landmarks_positions_array[i]):
+                display_warning_box(self, "Error", "Incorrect landmark positions: outside of the image size.")
+                return False
             
-            for i in range (self.VR_landmarks_positions_array.shape[0]):
-                # create sphere
-                sphere_center_local_position = self.volume_to_local_position(self.VR_landmarks_positions_array[i])
-                sphere = rg.sphere(image_arr.shape, sphere_local_radius, sphere_center_local_position, smoothing=True).astype(np.int16)
+        self.oriented_landmarks_positions_array = np.array(oriented_landmarks_positions_array)
+        self.oriented_landmarks_orientations_array = np.array(oriented_landmarks_orientations_array)
+        self.oriented_landmarks_quaternions_array = np.array(oriented_landmarks_quaternions_array)
 
-                # create capsule
-                capsule_center_local_position = sphere_center_local_position
-                capsule_center_local_position[0] = sphere_center_local_position[0] + 0.001
-                capsule_local_height = sphere_local_radius * 3
-                capsule_local_radius = sphere_local_radius * 0.75
-                capsule = rg.cylinder(image_arr.shape, capsule_local_height, capsule_local_radius, axis=1, position=capsule_center_local_position, smoothing=True).astype(np.int16)
-                
-                # rotate capsule
-                
-                
-                # add label           
-                oriented_landmarks_array[capsule > 0] = 5         
-                oriented_landmarks_array[sphere > 0] = 3
-                
-        return oriented_landmarks_array
+        return True
     
+    def quaternion_multiply(self, quaternion, vector3):
+        """
+        Rotate a vector by a quaternion : same as (quaternion * Vector3.forward) in Unity 
+        (inspired from https://answers.unity.com/questions/372371/multiply-quaternion-by-vector3-how-is-done.html)
+        
+        Parameters
+        ----------
+        quaternion : float[4]
+            array of (x, y, z, w) coordinates represented a Quaternion
+        vector3 : float[3]
+            array of (x, y, z)
+            
+        Returns
+        ----------
+        output : float[3]
+            array of (x, y, z)
+                    
+        """
+        q0 = quaternion[0]
+        q1 = quaternion[1]
+        q2 = quaternion[2]
+        q3 = quaternion[3]
+        m00 = 1.0 - 2.0 * q1 * q1 - 2.0 * q2 * q2
+        m01 = 2.0 * q0 * q1 - 2.0 * q2 * q3
+        m02 = 2.0 * q0 * q2 + 2.0 * q1 * q3
+        m10 = 2.0 * q0 * q1 + 2.0 * q2 * q3
+        m11 = 1.0 - 2.0 * q0 * q0 - 2.0 * q2 * q2
+        m12 = 2.0 * q1 * q2 - 2.0 * q0 * q3
+        m20 = 2.0 * q0 * q2 - 2.0 * q1 * q3
+        m21 = 2.0 * q1 * q2 + 2.0 * q0 * q3
+        m22 = 1.0 - 2.0 * q0 * q0 - 2.0 * q1 * q1
+        
+        x = m00 * vector3[0] + m01 * vector3[1] + m02 * vector3[2]
+        y = m10 * vector3[0] + m11 * vector3[1] + m12 * vector3[2]
+        z = m20 * vector3[0] + m21 * vector3[1] + m22 * vector3[2]
+        
+        return [x, y, z]
+    
+    def quaternion_multiply_old(self, quaternion, vector3):
+        
+        num = quaternion[0] * 2.0
+        num2 = quaternion[1] * 2.0
+        num3 = quaternion[2] * 2.0
+        num4 = quaternion[0] * num
+        num5 = quaternion[1] * num2
+        num6 = quaternion[2] * num3
+        num7 = quaternion[0] * num2
+        num8 = quaternion[0] * num3
+        num9 = quaternion[1] * num3
+        num10 = quaternion[3] * num
+        num11 = quaternion[3] * num2
+        num12 = quaternion[3] * num3
+        x = (1.0 - (num5 + num6)) * vector3[0] + (num7 - num12) * vector3[1] + (num8 + num11) * vector3[2]
+        y = (num7 + num12) * vector3[0] + (1.0 - (num4 + num6)) * vector3[1] + (num9 - num10) * vector3[2]
+        z = (num8 - num11) * vector3[0]+ (num9 + num10) * vector3[1] + (1.0 - (num4 + num5)) * vector3[2]
+        
+        return [x, y, z]
+
     def local_to_volume_position(self, local_position):
         """
         Convert local position to volume position according to the volume open in the "image" layer.
@@ -1438,7 +1436,7 @@ class ManualSegmentationWidget(QWidget):
         """
         if "image" in self.viewer.layers:
             image_arr = self.viewer.layers['image'].data
-            
+
             volume_position = np.array(local_position.shape)
             volume_position[0] = (local_position[0]) * (float)(image_arr.shape[0])
             volume_position[1] = (local_position[1]) * (float)(image_arr.shape[1])
@@ -1446,7 +1444,7 @@ class ManualSegmentationWidget(QWidget):
                 volume_position[2] = (local_position[2]) * (float)(image_arr.shape[2])
 
             return volume_position
-    
+
     def volume_to_local_position(self, volume_position):
         """
         Convert volume position to local position according to the volume open in the "image" layer.
@@ -1464,17 +1462,50 @@ class ManualSegmentationWidget(QWidget):
         """
         if "image" in self.viewer.layers:
             image_arr = self.viewer.layers['image'].data
-            
+
             local_position = np.zeros(len(volume_position), dtype=np.float32)
             local_position[0] = volume_position[0] / (float)(image_arr.shape[0])
             local_position[1] = volume_position[1] / (float)(image_arr.shape[1])
             if len(image_arr.shape) == 3:
                 local_position[2] = volume_position[2] / (float)(image_arr.shape[2])
-            
+
             return local_position
-        
-            
+
+
 # ============ Export data ============
+    def export_backup_segmentation(self):
+        """
+            Export a backup of the 3D segmentation data as a .tif file.
+
+        """
+        if hasattr(self.viewer, 'layers'):
+            if "annotations" in self.viewer.layers:
+                segmentation_arr = self.viewer.layers['annotations'].data
+                temp_segmentation_data_file_path = Path(self.image_dir).joinpath("TEMP_" + self.file_name_label.text() + "_segmentation.tif")
+                tif.imsave(str(temp_segmentation_data_file_path), segmentation_arr)
+
+    def export_custom_contrast(self):
+        """
+        Export custom contrast limits as a .json file that can be re-open in the plugin
+
+        """
+        if self.custom_contrast_limits is not None:
+
+            files_types = "JSON File (*.json)"
+
+            default_filepath = Path(self.image_dir).joinpath(self.file_name_label.text() + "_custom_contrast.json")
+            file_path, _ = QFileDialog.getSaveFileName(self, "Export contrast limit parameters", str(default_filepath), files_types)
+
+            # If choose "Cancel"
+            if file_path == "":
+                return
+
+            with open(file_path, 'w') as f:
+                json.dump(self.custom_contrast_limits, f)
+
+        else:
+            display_warning_box(self, "Error", "No custom contrast limits saved. Click on + button to add one (it will take the value of the current contrast limits used).")
+
     def export_segmentation(self):
         """
             Export the labelled data as a unique 3D image, or multiple 3D images (one by label)
@@ -1505,9 +1536,10 @@ class ManualSegmentationWidget(QWidget):
 
                 if saving_mode: # "Unique" choice
                     if extensions[-1] in [".tif", ".tiff"]:
-                        description = {"Hesperos_SelectedSlices" : json.dumps(self.selected_slice_list)}
+                        description = {"Hesperos_SelectedSlices" : self.selected_slice_list}
                         # tif.imsave(file_path, segmentation_arr, description=json.dumps(self.selected_slice_list))
                         tif.imsave(file_path, segmentation_arr, description=json.dumps(description))
+                        # tif.imsave(file_path, segmentation_arr, description=description)
 
                     elif (extensions[-1] == ".nii") or (extensions == [".nii", ".gz"]):
                         result_image_sitk = sitk.GetImageFromArray(segmentation_arr.astype(np.uint8))
@@ -1578,42 +1610,45 @@ class ManualSegmentationWidget(QWidget):
                 self.status_label.setText("Ready")
 
             else:
-                display_warning_box(self, "Error", "No segmentation data find")
+                display_warning_box(self, "Error", "No segmentation data find.")
                 return
 
-    def export_backup_segmentation(self):
+    def export_oriented_landmarks(self):
         """
-            Export a backup of the 3D segmentation data as a .tif file.
+        Export oriented landmark parameters as a .json file for reopening in DIVA software.
+        
+        """        
+        files_types = "JSON File (*.json)"
+        default_filepath = Path(self.image_dir).joinpath(self.file_name_label.text() + "_oriented_landmarks_for_DIVA.json")
+        file_path, _ = QFileDialog.getSaveFileName(self, "Export Oriented Landmarks", str(default_filepath), files_types)
 
-        """
-        if hasattr(self.viewer, 'layers'):
-            if "annotations" in self.viewer.layers:
-                segmentation_arr = self.viewer.layers['annotations'].data
-                temp_segmentation_data_file_path = Path(self.image_dir).joinpath("TEMP_" + self.file_name_label.text() + "_segmentation.tif")
-                tif.imsave(str(temp_segmentation_data_file_path), segmentation_arr)
+        # If choose "Cancel"
+        if file_path == "":
+            return
 
-    def export_custom_contrast(self):
-        """
-        Export custom contrast limits as a .json file that can be re-open in the plugin
+        oriented_landmarks = {}
+        oriented_landmarks_parameters = {}
+        
+        shape = self.viewer.layers['image'].data.shape # as (x, y, z)
+        
+        if len(shape) != 3:
+            display_warning_box(self, "Error", "Incorrect image size. Need to be a 3D image to use oriented landmarks.")
+            return
+        
+        volume_positions = pd.DataFrame(self.oriented_landmarks_positions_array, columns = ["z","y","x"])
+        volume_positions = volume_positions[["x","y","z"]]
+        volume_positions["z"] = shape[0] - volume_positions["z"]
+        
+        local_rotations = pd.DataFrame(self.oriented_landmarks_quaternions_array, columns = ["x","y","z","w"])
 
-        """
-        if self.custom_contrast_limits is not None:
-
-            files_types = "JSON File (*.json)"
-
-            default_filepath = Path(self.image_dir).joinpath(self.file_name_label.text() + "_custom_contrast.json")
-            file_path, _ = QFileDialog.getSaveFileName(self, "Export contrast limit parameters", str(default_filepath), files_types)
-
-            # If choose "Cancel"
-            if file_path == "":
-                return
-
-            with open(file_path, 'w') as f:
-                json.dump(self.custom_contrast_limits, f)
-
-        else:
-            display_warning_box(self, "Error", "No custom contrast limits saved. Click on + button to add one (it will take the value of the current contrast limits used).")
-
+        oriented_landmarks["_volume_positions"] = volume_positions.to_dict('records')
+        oriented_landmarks["_local_rotations"] = local_rotations.to_dict('records')
+        
+        oriented_landmarks_parameters["_oriented_landmarks_parameters"] = oriented_landmarks
+            
+        with open(file_path, 'w') as f:
+            json.dump(oriented_landmarks_parameters, f, separators=(',', ':'))
+    
 
 # ============ Set data ============
     def set_image_with_path(self, file_type):
@@ -1642,22 +1677,23 @@ class ManualSegmentationWidget(QWidget):
                 return
 
             self.set_image_layer(image_arr)
+            self.remove_oriented_landmarks_layers()
 
             self.reset_zoom_slider()
             self.reset_lock_push_button()
             self.go_to_selected_slice_push_button.setChecked(False)
-            self.go_to_selected_VR_landmark_push_button.setChecked(False)
+            self.go_to_selected_oriented_landmark_push_button.setChecked(False)
             self.backup_check_box.setChecked(False)
             self.default_contrast_combo_box.setCurrentText("")
 
             self.toggle_import_panel_widget(True, file_type)
-            self.toggle_panels(["annotation_panel", "slice_selection_panel", "reset_export_panel"], True)
-            if image_arr.shape[0] > 1:
-                self.toggle_panels(["import_VR_landmarks_panel"], True)
-            else :
-                self.toggle_panels(["import_VR_landmarks_panel"], False)
+            self.toggle_panels(["manage_oriented_landmarks_panel", "annotation_panel", "slice_selection_panel", "reset_export_panel"], True)
+            # if image_arr.shape[0] > 1:
+            #     self.toggle_panels(["manage_oriented_landmarks_panel"], True)
+            # else :
+            #     self.toggle_panels(["manage_oriented_landmarks_panel"], False)
             self.update_panel_titles()
-            
+
             self.step_range_spin_box.setMaximum(image_arr.shape[0])
 
             hasCorrespondingSegmentation, segmentation_file_path = self.has_corresponding_segmentation_file()
@@ -1675,18 +1711,18 @@ class ManualSegmentationWidget(QWidget):
                     self.set_segmentation_layer(segmentation_arr)
                     self.reset_lock_push_button()
                     self.go_to_selected_slice_push_button.setChecked(False)
-                    self.reset_selected_slice()
-                    self.go_to_selected_VR_landmark_push_button.setChecked(False)
-                    self.reset_VR_landmarks()
+                    self.reset_selected_slice_combo_box()
+                    self.go_to_selected_oriented_landmark_push_button.setChecked(False)
+                    self.reset_oriented_landmark()
 
             else:
                 segmentation_arr = np.zeros(image_arr.shape, dtype=np.int8)
                 self.set_segmentation_layer(segmentation_arr)
                 self.reset_lock_push_button()
                 self.go_to_selected_slice_push_button.setChecked(False)
-                self.reset_selected_slice()
-                self.go_to_selected_VR_landmark_push_button.setChecked(False)
-                self.reset_VR_landmarks()
+                self.reset_selected_slice_combo_box()
+                self.go_to_selected_oriented_landmark_push_button.setChecked(False)
+                self.reset_oriented_landmark()
 
             self.update_panel_titles()
             self.annotation_combo_box.setCurrentText("Choose a structure")
@@ -1694,6 +1730,116 @@ class ManualSegmentationWidget(QWidget):
 
         else:
             return
+
+    def set_oriented_landmarks_from_points_layer_action(self):
+        """
+        Set oriented landmarks data if a point was added or removed from the point layer button.
+        Update oriented_landmarks_positions_array and oriented_landmarks_orientations_array, add it to napari, toggle panels.
+
+        """
+        if "landmarks" in self.viewer.layers:
+            shape = self.viewer.layers['image'].data.shape
+            if len(shape) != 3:
+                return
+            current_points_layer_data = self.viewer.layers["landmarks"].data
+
+            new_nbr_landmarks = len(current_points_layer_data)
+            oriented_landmarks_positions_array = [[] * len(shape) for i in range(new_nbr_landmarks)]
+            oriented_landmarks_orientations_array = [[0.0] * len(shape) for i in range(new_nbr_landmarks)]
+            oriented_landmarks_quaternions_array = [[0.0] * 4 for i in range(new_nbr_landmarks)]
+
+            # == When a point was added (always at the last position in the list) ===
+            if new_nbr_landmarks > len(self.oriented_landmarks_positions_array):
+                # # Check if landmark position is valid
+                new_point_position_array = current_points_layer_data[-1].astype(np.int16)
+                if (new_point_position_array[0] > shape[0]) or (new_point_position_array[1] > shape[1]) or (new_point_position_array[2] > shape[2]) or any(x < 0 for x in new_point_position_array):
+                    display_warning_box(self, "Error", "Incorrect landmark positions: outside of the image size.")
+                    self.remove_oriented_landmark(isRemoveLast = True)
+                    self.add_oriented_landmark_push_button.setChecked(False)
+                    return 
+                                
+                is_added = True
+                for i in range(new_nbr_landmarks):
+                    oriented_landmarks_positions_array[i] = current_points_layer_data[i].astype(np.int16)
+                    # for the last point (the new one) define orientations as the current axes
+                    if i == new_nbr_landmarks - 1:
+                        # test if new point in image size 
+                        # 2D view
+                        if len(self.viewer.dims.displayed) == 2:
+                            current_axis_index = self.viewer.dims.not_displayed[0]
+                            # Order of rotation Rx, Ry, Rz different of the axis order z y x
+                            if len(shape) == 3:
+                                rotation_order = [2, 1, 0]
+                            else : 
+                                rotation_order = [1, 0]
+                            
+                            oriented_landmarks_orientations_array[i][rotation_order[current_axis_index]] = 1.0
+                            
+                            # for landmark added in z as current axis => q = 0 1 0 0
+                            if rotation_order[current_axis_index] == 2:
+                                oriented_landmarks_quaternions_array[i][1] = 1.0
+                            # for landmark added in y as current axis => q = 0 1 1 0
+                            elif rotation_order[current_axis_index] == 1:
+                                oriented_landmarks_quaternions_array[i][1] = 1.0
+                                oriented_landmarks_quaternions_array[i][2] = 1.0
+                            # for landmark added in x as current axis => q = 0 1 0 1
+                            elif rotation_order[current_axis_index] == 0:
+                                oriented_landmarks_quaternions_array[i][1] = 1.0
+                                oriented_landmarks_quaternions_array[i][3] = 1.0
+                        # 3D view (keep orientation to 0)
+                    else:
+                        oriented_landmarks_orientations_array[i] = self.oriented_landmarks_orientations_array[i]
+                        oriented_landmarks_quaternions_array[i] = self.oriented_landmarks_quaternions_array[i]
+
+            # == When a point was deleted (always at the last position in the list) ===
+            elif new_nbr_landmarks < len(self.oriented_landmarks_positions_array):
+                is_added = False
+                oriented_landmarks_positions_array = current_points_layer_data.astype(np.int16)
+                oriented_landmarks_orientations_array = self.oriented_landmarks_orientations_array[:-1]
+                oriented_landmarks_quaternions_array = self.oriented_landmarks_quaternions_array[:-1]
+
+            else:
+                return
+
+            self.oriented_landmarks_positions_array = np.array(oriented_landmarks_positions_array)
+            self.oriented_landmarks_orientations_array = np.array(oriented_landmarks_orientations_array)
+            self.oriented_landmarks_quaternions_array = np.array(oriented_landmarks_quaternions_array)
+
+            self.set_oriented_landmark_layers()
+            self.update_selected_oriented_landmark_combo_box()
+
+            # == When a point was added ===
+            if is_added:
+                self.selected_oriented_landmark_combo_box.setCurrentText(str(new_nbr_landmarks))
+                self.add_oriented_landmark_push_button.setChecked(False)
+                self.update_landmarks_layer_mode()
+
+    def set_oriented_landmarks_with_path(self):
+        """
+        Set oriented landmarks data by asking file path to the user.
+        Import data, add it to napari, toggle panels.
+
+        """
+        if "image" in self.viewer.layers:
+            if len(self.viewer.layers['image'].data.shape) != 3:
+                display_warning_box(self, "Error", "Incorrect image size. Need to be a 3D image to use oriented landmarks.")
+                return
+            
+        canRemove = self.can_remove_oriented_landmarks_data()
+
+        if canRemove:
+            self.status_label.setText("Loading...")
+
+            import_status = self.import_oriented_landmarks_json()
+
+            if import_status is False:
+                self.status_label.setText("Ready")
+                return
+
+            if "image" in self.viewer.layers:
+                self.set_oriented_landmark_layers()
+                self.update_selected_oriented_landmark_combo_box()
+                self.status_label.setText("Ready")
 
     def set_segmentation_with_path(self, segmentation_path=None):
         """
@@ -1705,7 +1851,6 @@ class ManualSegmentationWidget(QWidget):
             path of the segmentation file
 
         """
-
         # not from a corresponding segmentation file found for the image
         if segmentation_path is None:
             canRemove = self.can_remove_segmentation_data()
@@ -1735,42 +1880,20 @@ class ManualSegmentationWidget(QWidget):
                             segmentation_arr = np.transpose(segmentation_arr, (2, 0, 1))
 
                     else:
-                        display_warning_box(self, "Error", "Size of the segmentation file doesn't correspond to the size of the source image")
+                        display_warning_box(self, "Error", "Size of the segmentation file doesn't correspond to the size of the source image.")
                         self.status_label.setText("Ready")
                         return
 
                 self.set_segmentation_layer(segmentation_arr)
+                self.update_napari_layers_order()
                 self.reset_lock_push_button()
                 self.go_to_selected_slice_push_button.setChecked(False)
-                self.reset_selected_slice()
+                self.reset_selected_slice_combo_box()
                 self.import_selected_slice(segmentation_sitk)
-                self.go_to_selected_VR_landmark_push_button.setChecked(False)
-                self.reset_VR_landmarks()
-
+                # self.go_to_selected_oriented_landmark_push_button.setChecked(False)
+                # self.reset_oriented_landmark_data()
+                # self.reset_oriented_landmark_combo_box()
                 self.status_label.setText("Ready")
-
-    def set_oriented_landmarks_with_path(self):
-        """
-        Set oriented landmarks data by asking file path to the user.
-        Import data, add it to napari, toggle panels.
-
-        """
-        canRemove = self.can_remove_oriented_landmarks_data()
-
-        if canRemove:
-            self.status_label.setText("Loading...")
-
-        self.import_VR_landmarks()
-
-        # add item to the combo_box
-        for landmark_index in range(len(self.VR_landmarks_positions_array)):
-            new_text = str(landmark_index + 1)
-            self.selected_VR_landmark_combo_box.addItem(new_text)
-
-        # self.set_oriented_landmark_layer(self.VR_landmarks_positions_array)
-        self.set_oriented_landmark_layer(self.VR_landmarks_array)
-
-        self.status_label.setText("Ready")
 
 
 # ============ Set Napari layers ============
@@ -1786,10 +1909,31 @@ class ManualSegmentationWidget(QWidget):
         """
         self.remove_image_layer()
         # self.viewer.add_image(array, name='image', contrast_limits=(np.min(array), np.max(array)))
-        self.viewer.add_image(array, name='image')
+        if array.shape[0] == 1:
+            self.viewer.add_image(array[0, :, :], name='image')
+        else:
+            self.viewer.add_image(array, name='image')
         self.viewer.layers['image'].contrast_limits = (np.min(array), np.max(array))
+
+        # === Enable axes view ===
+        self.viewer.dims.axis_labels = ('z', 'y', 'x') # same than ('0', '1', '2')
+        self.viewer.axes.arrows = True
+        self.viewer.axes.colored = False
+        self.viewer.axes.dashed = False
+        self.viewer.axes.labels = True
+        self.viewer.axes.visible = True
+
         disable_layer_widgets(self.viewer, layer_name='image', layer_type='image')
         self.viewer.layers['image'].events.contrast_limits.connect(self.reset_default_contrast_combo_box)
+        # self.viewer.window._qt_viewer.viewerButtons.ndisplayButton.clicked.disconnect()
+        # self.viewer.window._qt_viewer.viewerButtons.rollDimsButton.clicked.connect(self.overwrite_roll_axes)
+        # self.viewer.window._qt_viewer.viewerButtons.rollDimsButton.clicked.connect(self.update_slice_index_after_rollDims)
+        # self.viewer.window._qt_viewer.viewerButtons.rollDimsButton.clicked.disconnect()
+        # self.viewer.window._qt_viewer.viewerButtons.rollDimsButton.clicked.connect(self.overwrite_roll_axes)
+        # self.viewer.window._qt_viewer.viewerButtons.rollDimsButton.clicked.connect(self.update_slice_index_after_rollDims)
+        # self.viewer.window._qt_viewer.viewerButtons.transposeDimsButton.clicked.disconnect()
+        # self.viewer.window._qt_viewer.viewerButtons.transposeDimsButton.clicked.connect(self.overwrite_transpose_dim)
+        # self.rotation_applied = 0
 
     def set_segmentation_layer(self, array):
         """
@@ -1809,48 +1953,69 @@ class ManualSegmentationWidget(QWidget):
         self.remove_backup_segmentation_file()
 
         self.viewer.layers['annotations'].mouse_double_click_callbacks.append(self.automatic_fill)
+        self.viewer.layers['annotations'].bind_key('O', self.enable_opacity_annotation_layer)
 
-    def set_oriented_landmark_layer(self, array):
+    def set_oriented_landmark_layers(self):
         """
-        Remove the label layer from Napari and add a new label layer (faster than changing the data of an existing layer)
-        New layer can be empty for initialisation.
-
-        Parameters
-        ----------
-        array : ndarray
-            TODOOOOO
+        Remove the points layer from Napari and add a new points layer and a new vectors layer
 
         """
-        self.remove_oriented_landmarks_layer()
-        self.viewer.add_labels(array, name='oriented landmarks', color=oriented_landmarks_colors, opacity=1)
-        disable_layer_widgets(self.viewer, layer_name='oriented landmarks', layer_type='label')
-        self.status_label.setText("Ready")    
-    
-    # def set_oriented_landmark_layer(self, array):
-    #     """
-    #     Remove the points layer from Napari and add a new points layer (faster than changing the data of an existing layer)
-    #     New layer can be empty for initialisation.
+        self.remove_oriented_landmarks_layers()
 
-    #     Parameters
-    #     ----------
-    #     array : ndarray
-    #         TODOOOOO
+        # === Add positions of the oriented landmarks as points in a point layer ===
+        shape_max = max(self.viewer.layers['image'].data.shape)
+        points_size = int(shape_max / 64)
+        vectors_length = points_size * 2
+        vector_edge_width = points_size / 2
+        self.viewer.add_points(
+            self.oriented_landmarks_positions_array,
+            name="landmarks",
+            size=points_size,
+            symbol='disc',
+            edge_color="white",
+            face_color="white",
+            blending='additive',
+            out_of_slice_display=True,
+            opacity=1,
+            ndim=3)
+        disable_layer_widgets(self.viewer, layer_name='landmarks', layer_type='points')
+        self.viewer.layers['landmarks'].events.data.connect(self.set_oriented_landmarks_from_points_layer_action)
+        # self.viewer.layers['landmarks'].events.mode.connect(self.update_add_oriented_landmark_push_button_check_status)
 
-    #     """
-    #     self.remove_oriented_landmarks_layer()
+        # === Add orientations of the oriented landmarks as vectors in a vector layer ===
+        nbr_vectors = len(self.oriented_landmarks_orientations_array)
+        vectors = np.zeros((nbr_vectors, 2, 3), dtype=np.float32)
+        for i in range(nbr_vectors) :
+            # assign x-y-z projection
+            vectors[i, 1, 0] = self.oriented_landmarks_orientations_array[i][2]
+            vectors[i, 1, 1] = self.oriented_landmarks_orientations_array[i][1]
+            vectors[i, 1, 2] = self.oriented_landmarks_orientations_array[i][0]
 
-    #     self.viewer.add_points(
-    #         array,
-    #         name="oriented landmarks",
-    #         size=30,
-    #         symbol='disc',
-    #         edge_color="white",
-    #         face_color="white",
-    #         opacity=0.7)
+            # assign x-y-z position
+            vectors[i, 0, 0] = self.oriented_landmarks_positions_array[i][0]
+            vectors[i, 0, 1] = self.oriented_landmarks_positions_array[i][1]
+            vectors[i, 0, 2] = self.oriented_landmarks_positions_array[i][2]
 
-    #     disable_layer_widgets(self.viewer, layer_name='oriented landmarks', layer_type='points')
+        self.viewer.add_vectors(
+            vectors,
+            name='orientations',
+            edge_width=vector_edge_width,
+            edge_color='yellow',
+            length=vectors_length,
+            blending='additive',
+            out_of_slice_display=True,
+            opacity=1,
+            ndim=3)
+        disable_layer_widgets(self.viewer, layer_name='orientations', layer_type='vectors')
 
-    #     self.status_label.setText("Ready")
+    def update_napari_layers_order(self):
+        """
+        Change the order of the napari layers 
+        
+        """          
+        if all(layer_name in self.viewer.layers for layer_name in ["annotations", "landmarks", "orientations"]):
+            annotations_layer_index = self.viewer.layers._list.index(self.viewer.layers["annotations"])
+            self.viewer.layers.move(annotations_layer_index, 1)
 
 
 # ============ Napari events callbacks ============
@@ -1882,103 +2047,194 @@ class ManualSegmentationWidget(QWidget):
         elif layer.mode in ["fill"]:
             layer.mode = "paint"
 
+    def enable_opacity_annotation_layer(self, viewer):
+        """
+        Enable keyboard shortcut to switch between positive opacity and zero opacity.
+
+        """
+        if "annotations" in self.viewer.layers:
+            if self.viewer.layers['annotations'].opacity != 0:
+                self.annotation_opacity = self.viewer.layers['annotations'].opacity
+                self.viewer.layers['annotations'].opacity = 0
+            else:
+                try:
+                    self.viewer.layers['annotations'].opacity = self.annotation_opacity
+                except:
+                    self.viewer.layers['annotations'].opacity = 0.6
+
+    def overwrite_transpose_dim(self, event):
+        """
+        TODO
+        Overwrite napari code for dims._trans)
+        """
+        # b = 5
+
+        # # basic function : "Transpose order of the last two visible axes, e.g. [0, 1] -> [1, 0]."
+        # # napari code for dims._transpose()
+        # order = list(self.viewer.dims.order)
+        # order[-2], order[-1] = order[-1], order[-2]
+        # self.viewer.dims.order = order
+
+        # NAPARI CODE FOR dims._roll
+        # order = np.array(self.viewer.dims.order)
+        # nsteps = np.array(self.viewer.dims.nsteps)
+        # order[nsteps > 1] = np.roll(order[nsteps > 1], 1)
+        # self.viewer.dims.order = order.tolist()
+
+        ## test
+
+        # self.rotation_applied = self.rotation_applied + 90
+        # if self.rotation_applied > 360:
+        #     self.rotation_applied = 0
+        # translation = self.viewer.layers['image'].translate
+        # indx_1, indx_2 = self.viewer.dims.displayed[0], self.viewer.dims.displayed[1]
+        # translation[indx_1] = self.viewer.dims.current_step[indx_1] / 2
+        # translation[indx_2] = self.viewer.dims.current_step[indx_2] / 2
+        # self.viewer.layers['image'].translate = - translation
+        # self.viewer.layers['image'].rotate = self.rotation_applied
+        # self.viewer.layers['image'].translate = + translation
+        # self.viewer.layers['image'].translate = - 2*translation
+
+    def update_slice_positon_after_dims_roll(self, event):
+        """
+        Linked to dims._roll() to update the slice position of the new displayed dimension if a oriented landmark or slice has been selected.
+
+        """
+        if self.viewer.dims.ndisplay == 2:
+            if (self.go_to_selected_oriented_landmark_push_button.isChecked() == True) and (self.selected_oriented_landmark_combo_box.currentText() != " "):
+                self.go_to_oriented_landmark()
+
+            elif self.go_to_selected_slice_push_button.isChecked() == True:
+                self.go_to_selected_slice()
+
 
 # ============ Custom widget callbacks ============
     def add_selected_slice(self):
         """
-        Add the z index of the actual slice display in the selected_slice_combo_box
+        Add the slice index of the actual slice displayed in the selected_slice_combo_box
 
         """
-        selected_slice_z = self.viewer.dims.current_step[0]
-        
+        current_axis_index = self.viewer.dims.not_displayed[0]
+        selected_slice = self.viewer.dims.current_step[current_axis_index]
+        axis_order = ['z', 'y', 'x']
+
         # if len(self.selected_slice_list) >= 30:
         #     display_warning_box(self, "Error", "More than 30 selected slices are not allowed. Please remove some selected slices to add new ones.")
         #     return
-
-        if selected_slice_z in self.selected_slice_list:
+        selected_info = str(str(selected_slice) + axis_order[current_axis_index] )
+        if selected_info in self.selected_slice_list:
             return
 
         else:
-            self.selected_slice_list.append(selected_slice_z)
-            self.selected_slice_list.sort()
+            self.selected_slice_list.append(selected_info)
+            self.selected_slice_list.sort(key=lambda text: int(text[:-1]))
 
-            list_index = self.selected_slice_list.index(selected_slice_z)
-            self.selected_slice_combo_box.insertItem(list_index + 1, str(selected_slice_z))
-            self.selected_slice_combo_box.setCurrentText(str(selected_slice_z))
-
-    def go_to_selected_slice(self):
-        """
-        Change the currently displayed slice according to the slice index selected in the selected_slice_combo_box
-
-        """
-        if self.go_to_selected_slice_push_button.isChecked() == True:
-            if self.selected_slice_combo_box.currentText() != " ":
-                # json to tuple
-                # selected_slice = eval(self.selected_slice_combo_box.currentText())
-                selected_slice_z = int(self.selected_slice_combo_box.currentText())
-                _, y, x = self.viewer.layers['image'].data.shape
-                self.viewer.dims.current_step = (selected_slice_z, y, x)
-            else:
-                self.go_to_selected_slice_push_button.setChecked(False)
-
-        else:
-            if self.selected_slice_combo_box.currentText() != " ":
-                current_slice_z = self.viewer.dims.current_step[0]
-                selected_slice_z = int(self.selected_slice_combo_box.currentText())
-                if current_slice_z != selected_slice_z:
-                    _, y, x = self.viewer.layers['image'].data.shape
-                    self.viewer.dims.current_step = (selected_slice_z, y, x)
-                else:
-                    self.go_to_selected_slice_push_button.setChecked(True)
-
-    def go_to_VR_landmark(self):
-        """
-        Change the currently displayed slice according to the landmark selected in the selected_VR_landmark_combo_box
-
-        """
-        if self.go_to_selected_VR_landmark_push_button.isChecked() == True:
-            if self.selected_VR_landmark_combo_box.currentText() != " ":
-                landmark_slice_z, _, _ = self.VR_landmarks_positions_array[int(self.selected_VR_landmark_combo_box.currentText()) - 1]
-                _, y, x = self.viewer.layers['image'].data.shape
-                self.viewer.dims.current_step = (landmark_slice_z, y, x)
-            else:
-                self.go_to_selected_VR_landmark_push_button.setChecked(False)
-
-        else:
-            if self.selected_VR_landmark_combo_box.currentText() != " ":
-                current_slice_z = self.viewer.dims.current_step[0]
-                landmark_slice_z, _, _ = self.VR_landmarks_positions_array[int(self.selected_VR_landmark_combo_box.currentText()) - 1]
-                if current_slice_z != landmark_slice_z:
-                    _, y, x = self.viewer.layers['image'].data.shape
-                    self.viewer.dims.current_step = (landmark_slice_z, y, x)
-                else:
-                    self.go_to_selected_VR_landmark_push_button.setChecked(True)
+            list_index = self.selected_slice_list.index(selected_info)
+            self.selected_slice_combo_box.insertItem(list_index + 1, selected_info)
+            self.selected_slice_combo_box.setCurrentText(selected_info)
 
     def go_left_step_slices(self):
         """
         Change the currently displayed slice according to the slice index selected in the step_range_spin_box
 
         """
-        current_step =  self.viewer.dims.current_step
-        _, y, x = self.viewer.layers['image'].data.shape
-        new_z_index = current_step[0] - self.step_range_spin_box.value()
-        if new_z_index >= 0 :
-            self.viewer.dims.current_step = (new_z_index, y, x)
+        # === Check axis not displayed (so use for current step) ===
+        current_axis_index = self.viewer.dims.not_displayed[0]
+
+        # === Update current step along this axis ===
+        new_step_index = self.viewer.dims.current_step[current_axis_index] - self.step_range_spin_box.value()
+        new_current_step_list = list(self.viewer.dims.current_step)
+        if new_step_index >= 0 :
+            new_current_step_list[current_axis_index] = new_step_index
+            self.viewer.dims.current_step = tuple(new_current_step_list)
         else:
-            self.viewer.dims.current_step = (0, y, x)        
-    
+            new_current_step_list[current_axis_index] = 0
+            self.viewer.dims.current_step = tuple(new_current_step_list)
+
     def go_right_step_slices(self):
         """
         Change the currently displayed slice according to the slice index selected in the step_range_spin_box
 
         """
-        current_step =  self.viewer.dims.current_step
-        z, y, x = self.viewer.layers['image'].data.shape
-        new_z_index = current_step[0] + self.step_range_spin_box.value()
-        if new_z_index <= z :
-            self.viewer.dims.current_step = (new_z_index, y, x)
+        # === Check axis not displayed (so use for current step) ===
+        current_axis_index = self.viewer.dims.not_displayed[0]
+
+        # === Update current step along this axis ===
+        new_step_index = self.viewer.dims.current_step[current_axis_index] + self.step_range_spin_box.value()
+        new_current_step_list = list(self.viewer.dims.current_step)
+        if new_step_index <= self.viewer.layers['image'].data.shape[current_axis_index]:
+            new_current_step_list[current_axis_index] = new_step_index
+            self.viewer.dims.current_step = tuple(new_current_step_list)
         else:
-            self.viewer.dims.current_step = (z - 1, y, x)   
+            new_current_step_list[current_axis_index] = self.viewer.layers['image'].data.shape[current_axis_index] - 1
+            self.viewer.dims.current_step = tuple(new_current_step_list)
+
+    def go_to_selected_slice(self):
+        """
+        Change the currently displayed slice according to the slice index selected in the selected_slice_combo_box
+
+        """
+        axis_order = ['z', 'y', 'x']
+
+        if self.go_to_selected_slice_push_button.isChecked() == True:
+            if self.selected_slice_combo_box.currentText() != " ":
+                current_axis_index = self.viewer.dims.not_displayed[0]
+                selected_slice = int(self.selected_slice_combo_box.currentText()[:-1])
+                selected_axis_index =  axis_order.index(self.selected_slice_combo_box.currentText()[-1])
+                if current_axis_index == selected_axis_index:
+                    new_current_step_list = list(self.viewer.dims.current_step)
+                    new_current_step_list[selected_axis_index] = selected_slice
+                    self.viewer.dims.current_step = tuple(new_current_step_list)
+                else:
+                    self.go_to_selected_slice_push_button.setChecked(False)
+            else:
+                self.go_to_selected_slice_push_button.setChecked(False)
+
+        else:
+            if self.selected_slice_combo_box.currentText() != " ":
+                current_axis_index = self.viewer.dims.not_displayed[0]
+                selected_slice = int(self.selected_slice_combo_box.currentText()[:-1])
+                selected_axis_index = axis_order.index(self.selected_slice_combo_box.currentText()[-1])
+                current_slice = self.viewer.dims.current_step[current_axis_index]
+                if current_slice != selected_slice and current_axis_index == selected_axis_index:
+                    new_current_step_list = list(self.viewer.dims.current_step)
+                    new_current_step_list[selected_axis_index] = selected_slice
+                    self.viewer.dims.current_step = tuple(new_current_step_list)
+                elif current_slice == selected_slice and current_axis_index == selected_axis_index:
+                    self.go_to_selected_slice_push_button.setChecked(True)
+                else:
+                    self.go_to_selected_slice_push_button.setChecked(False)
+
+    def go_to_oriented_landmark(self):
+        """
+        Change the currently displayed slice according to the landmark selected in the selected_oriented_landmark_combo_box
+
+        """
+        if self.go_to_selected_oriented_landmark_push_button.isChecked() == True:
+            if self.selected_oriented_landmark_combo_box.currentText() != " ":
+                # === Check axis not displayed (so use for current step) ===
+                current_axis_index = self.viewer.dims.not_displayed[0]
+                # === Update current step along this axis ===
+                landmark_slice = self.oriented_landmarks_positions_array[int(self.selected_oriented_landmark_combo_box.currentText()) - 1][current_axis_index]
+                new_current_step_list = list(self.viewer.dims.current_step)
+                new_current_step_list[current_axis_index] = landmark_slice
+                self.viewer.dims.current_step = tuple(new_current_step_list)
+            else:
+                self.go_to_selected_oriented_landmark_push_button.setChecked(False)
+
+        else:
+            if self.selected_oriented_landmark_combo_box.currentText() != " ":
+                # === Check axis not displayed (so use for current step) ===
+                current_axis_index = self.viewer.dims.not_displayed[0]
+                # === Update current step along this axis ===
+                current_displayed_slice = self.viewer.dims.current_step[current_axis_index]
+                landmark_slice = self.oriented_landmarks_positions_array[int(self.selected_oriented_landmark_combo_box.currentText()) - 1][current_axis_index]
+                if current_displayed_slice != landmark_slice:
+                    new_current_step_list = list(self.viewer.dims.current_step)
+                    new_current_step_list[current_axis_index] = landmark_slice
+                    self.viewer.dims.current_step = tuple(new_current_step_list)
+                else:
+                    self.go_to_selected_oriented_landmark_push_button.setChecked(True)
 
     def lock_slide(self):
         """
@@ -2002,6 +2258,72 @@ class ManualSegmentationWidget(QWidget):
             else:
                 self.lock_push_button.setChecked(True)
                 self.viewer.dims.current_step = self.locked_slice_index
+
+    def remove_selected_slice(self):
+        """
+        Remove the current slice index displayed in the selected_slice_combo_box and set the combo box to the default value " "
+
+        """
+        if len(self.selected_slice_list) == 0:
+            return
+
+        axis_order = ['z', 'y', 'x']
+        current_axis_index = self.viewer.dims.not_displayed[0]
+
+        current_slice = self.viewer.dims.current_step[current_axis_index]
+        current_info = str(str(current_slice) + axis_order[current_axis_index] )
+
+        if current_info in self.selected_slice_list:
+            list_index = self.selected_slice_list.index(current_info)
+            self.selected_slice_combo_box.setCurrentText(" ")
+            self.selected_slice_combo_box.removeItem(list_index + 1)
+            self.selected_slice_list.remove(current_info)
+
+    def remove_oriented_landmark(self, isRemoveLast=False):
+        """
+        Remove the last oriented landmark of the list (data is automatically updated)
+        
+        Parameters
+        ----------
+        isRemoveLast : bool
+            if True the last landmark will be removed. If False, the index of the landmark to remove is defined by selected_oriented_landmark_combo_box.
+
+        """
+        if "landmarks" in self.viewer.layers:
+            if len(self.viewer.layers["landmarks"].data) != 0:
+                if isRemoveLast: 
+                    nbr_landmarks = len(self.viewer.layers["landmarks"].data)
+                    index_to_remove = nbr_landmarks - 1
+                    if index_to_remove < 0 : index_to_remove = 0
+                    self.viewer.layers["landmarks"].mode = "SELECT"
+                    self.viewer.layers["landmarks"].selected_data={index_to_remove}
+                    self.viewer.layers["landmarks"].remove_selected()
+                    self.viewer.layers["landmarks"].mode = "PAN_ZOOM"
+                
+                else:
+                    if self.selected_oriented_landmark_combo_box.currentText() != ' ':
+                        index_to_remove = int(self.selected_oriented_landmark_combo_box.currentText()) - 1
+                        if index_to_remove < 0 : index_to_remove = 0
+                        self.viewer.layers["landmarks"].mode = "SELECT"
+                        self.viewer.layers["landmarks"].selected_data={index_to_remove}
+                        self.viewer.layers["landmarks"].remove_selected()
+                        self.viewer.layers["landmarks"].mode = "PAN_ZOOM"
+
+    def reset_segmentation(self):
+        """
+            Reset segmentation data
+
+        """
+        canRemoveSegmentation = self.can_remove_segmentation_data()
+
+        if canRemoveSegmentation:
+            if "image" in self.viewer.layers:
+                image_arr = self.viewer.layers['image'].data
+                segmentation_arr = np.zeros(image_arr.shape, dtype=np.int8)
+                self.set_segmentation_layer(segmentation_arr)
+                self.update_napari_layers_order()
+        else:
+            return
 
     def set_custom_contrast(self):
         """
@@ -2051,6 +2373,37 @@ class ManualSegmentationWidget(QWidget):
                 segmentation_layer = self.viewer.layers['annotations']
                 segmentation_layer.undo()
 
+    def update_landmarks_layer_mode(self):
+        """
+        Update the mode of the 'landmarks' layer to allow points addition according to the checked status of the add_oriented_landmark_push_button push button.
+        When a point is added, the set_oriented_landmarks_from_points_layer_action function is automatically called.
+
+        """
+        if "image" in self.viewer.layers:
+            if len(self.viewer.layers["image"].data.shape) != 3:
+                display_warning_box(self, "Error", "Incorrect file size. Need to be a 3D image to use oriented landmarks.")
+                self.add_oriented_landmark_push_button.setChecked(False)
+                return
+            
+        if self.add_oriented_landmark_push_button.isChecked() == False:
+            if "landmarks" in self.viewer.layers:
+                self.viewer.layers["landmarks"].mode = 'PAN_ZOOM'
+
+        else:
+            if "landmarks" in self.viewer.layers:
+                self.viewer.layers["landmarks"].mode = 'ADD'
+                self.viewer.layers.selected = self.viewer.layers["landmarks"]
+                self.viewer.layers.selection.add(self.viewer.layers["landmarks"])
+                self.viewer.layers.selection.active = self.viewer.layers["landmarks"]
+
+            else:
+                self.oriented_landmarks_positions_array = []
+                self.oriented_landmarks_orientations_array = []
+                self.oriented_landmarks_quaternions_array = []
+                self.set_oriented_landmark_layers()
+                self.update_selected_oriented_landmark_combo_box()
+                self.update_landmarks_layer_mode()
+
     def zoom(self):
         """
             Zoom the camera view of the main canvas of napari
@@ -2077,11 +2430,11 @@ class ManualSegmentationWidget(QWidget):
         elif structure_name == "Shoulder Bones":
             radio_button_to_check = self.shoulder_bones.group_radio_button.button(1)
             radio_button_to_check.setChecked(True)
-    
+
         elif structure_name == "Shoulder Bone Borders":
             radio_button_to_check = self.shoulder_bone_borders.group_radio_button.button(1)
             radio_button_to_check.setChecked(True)
-            
+
         elif structure_name == "Shoulder Deltoid":
             radio_button_to_check = self.shoulder_deltoid.group_radio_button.button(1)
             radio_button_to_check.setChecked(True)
@@ -2093,7 +2446,7 @@ class ManualSegmentationWidget(QWidget):
         elif structure_name == "Larva":
             radio_button_to_check = self.larva.group_radio_button.button(1)
             radio_button_to_check.setChecked(True)
-        
+
         elif structure_name == "Mouse Embryon":
             radio_button_to_check = self.mouse_embryon.group_radio_button.button(1)
             radio_button_to_check.setChecked(True)
@@ -2132,14 +2485,37 @@ class ManualSegmentationWidget(QWidget):
         self.locked_slice_index = None
         self.lock_push_button.setChecked(False)
 
-    def reset_zoom_slider(self):
+    def reset_oriented_landmark(self):
         """
-        Reset the zoom slider to 100 (no zoom)
+        Reset oriented landmarks (reset arrays, delete layers and reset combo box)
+        
+        """
+        self.reset_oriented_landmark_data()
+        self.remove_oriented_landmarks_layers()
+        self.reset_oriented_landmark_combo_box()
+
+    def reset_oriented_landmark_combo_box(self):
+        """
+        Set the combo box to the default value " " and remove all other item of the combo box
 
         """
-        self.zoom_slider.setValue(int(self.viewer.camera.zoom * 100))
+        if self.selected_oriented_landmark_combo_box.currentText() != " ":
+            self.selected_oriented_landmark_combo_box.setCurrentText(" ")
 
-    def reset_selected_slice(self):
+        while self.selected_oriented_landmark_combo_box.count() != 1:
+            index = self.selected_oriented_landmark_combo_box.count() - 1
+            self.selected_oriented_landmark_combo_box.removeItem(index)
+
+    def reset_oriented_landmark_data(self):
+        """
+        Reset the oriented landmarks arrays to empty
+
+        """
+        self.oriented_landmarks_positions_array = []
+        self.oriented_landmarks_orientations_array = []
+        self.oriented_landmarks_quaternions_array = []
+
+    def reset_selected_slice_combo_box(self):
         """
         Reset the selected slice list to empty, set the combo box to the default value " " and remove all other item of the combo box
 
@@ -2153,23 +2529,15 @@ class ManualSegmentationWidget(QWidget):
             index = self.selected_slice_combo_box.count() - 1
             self.selected_slice_combo_box.removeItem(index)
 
-    def reset_VR_landmarks(self):
+    def reset_zoom_slider(self):
         """
-        Reset the VR landmarks arrays to empty, set the combo box to the default value " " and remove all other item of the combo box
+        Reset the zoom slider to 100 (no zoom)
 
         """
-        self.VR_landmarks_positions_array = []
-        self.VR_landmarks_orientations_array = []
+        self.zoom_slider.setValue(int(self.viewer.camera.zoom * 100))
 
-        if self.selected_VR_landmark_combo_box.currentText() != " ":
-            self.selected_VR_landmark_combo_box.setCurrentText(" ")
-
-        while self.selected_VR_landmark_combo_box.count() != 1:
-            index = self.selected_VR_landmark_combo_box.count() - 1
-            self.selected_VR_landmark_combo_box.removeItem(index)
-
-
-# ============ Remove or Reset data ============
+        
+# ============ Remove layer ============
     def remove_image_layer(self):
         """
             Remove image layer from napari viewer
@@ -2177,6 +2545,16 @@ class ManualSegmentationWidget(QWidget):
         """
         if "image" in self.viewer.layers:
             self.viewer.layers.remove('image')
+
+    def remove_oriented_landmarks_layers(self):
+        """
+            Remove points layer and vectors layer from napari viewer
+
+        """
+        if "landmarks" in self.viewer.layers:
+            self.viewer.layers.remove('landmarks')
+        if "orientations" in self.viewer.layers:
+            self.viewer.layers.remove('orientations')
 
     def remove_segmentation_layer(self):
         """
@@ -2186,17 +2564,11 @@ class ManualSegmentationWidget(QWidget):
         if "annotations" in self.viewer.layers:
             self.viewer.layers.remove('annotations')
 
-    def remove_oriented_landmarks_layer(self):
-        """
-            Remove points layer from napari viewer
 
-        """
-        if "oriented landmarks" in self.viewer.layers:
-            self.viewer.layers.remove('oriented landmarks')
-
+# ============ Reset data ============
     def remove_backup_segmentation_file(self):
         """
-            Delete the backup segmentation file
+        Delete the backup segmentation file
 
         """
         temp_segmentation_data_file_path = Path(self.image_dir).joinpath("TEMP_" + self.file_name_label.text() + "_segmentation.tif")
@@ -2204,37 +2576,6 @@ class ManualSegmentationWidget(QWidget):
             temp_segmentation_data_file_path.unlink()
 
         self.backup_check_box.setChecked(False)
-
-    def reset_segmentation(self):
-        """
-            Reset segmentation data
-
-        """
-        canRemoveSegmentation = self.can_remove_segmentation_data()
-
-        if canRemoveSegmentation:
-            if "image" in self.viewer.layers:
-                image_arr = self.viewer.layers['image'].data
-                segmentation_arr = np.zeros(image_arr.shape, dtype=np.int8)
-                self.set_segmentation_layer(segmentation_arr)
-        else:
-            return
-
-    def remove_selected_slice(self):
-        """
-        Remove the current z index displayed in the selected_slice_combo_box and set the combo box to the default value " "
-
-        """
-        if len(self.selected_slice_list) == 0:
-            return
-
-        current_slice_z = self.viewer.dims.current_step[0]
-
-        if current_slice_z in self.selected_slice_list:
-            list_index = self.selected_slice_list.index(current_slice_z)
-            self.selected_slice_combo_box.removeItem(list_index + 1)
-            self.selected_slice_list.remove(current_slice_z)
-            self.selected_slice_combo_box.setCurrentText(" ")
 
 
 # ============ Display warning/question message box ============
@@ -2252,6 +2593,26 @@ class ManualSegmentationWidget(QWidget):
             choice = display_ok_cancel_question_box(
                 "Warning",
                 "This will delete image data. Do you want to continue ?",
+            )
+        else:
+            choice = True
+
+        return choice
+
+    def can_remove_oriented_landmarks_data(self):
+        """
+        Display a question box to remove oriented landmarks data (from DIVA)
+
+        Returns
+        ----------
+        choice : bool
+            answer to the question : True if Ok, False if Cancel (default=True)
+
+        """
+        if "landmarks" in self.viewer.layers:
+            choice = display_ok_cancel_question_box(
+                "Warning",
+                "This will delete oriented landmarks data. Do you want to continue ?",
             )
         else:
             choice = True
@@ -2278,26 +2639,6 @@ class ManualSegmentationWidget(QWidget):
 
         return choice
 
-    def can_remove_oriented_landmarks_data(self):
-        """
-        Display a question box to remove oriented landmarks data (from DIVA)
-
-        Returns
-        ----------
-        choice : bool
-            answer to the question : True if Ok, False if Cancel (default=True)
-
-        """
-        if "oriented landmarks" in self.viewer.layers:
-            choice = display_ok_cancel_question_box(
-                "Warning",
-                "This will delete oriented landmarks data. Do you want to continue ?",
-            )
-        else:
-            choice = True
-
-        return choice
-
     def can_remove_all(self):
         """
         Display a question box to remove all data
@@ -2308,7 +2649,7 @@ class ManualSegmentationWidget(QWidget):
             answer to the question : True if Ok, False if Cancel (default=True)
 
         """
-        if "image" in self.viewer.layers or "annotations" in self.viewer.layers or "oriented landmarks" in self.viewer.layers:
+        if all(layer_name in self.viewer.layers for layer_name in ["image", "annotations", "landmarks", "orientations"]):
             choice = display_ok_cancel_question_box(
                 "Warning",
                 "This will delete all data. Do you want to continue ?",
@@ -2324,45 +2665,129 @@ class ManualSegmentationWidget(QWidget):
         print("napari has", len(self.viewer.layers), "layers")
 
 
-# ============ Comments ============
-    # def slicer_change(self):
-    #     index = self.viewer.dims.current_step
-    #     print(index)
 
-    #     # image_to_display = self.image[index, :, :]
-
-    #     if 'image' in self.viewer.layers:
-    #             image_arr = self.viewer.layers['image'].data
-
-
-    #     pixmap = QPixmap(image_path)
-    #     view_image_1.setPixmap(pixmap)
-
-
-
-    # def generate_help_layout(self):
-
-    #     self.help_layout = QGridLayout()
-    #     self.help_layout.setContentsMargins(10, 10, 10, 10)
-    #     # self.help_layout.setAlignment(QtCore.Qt.AlignTop)
-    #     self.help_layout.setSpacing(4)
-
-    #     self.add_view_panel(row=0, column=0)
-    #     self.add_atlas_panel(row=0, column=1)
-
-    #     self.help_container = QWidget()
-
-    #     self.help_container.setLayout(self.help_layout)
-
-    #     self.help_dock = self.viewer.window.add_dock_widget(widget=self.help_container, area='bottom')
-
-
-    # def import_selected_slice_metadata_from_nifti(self, img_sitk):
+    # def find_current_axis_index(self):
     #     """
-    #     TODO
+    #     If the original image dimension is 3, find the axis not displayed in the Napari viewer.
+
+    #     Returns
+    #     ----------
+    #     current_axis_index : int
+    #         axis index
 
     #     """
-    #     try:
-    #         return img_sitk.GetMetaData("Hesperos_SelectedSlices")
-    #     except:
-    #         return []
+    #     # if axis labels named as ['z', 'y', 'x'] - used to displayed axis on image
+    #     if 'x', 'y', 'z' in self.viewer.dims.axis_labels:
+
+    #     # if axis labels named as ['0', '1', '2'] - used to displayed axis on image
+    #     else:
+    #         axis_labels = [eval(i) for i in self.viewer.dims.axis_labels]
+    #         displayed_axes = list(self.viewer.dims.displayed)
+
+
+    #     current_axis_index = list(set(axis_labels).difference(displayed_axes))
+    #     if len(current_axis_index) > 0:
+    #         return current_axis_index[0]
+    #     else:
+    #         return 0
+    
+    # def normalize(self, v):
+    #     """
+    #     Normalize a vector (x, y, z)
+        
+    #     Parameters
+    #     ----------
+    #     v : float[3]
+    #         vector to normalize
+        
+    #     Returns
+    #     ----------
+    #     out : float[3]
+    #         normalized vector
+            
+    #     """
+    #     norm = np.linalg.norm(v)
+    #     if norm == 0:
+    #         return v
+    #     return v / norm
+    
+# ================== TEST ==================
+    # left = np.array([-1.0, 0.0, 0.0])
+    # up = np.array([0.0, 1.0, 0.0])
+    # forward = np.array([0.0, 0.0, 1.0])
+    # test = np.array([self.oriented_landmarks_orientations_array[0][0], self.oriented_landmarks_orientations_array[0][1], self.oriented_landmarks_orientations_array[0][2]])
+    
+    # i = 0
+    # print(self.oriented_landmarks_quaternions_array[i])
+    # print(self.quaternion_from_forward_and_up_vectors(self.oriented_landmarks_orientations_array[i], left))
+    
+    # input_quat = np.array([0.0, 0.0, 0.0, 1.0])
+    # output_forward = self.quaternion_multiply(input_quat, forward)
+    
+    # input_forward = np.array([0.0, 0.0, 1.0])
+    # output_quat = self.quaternion_from_forward_and_up_vectors(input_forward, left)
+    # print(input_forward, output_quat)
+ # =============================================
+ 
+    # def quaternion_from_forward_and_up_vectors(self, forward, up):
+    #     """
+    #     Transform 2 orthogonal vectors as a Quaternion (inspired by https://gist.github.com/awesomebytes/7ccbd396511db71d0a51341569fa95fa )
+    #     (same as LookRotation Quaternion function in Unity)
+        
+    #     Parameters
+    #     ----------
+    #     forward : float[3]
+    #         vector
+    #     up : float[3]
+    #         vector
+        
+    #     Returns
+    #     ----------
+    #     x, y, z, w : float[3]
+    #        output quaternion 
+        
+    #     """
+    #     v0 = self.normalize(forward)
+    #     v1 = self.normalize(np.cross(self.normalize(up), v0))
+    #     v2 = np.cross(v0, v1)
+    #     m00, m01, m02 = v1
+    #     m10, m11, m12 = v2
+    #     m20, m21, m22 = v0
+
+    #     num8 = (m00 + m11) + m22
+
+    #     if num8 > 0.0:
+    #         num = sqrt(num8 + 1.0)
+    #         w = num * 0.5
+    #         num = 0.5 / num
+    #         x = (m12 - m21) * num
+    #         y = (m20 - m02) * num
+    #         z = (m01 - m10) * num
+    #         return x, y, z, w
+
+    #     if (m00 >= m11) and (m00 >= m22):
+    #         num7 = sqrt(((1.0 + m00) - m11) - m22)
+    #         num4 = 0.5 / num7
+    #         x = 0.5 * num7
+    #         y = (m01 + m10) * num4
+    #         z = (m02 + m20) * num4
+    #         w = (m12 - m21) * num4
+    #         return x, y, z, w
+
+    #     if m11 > m22:
+    #         num6 = sqrt(((1.0 + m11) - m00) - m22)
+    #         num3 = 0.5 / num6
+    #         x = (m10 + m01) * num3
+    #         y = 0.5 * num6
+    #         z = (m21 + m12) * num3
+    #         w = (m20 - m02) * num3
+    #         return x, y, z, w
+
+    #     num5 = sqrt(((1.0 + m22) - m00) - m11)
+    #     num2 = 0.5 / num5
+    #     x = (m20 + m02) * num2
+    #     y = (m21 + m12) * num2
+    #     z = 0.5 * num5
+    #     w = (m01 - m10) * num2
+        
+    #     return x, y, z, w
