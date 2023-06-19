@@ -20,16 +20,17 @@ This [napari] plugin was generated with [Cookiecutter] using [@napari]'s [cookie
     * [Manual installation](#manual-installation)
     * [Upgrade Hesperos version](#upgrade-hesperos-version)
 - [Hesperos: *Manual Segmentation and Correction* mode](#hesperos-manual-segmentation-and-correction-mode)
-    * [Import and adjust your image](#import-and-adjust-your-image-use-panel-1)
+    * [Import and adjust your image](#import-and-adjust-your-image-panel-1)
     * [Layer controls](#layer-controls)
-    * [Annotate your image](#annotate-your-image-use-panel-2)
-    * [Select slices of interest](#select-slices-of-interest-use-panel-3----only-displayed-for-the-shoulder-bones-category)
-    * [Export annotations](#export-annotations-use-panel-3----or-4-if-the-shoulder-bones-category-is-selected)
+    * [Manage oriented landmarks for the DIVA software](#manage-oriented-landmarks-for-the-diva-software-panel-2)
+    * [Annotate your image](#annotate-your-image-panel-3)
+    * [Select slices of interest](#select-slices-of-interest-panel-4)
+    * [Export annotations](#export-annotations-panel-5)
 - [Hesperos: *OneShot Segmentation* mode](#hesperos-oneshot-segmentation-mode)
-    * [Import and adjust your image](#import-and-adjust-your-image-use-panel-1)
-    * [Annotate your image](#annotate-your-image-use-panel-2)
-    * [Run automatic segmentation](#run-automatic-segmentation-use-panel-3)
-    * [Export annotations](#export-annotations-use-panel-4)
+    * [Import and adjust your image](#import-and-adjust-your-image-panel-1)
+    * [Annotate your image](#annotate-your-image-panel-2)
+    * [Run automatic segmentation](#run-automatic-segmentation-panel-3)
+    * [Export annotations](#export-annotations-panel-4)
 
         
 # Installation and Usage
@@ -102,10 +103,10 @@ The Hesperos plugin is designed to run on Windows (11 or less) and MacOS with Py
     
  The ***Manual Segmentation and Correction*** mode of the Hesperos plugin is a simplified and optimized interface to do basic 2D manual segmentation of several structures in a 3D image using a mouse or a stylet with a tablet.
 
+ <img src="https://github.com/chgodard/hesperos/assets/49953723/dfcf96a2-1c41-41b7-b931-22b6c6841d5e" width="1000px"/>
     
- <img src="https://user-images.githubusercontent.com/49953723/193262711-710673f2-5b53-4eb6-a7c7-6dada9d28d92.PNG" width="1000px"/>
-    
-## Import and adjust your image *(use Panel 1)*
+## Import and adjust your image *(Panel 1)*
+
 The Hesperos plugin can be used with Digital Imaging and COmmunications in Medicine (DICOM), Neuroimaging Informatics Technology Initiative (NIfTI) or Tagged Image File Format (TIFF) images. To improve performances, use images that are located on your own disk.
 
 1. To import data:
@@ -116,9 +117,12 @@ The Hesperos plugin can be used with Digital Imaging and COmmunications in Medic
     - by choosing one of the two predefined contrasts: *CT bone* or *CT Soft* in <img src="https://user-images.githubusercontent.com/49953723/193262708-17e1d301-0a9a-497f-9feb-613e69893c06.PNG" width="150px"/>.
     - by creating a custom default contrast with the <img src="https://user-images.githubusercontent.com/49953723/193262707-466917b4-b885-429b-9924-6481fa6410bb.PNG" width="30px"/> button and selecting *Custom Contrast*. Settings can be exported as a .json file with the <img src="https://user-images.githubusercontent.com/49953723/193262709-e1ad5321-1f60-4b60-a715-7c494670e1cd.PNG" width="30px"/> button.
     - by loading a saved default contrast with the <img src="https://user-images.githubusercontent.com/49953723/193262710-c9f66354-f896-4e59-8718-70e5509875af.PNG" width="30px"/> button and selecting *Custom Contrast*.
-4. In the bottom left corner of the application you also have the possibility to: 
+4. In the bottom left corner of the application you also have the possibility to:
+    - <img src="https://github.com/chgodard/hesperos/assets/49953723/19eb4f30-2dd2-41f0-b2ed-1657db30609a" width="25px"/>: switch from 2D view to 3D view. Then the button becomes <img src="https://github.com/chgodard/hesperos/assets/49953723/64a65eb4-d3ec-493c-add9-3a1482f9e04e" width="25px"/> to switch back. 
     - <img src="https://user-images.githubusercontent.com/49953723/193262716-d9947eb9-d87f-4251-af76-2d906cd36018.PNG" width="25px"/>: change the order of the visible axis (for example go to sagittal, axial or coronal planes).
     - <img src="https://user-images.githubusercontent.com/49953723/193262717-12afbfb1-49ae-4a77-a83e-5bc99850734a.PNG" width="25px"/>: transpose the 3D image on the current axis being displayed.
+
+
 
 
 ## Layer controls
@@ -148,19 +152,30 @@ When data is loading, two layers are created: the *`image`* layer and the *`anno
 >2. Double click to activate the fill bucket.  
 >3. Click inside the closed area to fill it.  
 >4. Double click on the filled area to deactivate the fill bucket and reactivate the paint brush mode.
-    
 
-## Annotate your image *(use Panel 2)*
+
+<ins>For the *orientations* and *landmarks* layers:</ins>
+- *`opacity`*: a slider to control the global opacity of the layer.
+
+
+## Manage oriented landmarks for the DIVA software *(Panel 2)*
+
+
+
+
+## Annotate your image *(Panel 3)*
     
 Manual annotation and correction on the segmented file is done using the layer controls of the *`annotations`* layer. Click on the layer to display them. /!\ You have to choose a structure to start annotating *(see 2.)*.
 1. To modify an existing segmentation, you can directy open the segmented file with the <img src="https://user-images.githubusercontent.com/49953723/193262702-df3b4fb8-63d0-4a1b-b1c9-8391cf8c3f22.PNG" width="130px"/> button. The file needs to have the same dimensions as the original image. 
     > /!\ Only .tiff, .tif, .nii and .nii.gz files are supported as segmented files.  
     
 2. Choose a structure to annotate in the drop-down menu
+    - *`Feta Challenge`*: to annotate fetal brain MRI with the same label than the [FeTA Challenge](https://feta.grand-challenge.org/).
     - *`Fetus`*: to annotate pregnancy image.
+    - *`Larva`*: to annotate drosophila larva image according to the anatomy described in [Schoborg et al. 2019](https://journals.biologists.com/dev/article/146/23/dev176685/224232/Micro-computed-tomography-as-a-platform-for).
+    - *`Mouse Embryon`*: to annotate HREM or MicroCT of mouse embryons.
     - *`Shoulder`*: to annotate bones and muscles for shoulder surgery.
     - *`Shoulder Bones`*: to annotate only few bones for shoulder surgery.
-    - *`Feta Challenge`*: to annotate fetal brain MRI with the same label than the FeTA Challenge (see ADD LIEN WEB).
     
 > When selecting a structure, a new panel appears with a list of elements to annotate. Each element has its own label and color. Select one element in the list to automatically activate the paint brush mode with the corresponding color (color is updated in the *`label`* rectangle in the layer controls panel).
     
@@ -177,19 +192,19 @@ Manual annotation and correction on the segmented file is done using the layer c
         2. Click on the <img src="https://user-images.githubusercontent.com/49953723/193262703-2b2ea2dc-24fa-438b-a75c-3aa42b210f53.PNG" width="30px"/> button  => change the button to <img src="https://user-images.githubusercontent.com/49953723/193262706-40f3dbca-5589-406d-81e8-e150ae8bfab6.PNG" width="30px"/> and "unlock" the slice.
 
 
-## Select slices of interest *(use Panel 3 -- only displayed for the Shoulder Bones category)*
+## Select slices of interest *(Panel 4)*
 
-This panel will only be displayed if the *`Shoulder Bones`* category is selected. A maxiumum of 10 slices can be selected in a 3D image and the corresponding z-indexes will be integrated in the metadata during the exportation of the segmentation file.
+A maxiumum of 10 slices can be selected in a 3D image and the corresponding indexes will be integrated in the metadata during the exportation of the segmentation file.
    
    > /!\ Metadata integration is available only for exported .tiff and .tif files and with the *`Unique`* save option. 
 
-- <img src="https://user-images.githubusercontent.com/49953723/201736039-4ed10553-4a4b-4d5e-9d61-826dc139e437.png" width="25px"/> : to add the currently displayed z-index in the drop-down menu.
-- <img src="https://user-images.githubusercontent.com/49953723/201736105-a9c45264-412a-453b-8475-5a9ab856b07d.png" width="25px"/> : to remove the currently displayed z-index from the drop-down menu.
-- <img src="https://user-images.githubusercontent.com/49953723/201736152-319d8559-dbfc-4e52-aeb3-e8e34445f67a.png" width="25px"/> : to go to the z-index selected in the drop-down menu. The icon will be checked when the currently displayed z-index matches the selected z-index in the drop-down menu.
-- <img src="https://user-images.githubusercontent.com/49953723/201733835-7bee453a-bc07-416f-8b95-aaf803683cac.png" width="100px"/> : a drop-down menu containing the list of selected z-indexes. Select a z-index from the list to work with it more easily.
+- <img src="https://user-images.githubusercontent.com/49953723/201736039-4ed10553-4a4b-4d5e-9d61-826dc139e437.png" width="25px"/> : to add the currently displayed slice index in the drop-down menu.
+- <img src="https://user-images.githubusercontent.com/49953723/201736105-a9c45264-412a-453b-8475-5a9ab856b07d.png" width="25px"/> : to remove the currently displayed slice index from the drop-down menu.
+- <img src="https://user-images.githubusercontent.com/49953723/201736152-319d8559-dbfc-4e52-aeb3-e8e34445f67a.png" width="25px"/> : to go to the slice index selected in the drop-down menu. The icon will be checked when the currently displayed slice index matches the selected slice index in the drop-down menu.
+- <img src="https://github.com/chgodard/hesperos/assets/49953723/4d1e50b7-2eb2-4e5e-b486-d159f78948ae" width="150px"/> : a drop-down menu containing the list of slice selected indexes. Select an index from the list to work with it more easily.
 
 
-## Export annotations *(use Panel 3 -- or 4 if the Shoulder Bones category is selected)*
+## Export annotations *(Panel 5)*
     
 1. Annotations can be exported as .tif, .tiff, .nii or .nii.gz file with the <img src="https://user-images.githubusercontent.com/49953723/201735102-113f64b7-4da4-40ee-b058-9900268d270d.png" width="95px"/> button in one of the two following saving mode:
     - *`Unique`*: segmented data is exported as a unique 3D image with corresponding label ids (1-2-3-...). This file can be re-opened in the application.
@@ -212,12 +227,12 @@ The principle is to accelerate the segmentation without prior information. The p
 <img src="https://user-images.githubusercontent.com/49953723/193262714-8699cd59-3825-4d71-b27a-bbcad1e36d55.PNG" width="1000px"/>
 
     
-## Import and adjust your image *(use Panel 1)*
+## Import and adjust your image *(Panel 1)*
     
 Same panel as the *Manual Segmentation and Correction* mode *(see [panel 1 description](#import-and-adjust-your-image-use-panel-1))*.
    
     
-## Annotate your image *(use Panel 2)*
+## Annotate your image *(Panel 2)*
     
 Annotations and corrections on the segmented file is done using the layer controls of the *`annotations`* layer. Click on the layer to display them. Only two labels are available: *`Structure of interest`* and *`Other`*. 
 
@@ -234,7 +249,7 @@ To achieve that, the user has to:
 2. All actions can be undone with the <img src="https://user-images.githubusercontent.com/49953723/193265848-8c458035-609a-433e-aa82-5d9588971425.PNG" width="30px"/> button or Ctrl-Z.
 
     
-## Run automatic segmentation *(use Panel 3)*
+## Run automatic segmentation *(Panel 3)*
 
 From the previously tagged pixels, features are extracted and used to train a basic classifier : the Random Forest Classifier (RFC). When the training of the pixel classifier is done, it is applied to each pixel of the complete volume and outputs a probability to belong to the structure of interest.
 
@@ -250,7 +265,7 @@ To run training and inference, click on the <img src="https://user-images.github
 >2. Export your segmentation data and re-open it with the *Manual Annotation and Correction* mode of Hesperos to manually erase or add annotations.
     
     
-## Export annotations *(use Panel 4)*
+## Export annotations *(Panel 4)*
     
 1. Segmented probabilites can be exported as .tif, .tiff, .nii or .nii.gz file with the <img src="https://user-images.githubusercontent.com/49953723/193262734-57159a97-2f46-4aba-b3bf-b55a35dfacbd.PNG" width="105px"/> button. The image is exported as a unique 3D binary image (value 0 and 255). This file can be re-opened in the application for correction.
 2. Probabilities can be exported as .tif, .tiff, .nii or .nii.gz file with the <img src="https://user-images.githubusercontent.com/49953723/193262733-26e37392-55b2-4c36-9287-b2f5d8d30e03.PNG" width="105px"/> button as a unique 3D image. The probabilities image is normed between 0 and 255.
