@@ -1275,12 +1275,22 @@ class ManualSegmentationWidget(QWidget):
         try:
             description = json.loads(segmentation_sitk.GetMetaData('ImageDescription'))
             loaded_selected_slice_list = description['Hesperos_SelectedSlices']
-            # loaded_selected_slice_list = json.load(description['Hesperos_SelectedSlices'])
+            if loaded_selected_slice_list[0] == '[':
+                is_old_version = True
+                loaded_selected_slice_list = json.loads(description['Hesperos_SelectedSlices'])
+            else:
+                is_old_version = False
         except:
             return
         if loaded_selected_slice_list != []:
             if loaded_selected_slice_list != "[]":
-                self.selected_slice_list = loaded_selected_slice_list
+                # in old version : only the index number was saved : ['100x', '102y']
+                if is_old_version :
+                    self.selected_slice_list = [str(index) + 'z' for index in loaded_selected_slice_list]
+                else:
+                    self.selected_slice_list = loaded_selected_slice_list
+                    
+                # in new version the index number and the axe are saved as string  : "[136, 170, 255]"
                 self.selected_slice_list.sort(key=lambda text: int(text[:-1]))
 
                 for slice_index in self.selected_slice_list:
