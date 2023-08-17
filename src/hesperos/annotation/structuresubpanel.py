@@ -128,5 +128,9 @@ class StructureSubPanel(QGroupBox):
         structure_id = self.group_radio_button.id(object)
         if hasattr(self.parent.viewer, 'layers'):
             if 'annotations' in self.parent.viewer.layers:
+                self.parent.viewer.layers.selected = self.parent.viewer.layers["annotations"]
+                self.parent.viewer.layers.selection.add(self.parent.viewer.layers["annotations"])
+                self.parent.viewer.layers.selection.active = self.parent.viewer.layers["annotations"]
+                
                 self.parent.viewer.layers['annotations'].selected_label = structure_id
                 self.parent.viewer.layers['annotations'].mode = "PAINT"

@@ -17,6 +17,25 @@ label_layer_widget_list = [
     'selectionSpinBox',
 ]
 
+label_layer_widget_list_bis = [
+    'blendComboBox',
+    'brushSizeSlider',
+    'colorModeComboBox',
+    'colormapUpdate',
+    'contigCheckBox',
+    'contourSpinBox',
+    'erase_button',
+    'fill_button',
+    'ndimSpinBox',
+    'paint_button',
+    'pick_button',
+    'preserveLabelsCheckBox',
+    'renderComboBox',
+    'renderLabel',
+    'selectedColorCheckbox',
+    'selectionSpinBox',
+]
+
 image_layer_widget_list = [
     'attenuationLabel',
     'attenuationSlider',
@@ -27,8 +46,24 @@ image_layer_widget_list = [
     'interpComboBox',
     'interpLabel',
     'isoThresholdLabel',
-    'isoThresholdSlider'
+    'isoThresholdSlider',
 ]
+
+# points_layer_widget_list = [
+#     'addition_button',
+#     'delete_button',
+#     'edgeColorEdit',
+#     'faceColorEdit',
+#     'outOfSliceCheckBox',
+#     'select_button',
+#     'symbolComboBox',
+#     'textDispCheckBox',
+# ]
+
+# vectors_layer_widget_list = [
+#     'edgeColorEdit',
+#     'outOfSliceCheckBox',
+# ]
 
 points_layer_widget_list = [
     'addition_button',
@@ -40,7 +75,16 @@ points_layer_widget_list = [
     'select_button',
     'sizeSlider',
     'symbolComboBox',
-    'textDispCheckBox'
+    'textDispCheckBox',
+]
+
+vectors_layer_widget_list = [
+    'blendComboBox',
+    'color_mode_comboBox',
+    'edgeColorEdit',
+    'lengthSpinBox',
+    'outOfSliceCheckBox',
+    'widthSpinBox',
 ]
 
 label_colors = {
@@ -80,10 +124,7 @@ label_colors = {
     33: (30/255, 10/255, 200/255, 1.0),
     None: 'transparent',
 }
-    # '_background_label': 'transparent',
     #when checked "selected color" with color mode "direct", the label used to display the non selected label is referenced by the id None (see napari.layers.labels.labels.py)
-# (1/255, 128/255, 1/255, 1.0)
-# (255/255, 192/255, 203/255, 1)
 
 
 # ============ Function to custom napari viewer buttons ============
@@ -108,20 +149,29 @@ def disable_napari_buttons(viewer):
     viewer.window._qt_viewer.layerButtons.deleteButton.setVisible(False)
 
 def disable_napari_change_dim_button(viewer, isVisible):
-    """_summary_
-
-    Args:
-        viewer (_type_): _description_
-        isVisible (bool): _description_
+    """
+    Disable Napari dimension changing button
+    
+    Parameters
+    ----------
+    viewer : napari.Viewer
+        active (unique) instance of the napari viewer
+    isVisible : bool
+        visible status
+        
     """
     viewer.window._qt_viewer.viewerButtons.rollDimsButton.setEnabled(isVisible)
     # or rollDimsButton / transposeDimsButton
 
 def disable_dock_widget_buttons(viewer):
-    """_summary_
-
-    Args:
-        viewer (_type_): _description_
+    """
+    Disable closing button of dock widget
+    
+    Parameters
+    ----------
+    viewer : napari.Viewer
+        active (unique) instance of the napari viewer
+        
     """
     # for dw in list(viewer.window._dock_widgets.values()):
     #     dw.title.close_button.hide()
@@ -140,9 +190,18 @@ def increase_napari_buttons_size(viewer):
     viewer.window._qt_viewer.viewerButtons.transposeDimsButton.setGeometry(100, 100, 2000, 2000)
 
 def reset_dock_widget(viewer):
+    """
+    Remove all layers to reset
+
+    Parameters
+    ----------
+    viewer : napari.Viewer
+        active (unique) instance of the napari viewer
+
+    """
     if hasattr(napari, 'DOCK_WIDGETS'):
-        while len(napari.DOCK_WIDGETS) !=0:
-            for layers in ("image", "annotations", "segmentation", "probabilities"):
+        while len(napari.DOCK_WIDGETS) != 0:
+            for layers in ("image", "annotations", "segmentation", "probabilities", "orientations", "landmarks"):
                 if layers in viewer.layers:
                     viewer.layers.remove(layers)
 
@@ -157,11 +216,12 @@ def disable_layer_widgets(viewer, layer_name, layer_type):
     ----------
     viewer : napari.Viewer
         active (unique) instance of the napari viewer
-    layer_name: int
+    layer_name: str
         name of the layer to clean
+    layer_type: str
+        type of the layer to clean
 
     """
-
     if layer_type == 'image':
         layer = viewer.layers[layer_name]
         list_widget_to_remove = image_layer_widget_list
@@ -177,8 +237,26 @@ def disable_layer_widgets(viewer, layer_name, layer_type):
     elif layer_type == 'points':
         layer = viewer.layers[layer_name]
         list_widget_to_remove = points_layer_widget_list
-        indx_while = 4
+        indx_while = 3
         indx_item = 3
+    
+    elif layer_type == 'vectors':
+        layer = viewer.layers[layer_name]
+        list_widget_to_remove = vectors_layer_widget_list
+        indx_while = 2
+        indx_item = 2
+
+    # elif layer_type == 'points':
+    #     layer = viewer.layers[layer_name]
+    #     list_widget_to_remove = points_layer_widget_list
+    #     indx_while = 8
+    #     indx_item = 7
+    
+    # elif layer_type == 'vectors':
+    #     layer = viewer.layers[layer_name]
+    #     list_widget_to_remove = vectors_layer_widget_list
+    #     indx_while = 9
+    #     indx_item = 8
 
     else:
         return
