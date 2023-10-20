@@ -10,4 +10,6 @@ call pip install napari==0.4.14
 
 call conda install -c anaconda pyqt
 
+call pip install vispy==0.9.6
+
 exit
