@@ -80,8 +80,9 @@ The Hesperos plugin is designed to run on Windows (11 or less) and MacOS with Py
 4. Install the required Python packages in your virtual environment:
     ```
     conda activate hesperos_env
-    conda install -c conda-forge napari=0.4.14 
+    pip install napari==0.4.14 
     conda install -c anaconda pyqt
+    pip install vispy==0.9.6
     pip install hesperos
     ```
     > /!\ Hesperos plugin is not yet compatible with napari version superior to 0.4.14.
